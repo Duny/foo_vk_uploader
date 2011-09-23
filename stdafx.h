@@ -1,8 +1,5 @@
 #pragma once
 
-#include <windows.h>
-
-#include "foobar2000\SDK\foobar2000.h"
 #include "foobar2000\ATLHelpers\ATLHelpers.h"
 
 #include "resource.h"
