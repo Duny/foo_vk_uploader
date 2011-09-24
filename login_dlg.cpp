@@ -6,7 +6,7 @@
 
 namespace vk_uploader
 {
-    class myinitquit : public initquit
+    /*class myinitquit : public initquit
     {
         void on_init () override
         {
@@ -16,7 +16,7 @@ namespace vk_uploader
     public:
         myinitquit () {}
     };
-    static initquit_factory_t<myinitquit> g_initquit;
+    static initquit_factory_t<myinitquit> g_initquit;*/
 
 
     LRESULT login_dlg::on_init_dialog (CWindow, LPARAM)

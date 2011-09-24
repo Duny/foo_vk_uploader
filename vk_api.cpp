@@ -1,5 +1,7 @@
 #include "stdafx.h"
-#include "login_dlg.h"
+
+
+#include "vk_api.h"
 
 namespace vk_uploader
 {
