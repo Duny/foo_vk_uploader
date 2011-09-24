@@ -6,7 +6,7 @@ class vk_uploader_initquit : public initquit
     void on_init () {
         g_com_module.Init (NULL, NULL, &LIBID_ATLLib);
 
-        vk_api::init ();
+        vk_uploader::vk_api::vk_api::init ();
     }
 
     void on_quit () {

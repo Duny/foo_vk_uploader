@@ -24,9 +24,6 @@
     <ClCompile Include="foo_vk_uploader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="login_dialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -39,9 +36,6 @@
     <ClCompile Include="vk_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WebBrowserCtrl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp">
       <Filter>jsoncpp</Filter>
     </ClCompile>
@@ -50,6 +44,12 @@
     </ClCompile>
     <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp">
       <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="login_dlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="config.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -71,10 +71,10 @@
     <ClInclude Include="vk_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WebBrowserCtrl.h">
+    <ClInclude Include="login_dlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="login_dialog.h">
+    <ClInclude Include="config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

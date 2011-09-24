@@ -1,6 +1,9 @@
 #pragma once
 
 #include "foobar2000\ATLHelpers\ATLHelpers.h"
+#include <exdispid.h>
+#include <atlframe.h>
+#include <comutil.h>
 
 #include "resource.h"
 
@@ -15,11 +18,10 @@
 extern const pfc::string8 g_app_id;
 
 // Config variables
-extern cfg_string vk_access_token;
+//extern cfg_string vk_access_token;
 
-extern cfgWindowSize vk_login_dlg_size;
-extern cfgDialogPosition vk_login_dlg_pos;
 
-extern cfgDialogPosition vk_upload_setup_dlg_pos;
+
+//extern cfgDialogPosition vk_upload_setup_dlg_pos;
 
 void upload_items (metadb_handle_list_cref p_items);

@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Russian resources
+// Русский (Россия) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
-#ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 #pragma code_page(1251)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -27,11 +25,13 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
-    IDD_LOGIN_DLG, DIALOG
+    IDD_LOGIN, DIALOG
     BEGIN
-        RIGHTMARGIN, 230
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 325
+        TOPMARGIN, 4
     END
 
     IDD_UPLOAD_SETUP_DLG, DIALOG
@@ -54,12 +54,14 @@ END
 // Dialog
 //
 
-IDD_LOGIN_DLG DIALOGEX 0, 0, 330, 220
+IDD_LOGIN DIALOGEX 0, 0, 330, 220
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Login to Vkontakte"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_EXPLORER1,"{8856F961-340A-11D0-A96B-00C04FD705A2}",0x0,0,0,327,220
+    CONTROL         "",IDC_IE,"{8856F961-340A-11D0-A96B-00C04FD705A2}",0x0,5,22,320,198
+    PUSHBUTTON      "Try again",IDC_BUTTON_RELOAD,223,4,50,14
+    PUSHBUTTON      "Close",IDC_BUTTON_CLOSE,275,4,50,14
 END
 
 IDD_UPLOAD_SETUP_DLG DIALOGEX 0, 0, 262, 89
@@ -88,10 +90,10 @@ END
 // Dialog Info
 //
 
-IDD_LOGIN_DLG DLGINIT
+IDD_LOGIN DLGINIT
 BEGIN
-    IDC_EXPLORER1, 0x376, 160, 0
-0x0000, 0x0000, 0x004c, 0x0000, 0x32bf, 0x0000, 0x2500, 0x0000, 0x0000, 
+    IDC_IE, 0x376, 160, 0
+0x0000, 0x0000, 0x004c, 0x0000, 0x319c, 0x0000, 0x2148, 0x0000, 0x0000, 
 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
 0x0000, 0x0000, 0x004c, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 
 0x0000, 0xd0e0, 0x0057, 0x3573, 0x11cf, 0x69ae, 0x0008, 0x2e2b, 0x6212, 
@@ -103,18 +105,16 @@ BEGIN
     0
 END
 
-#endif    // Russian resources
+#endif    // Русский (Россия) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (Australia) resources
+// Английский (Австралия) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // English (Australia) resources
+#endif    // Английский (Австралия) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
