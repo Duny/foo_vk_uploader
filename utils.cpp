@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "upload_setup_dialog.h"
 //{"error":{"error_code":3,"error_msg":"Unknown method passed","request_params":[{"key":"oauth","value":"1"},{"key":"method","value":"sdfsf"},{"key":"access_token","value":"95e72c49dba8a93b95580d3ef395cf166f695ee95ea3c9e844b707319bbbc66"}]}}
 
 

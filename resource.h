@@ -4,6 +4,7 @@
 //
 #define IDD_LOGIN                       106
 #define IDD_UPLOAD_SETUP_DLG            109
+#define IDD_UPLOAD_SETUP                109
 #define IDC_CHECK_POST_ON_WALL          1036
 #define IDC_IE                          1039
 #define IDC_COMBO_ALBUM                 1040
