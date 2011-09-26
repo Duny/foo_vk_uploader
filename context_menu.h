@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include "upload_setup_dlg.h"
 
 namespace vk_uploader
 {
@@ -19,6 +20,7 @@ namespace vk_uploader
                 // TODO
                 //cfg::upload_profiles.add_item (cfg::upload_profile ());
                 //cfg::upload_profiles.remove_all ();
+                static_api_ptr_t<upload_setup_dialog>()->show (p_data);
             }
 
             bool get_description (pfc::string_base &p_out) override
