@@ -18,7 +18,7 @@ namespace vk_uploader
         public:
             myinitquit () {}
         };
-        static initquit_factory_t<myinitquit> g_initquit;
+        //static initquit_factory_t<myinitquit> g_initquit;
     }
 
     class login_dlg :
@@ -52,13 +52,34 @@ namespace vk_uploader
             SINK_ENTRY(IDC_IE, DISPID_NAVIGATECOMPLETE2, on_navigate_complete2)
         END_SINK_MAP()
 
-        LRESULT on_init_dialog (CWindow, LPARAM);
-        void on_destroy () { cfg::login_dialog_pos.RemoveWindow (*this); }
+        LRESULT on_init_dialog (CWindow, LPARAM)
+        {
+            // Init resizing
+            DlgResize_Init ();
+            m_pos.AddWindow (*this);
 
-        void __stdcall on_navigate_complete2 (IDispatch*, VARIANT*);
+            CAxWindow ie = GetDlgItem (IDC_IE);
+            if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
+                return FALSE;
+
+            reload ();
+
+            return TRUE;
+        }
+
+        void __stdcall on_navigate_complete2 (IDispatch*, VARIANT *p_url)
+        {
+            m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
+
+            // if address starts from redirect url that means 
+            // user was successfully authorized and we can close dialog window
+            if (m_final_url.find_first (vk_api::redirect_url) == 0)
+                close ();
+        }
 
         HRESULT on_reload (WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { reload (); return TRUE; }
         HRESULT on_close (WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { close (); return TRUE; }
+        void on_destroy () { m_pos.RemoveWindow (*this); }
 
 
         void reload ()
@@ -72,32 +93,13 @@ namespace vk_uploader
 
         pfc::string8 m_final_url;
         CComPtr<IWebBrowser2> m_wb2;
+
+        static const GUID guid_dialog_pos;
+        static cfgDialogPosition m_pos;
     };
+    const GUID login_dlg::guid_dialog_pos = { 0xcc80a64a, 0x44de, 0x4735, { 0x93, 0xdf, 0xc7, 0x92, 0x63, 0xbb, 0x3a, 0x23 } };
+    cfgDialogPosition login_dlg::m_pos (guid_dialog_pos);
 
-    LRESULT login_dlg::on_init_dialog (CWindow, LPARAM)
-    {
-        // Init resizing
-        DlgResize_Init ();
-        cfg::login_dialog_pos.AddWindow (*this);
-
-        CAxWindow ie = GetDlgItem (IDC_IE);
-        if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
-            return FALSE;
-
-        //reload ();
-
-	    return TRUE;
-    }
-
-    void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
-    {
-        m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-
-        // if address starts from redirect url that means 
-        // user was successfully authorized and we can close dialog window
-        if (m_final_url.find_first (vk_api::redirect_url) == 0)
-            close ();
-    }
     
     class login_dialog_imp : public login_dialog
     {

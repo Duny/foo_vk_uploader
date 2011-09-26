@@ -1,11 +1,13 @@
 #pragma once
 
+#include "config.h"
+
 namespace vk_uploader
 {
     class NOVTABLE upload_setup_dialog : public service_base
     {
     public:
-        virtual void show (metadb_handle_list_cref p_items) = 0;
+        virtual void show (metadb_handle_list_cref p_items, const cfg::upload_profile &p_profile = cfg::upload_profile::default_) = 0;
 
         FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(upload_setup_dialog)
     };

@@ -101,7 +101,10 @@ namespace vk_uploader
             t_enabled_state get_enabled_state (unsigned p_index) override { return DEFAULT_ON; }
 
             //! Executes the menu item command without going thru the instantiate_item path. For items with dynamically-generated sub-items, p_node is identifies of the sub-item command to execute.
-            void item_execute_simple (unsigned p_index, const GUID &p_node, metadb_handle_list_cref p_data, const GUID &p_caller) override { }
+            void item_execute_simple (unsigned p_index, const GUID &p_node, metadb_handle_list_cref p_data, const GUID &p_caller) override
+            {
+                int i = 0;
+            }
 
             GUID get_parent () override { return contextmenu_groups::fileoperations; }
         };

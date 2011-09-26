@@ -15,14 +15,17 @@ namespace vk_uploader
 
             GUID m_guid;
             pfc::string8 m_name; // profile name
+
+            pfc::string8 m_album; // put uploaded tracks in the album
+            bool m_post_on_wall;
         };
         FB2K_STREAM_READER_OVERLOAD(upload_profile)
         {
-            return stream >> value.m_guid >> value.m_name;
+            return stream >> value.m_guid >> value.m_name >> value.m_album >> value.m_post_on_wall;
         }
         FB2K_STREAM_WRITER_OVERLOAD(upload_profile)
         {
-            return stream << value.m_guid << value.m_name;
+            return stream << value.m_guid << value.m_name << value.m_album << value.m_post_on_wall;
         }
 
         extern cfg_objList<upload_profile> upload_profiles;
