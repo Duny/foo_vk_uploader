@@ -26,7 +26,7 @@ namespace vk_uploader
         }
 
         extern cfg_objList<upload_profile> upload_profiles;
-        extern cfgDialogPosition dialog_pos;
+        extern cfgDialogPosition login_dialog_pos, upload_dialog_pos;
     }
 }
 #endif

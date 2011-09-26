@@ -1,48 +1,92 @@
 #include "stdafx.h"
 
+#include "config.h"
 #include "login_dlg.h"
 #include "vk_api.h"
-#include "config.h"
 
 namespace vk_uploader
 {
-    /*class myinitquit : public initquit
+    namespace
     {
-        void on_init () override
+        class myinitquit : public initquit
         {
-            login_dlg ().show ();
-        }
-        void on_quit () override {}
-    public:
-        myinitquit () {}
-    };
-    static initquit_factory_t<myinitquit> g_initquit;*/
+            void on_init () override
+            {
+                static_api_ptr_t<login_dialog>()->show ();
+            }
+            void on_quit () override {}
+        public:
+            myinitquit () {}
+        };
+        static initquit_factory_t<myinitquit> g_initquit;
+    }
 
+    class login_dlg :
+        public CAxDialogImpl<login_dlg>,
+        public CDialogResize<login_dlg>,
+        public IDispEventImpl<IDC_IE, login_dlg>
+    {
+    public:
+        enum { IDD = IDD_LOGIN };
+
+        pfc::string8 get_final_url () const { return m_final_url; }
+
+    private:
+        BEGIN_MSG_MAP_EX(login_dlg)
+            CHAIN_MSG_MAP(CAxDialogImpl<login_dlg>)
+            CHAIN_MSG_MAP(CDialogResize<login_dlg>)
+            COMMAND_ID_HANDLER(IDC_BUTTON_RELOAD, on_reload)
+            COMMAND_ID_HANDLER(IDC_BUTTON_CLOSE, on_close)
+            MSG_WM_INITDIALOG(on_init_dialog)
+            MSG_WM_CLOSE(close)
+            MSG_WM_DESTROY(on_destroy)
+        END_MSG_MAP()
+
+        BEGIN_DLGRESIZE_MAP(login_dlg)
+            DLGRESIZE_CONTROL(IDC_IE, DLSZ_SIZE_X | DLSZ_SIZE_Y)
+            DLGRESIZE_CONTROL(IDC_BUTTON_RELOAD, DLSZ_MOVE_X)
+            DLGRESIZE_CONTROL(IDC_BUTTON_CLOSE, DLSZ_MOVE_X)
+        END_DLGRESIZE_MAP()
+
+        BEGIN_SINK_MAP(login_dlg)
+            SINK_ENTRY(IDC_IE, DISPID_NAVIGATECOMPLETE2, on_navigate_complete2)
+        END_SINK_MAP()
+
+        LRESULT on_init_dialog (CWindow, LPARAM);
+        void on_destroy () { cfg::login_dialog_pos.RemoveWindow (*this); }
+
+        void __stdcall on_navigate_complete2 (IDispatch*, VARIANT*);
+
+        HRESULT on_reload (WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { reload (); return TRUE; }
+        HRESULT on_close (WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { close (); return TRUE; }
+
+
+        void reload ()
+        {
+            CComVariant v;
+            m_wb2->Navigate (CComBSTR (vk_api::oauth_url), &v, &v, &v, &v);
+            m_final_url.reset ();
+        }
+
+        void close () { EndDialog (IDOK); }
+
+        pfc::string8 m_final_url;
+        CComPtr<IWebBrowser2> m_wb2;
+    };
 
     LRESULT login_dlg::on_init_dialog (CWindow, LPARAM)
     {
         // Init resizing
         DlgResize_Init ();
-        cfg::dialog_pos.AddWindow (*this);
+        cfg::login_dialog_pos.AddWindow (*this);
 
         CAxWindow ie = GetDlgItem (IDC_IE);
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             return FALSE;
 
-        reload ();
+        //reload ();
 
 	    return TRUE;
-    }
-
-    bool login_dlg::show ()
-    {
-        DoModal (core_api::get_main_window ());
-	    return !m_final_url.is_empty ();
-    }
-    
-    void login_dlg::on_destroy ()
-    {
-        cfg::dialog_pos.RemoveWindow (*this);
     }
 
     void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
@@ -54,13 +98,16 @@ namespace vk_uploader
         if (m_final_url.find_first (vk_api::redirect_url) == 0)
             close ();
     }
-
-    void login_dlg::reload ()
+    
+    class login_dialog_imp : public login_dialog
     {
-        CComVariant v;
-        m_wb2->Navigate (CComBSTR (vk_api::oauth_url), &v, &v, &v, &v);
-        m_final_url.reset ();
-    }
+        void show () override
+        {
+            login_dlg ().DoModal (core_api::get_main_window ());
+        }
+    };
+    static service_factory_single_t<login_dialog_imp> g_login_dialog_factory;
+
     //HRESULT login_dlg::NavigateComplete (_bstr_t URL)
     //{
     //    pfc::string8 url (URL);
