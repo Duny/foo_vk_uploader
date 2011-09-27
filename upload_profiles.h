@@ -10,22 +10,21 @@ namespace vk_uploader
             profile (const GUID &p_guid = pfc::guid_null, const pfc::string8 &p_name = "")
                 : m_guid (p_guid), m_name (p_name) {}
 
-            //bool is_default () const { return IsEqualGUID (default_.m_guid, m_guid) && default_.m_name == m_name; }
-
             GUID m_guid;
             pfc::string8 m_name; // profile name
 
-            pfc::string8 m_album; // put uploaded tracks in the album
+            pfc::string8 m_album; // put uploaded tracks to the album
             bool m_post_on_wall;
         };
-
+        
+        extern profile default_profile;
 
         class NOVTABLE manager : public service_base
         {
         public:
             virtual t_size get_count () const = 0;
+
             virtual const profile &get_profile (t_size p_index) const = 0;
-            virtual const profile &get_default_profile () const = 0; // special case of profile with default setting
 
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
         };

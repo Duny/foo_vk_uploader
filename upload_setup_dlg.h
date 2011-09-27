@@ -9,8 +9,7 @@ namespace vk_uploader
         class NOVTABLE upload_setup_dialog : public service_base
         {
         public:
-            virtual void show (metadb_handle_list_cref p_items, 
-                const upload_profiles::profile &p_profile = upload_profiles::profile ()) = 0;
+            virtual void show (metadb_handle_list_cref p_items, const profile &p_profile = profile ()) = 0;
 
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(upload_setup_dialog)
         };
