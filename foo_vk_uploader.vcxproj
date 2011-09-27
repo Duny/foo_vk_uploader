@@ -110,7 +110,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="config.cpp" />
+    <ClCompile Include="upload_profiles.cpp" />
     <ClCompile Include="context_menu.cpp" />
     <ClCompile Include="foo_vk_uploader.cpp" />
     <ClCompile Include="login_dlg.cpp">
@@ -137,7 +137,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="config.h" />
+    <ClInclude Include="upload_profiles.h" />
     <ClInclude Include="context_menu.h" />
     <ClInclude Include="login_dlg.h" />
     <ClInclude Include="resource.h" />

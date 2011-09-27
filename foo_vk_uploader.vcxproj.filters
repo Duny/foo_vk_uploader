@@ -45,10 +45,10 @@
     <ClCompile Include="login_dlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="config.cpp">
+    <ClCompile Include="upload_setup_dlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="upload_setup_dlg.cpp">
+    <ClCompile Include="upload_profiles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -71,10 +71,10 @@
     <ClInclude Include="login_dlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="config.h">
+    <ClInclude Include="upload_setup_dlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="upload_setup_dlg.h">
+    <ClInclude Include="upload_profiles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

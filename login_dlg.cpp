@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include "config.h"
 #include "login_dlg.h"
 #include "vk_api.h"
 
