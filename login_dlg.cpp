@@ -76,10 +76,9 @@ namespace vk_uploader
                 close ();
         }
 
-        HRESULT on_reload (WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { reload (); return TRUE; }
-        HRESULT on_close (WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { close (); return TRUE; }
+        HRESULT on_reload (WORD, WORD, HWND, BOOL&) { reload (); return TRUE; }
+        HRESULT on_close (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
         void on_destroy () { m_pos.RemoveWindow (*this); }
-
 
         void reload ()
         {

@@ -19,12 +19,15 @@ namespace vk_uploader
         
         extern profile default_profile;
 
+
         class NOVTABLE manager : public service_base
         {
         public:
             virtual t_size get_count () const = 0;
 
             virtual const profile &get_profile (t_size p_index) const = 0;
+
+            virtual void get_profiles (pfc::list_t<profile> &p_out) const = 0;
 
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
         };

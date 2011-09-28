@@ -20,8 +20,6 @@ namespace vk_uploader
             void execute (metadb_handle_list_cref p_data, const GUID &p_caller) override
             {
                 // TODO
-                //cfg::upload_profiles.add_item (cfg::upload_profile ());
-                //cfg::upload_profiles.remove_all ();
             }
 
             bool get_description (pfc::string_base &p_out) override

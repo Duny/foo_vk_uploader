@@ -11,8 +11,7 @@ namespace vk_uploader
         public:
 	        enum { IDD = IDD_UPLOAD_SETUP };
 
-            upload_setup_dlg (metadb_handle_list_cref p_items, const upload_profiles::profile &p_profile) 
-                : m_items (p_items), m_profile (p_profile) {}
+            upload_setup_dlg (metadb_handle_list_cref p_items) : m_items (p_items) {}
 
         private:
             BEGIN_MSG_MAP_EX(upload_setup_dlg)
@@ -26,18 +25,20 @@ namespace vk_uploader
             {
                 m_pos.AddWindow (*this);
 
+                static_api_ptr_t<upload_profiles::manager>()->get_profiles (m_profiles);
+
                 ShowWindow (SW_SHOWNORMAL);
                 return 0;
             }
 
-            HRESULT on_cancel (WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { close (); return TRUE; }
+            HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
 
             void close () { DestroyWindow (); }
 
             void on_destroy () { m_pos.RemoveWindow (*this); }
 
             metadb_handle_list_cref m_items;
-            upload_profiles::profile m_profile;
+            pfc::list_t<profile> m_profiles;
 
             static const GUID guid_dialog_pos;
             static cfgDialogPosition m_pos;
@@ -63,9 +64,9 @@ namespace vk_uploader
 
         class upload_setup_dialog_imp : public upload_setup_dialog
         {
-            void show (metadb_handle_list_cref p_items, const upload_profiles::profile &p_profile) override
+            void show (metadb_handle_list_cref p_items) override
             {
-                new CWindowAutoLifetime<ImplementModelessTracking<upload_setup_dlg>>(core_api::get_main_window (), p_items, p_profile);
+                new CWindowAutoLifetime<ImplementModelessTracking<upload_setup_dlg>>(core_api::get_main_window (), p_items);
             }
         };
         static service_factory_single_t<upload_setup_dialog_imp> g_upload_dialog_factory;

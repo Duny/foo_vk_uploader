@@ -24,7 +24,7 @@ namespace vk_uploader
             static cfg_objList<profile> g_profiles;
 
         public:
-            t_size get_count () const
+            t_size get_count () const override
             {
                 return g_profiles.get_count ();
             }
@@ -32,6 +32,11 @@ namespace vk_uploader
             const profile &get_profile (t_size p_index) const override
             {
                 return g_profiles.get_item_ref (p_index);
+            }
+
+            void get_profiles (pfc::list_t<profile> &p_out) const override
+            {
+                p_out = g_profiles;
             }
         };
 
