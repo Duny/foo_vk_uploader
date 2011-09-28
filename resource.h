@@ -8,14 +8,17 @@
 #define IDC_CHECK_POST_ON_WALL          1036
 #define IDC_IE                          1039
 #define IDC_COMBO_ALBUM                 1040
+#define IDC_COMBO_ALBUMS                1040
 #define IDC_BUTTON_ALBUMS_REFRESH       1041
 #define IDC_BUTTON_ALBUM_NEW            1042
 #define IDC_BUTTON_CLOSE                1042
 #define IDC_BUTTON_ALBUM_DELETE         1043
 #define IDC_BUTTON_RELOAD               1043
 #define IDC_COMBO_PRESET                1044
+#define IDC_COMBO_PRESETS               1044
 #define IDC_BUTTON_PRESET_LOAD          1045
 #define IDC_BUTTON_PRESET_SAVE          1046
+#define IDC_BUTTON_SAVE_PROFILE         1046
 #define IDC_BUTTON_PRESET_DELETE        1047
 
 // Next default values for new objects
