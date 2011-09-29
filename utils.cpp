@@ -1,4 +1,28 @@
 #include "stdafx.h"
+
+#include "utils.h"
+
+namespace vk_uploader
+{
+    pfc::string8 trim (const pfc::string8 &p_str)
+    {
+        auto is_trim_char = [] (char c) -> bool { return c == ' ' || c == '\n' || c == '\t'; };
+
+        t_size str_len = p_str.get_length ();
+
+        t_size left = 0;
+        while (left < str_len && is_trim_char (p_str[left])) left++;
+
+        t_size right = str_len - 1;
+        while (right > left && is_trim_char (p_str[right])) right--;
+
+        pfc::string8 p_out = p_str;
+        p_out.truncate (right + 1);
+        p_out.remove_chars (0, left);
+        return p_out;
+    }
+}
+
 //{"error":{"error_code":3,"error_msg":"Unknown method passed","request_params":[{"key":"oauth","value":"1"},{"key":"method","value":"sdfsf"},{"key":"access_token","value":"95e72c49dba8a93b95580d3ef395cf166f695ee95ea3c9e844b707319bbbc66"}]}}
 
 

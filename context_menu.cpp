@@ -28,7 +28,7 @@ namespace vk_uploader
                 return true;
             }
 
-            GUID get_guid () override { return m_profile.m_guid; }
+            GUID get_guid () override { return static_api_ptr_t<up::manager>()->get_profile_guid (m_profile.m_name); }
 
             bool is_mappable_shortcut () override { return true; }
 

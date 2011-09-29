@@ -1,11 +1,14 @@
 #include "stdafx.h"
 
 #include "upload_setup_dlg.h"
+#include "utils.h"
 
 namespace vk_uploader
 {
     namespace upload_profiles
     {
+        namespace strcvt = pfc::stringcvt;
+
         class upload_setup_dlg : public CAxDialogImpl<upload_setup_dlg>
         {
         public:
@@ -32,7 +35,7 @@ namespace vk_uploader
 
                 static_api_ptr_t<upload_profiles::manager>()->get_profiles (m_profiles);
                 m_profiles.for_each ([this] (profile p) {
-                    m_combo_profiles.AddString (pfc::stringcvt::string_os_from_utf8 (p.m_name));
+                    m_combo_profiles.AddString (strcvt::string_os_from_utf8 (p.m_name));
                 });
 
                 ShowWindow (SW_SHOWNORMAL);
@@ -43,11 +46,32 @@ namespace vk_uploader
 
             HRESULT on_save_profile (WORD, WORD, HWND, BOOL&)
             {
-                pfc::string8 profile_name = string_utf8_from_window (m_combo_profiles);
-                str_trim (profile_name);
+                pfc::string8 profile_name = get_window_text_trimmed (m_combo_profiles);
 
-                if (profile_name.get_length ()) {
-                    //uMessageBox (nullptr, pfc::string_formatter () << "\"" << profile_name << "\"", "", MB_OK);
+                if (profile_name.length () > 0) {
+                    static_api_ptr_t<upload_profiles::manager> api;
+
+                    auto index = m_combo_profiles.FindStringExact (0, strcvt::string_os_from_utf8 (profile_name));
+                    if (index != CB_ERR) { // update existing profile
+                        profile p;
+                        get_current_profile (p);
+                        api->save_profile (p);
+                        m_profiles[index] = p;
+                    }
+                    else {
+                        try {
+                            profile p = api->new_profile (profile_name);
+                            get_current_profile (p);
+                            api->save_profile (p);
+
+                            m_profiles.add_item (p);
+                            m_combo_profiles.AddString (strcvt::string_os_from_utf8 (profile_name));
+                        }
+                        catch (std::exception &e) {
+                            uMessageBox (*this, e.what (), "Error", MB_OK | MB_ICONERROR);
+                            return FALSE;
+                        }  
+                    }
                 }
 
                 return TRUE;
@@ -57,20 +81,10 @@ namespace vk_uploader
 
             void on_destroy () { m_pos.RemoveWindow (*this); }
 
-            void str_trim (pfc::string8 &str)
+            void get_current_profile (profile &p)
             {
-                auto is_trim_char = [] (char c) -> bool { return c == ' ' || c == '\n' || c == '\t'; };
-                
-                t_size str_len = str.get_length ();
-
-                t_size left = 0;
-                while (left < str_len && is_trim_char (str[left])) left++;
-
-                t_size right = str_len - 1;
-                while (right > left && is_trim_char (str[right])) right--;
-
-                str.truncate (right + 1);
-                str.remove_chars (0, left);
+                p.m_album = get_window_text_trimmed (m_combo_albums);
+                p.m_post_on_wall = m_check_post_on_wall.IsChecked ();
             }
 
             CComboBox m_combo_albums, m_combo_profiles;

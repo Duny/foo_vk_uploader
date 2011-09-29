@@ -143,6 +143,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="upload_setup_dlg.h" />
     <ClInclude Include="upload_thread.h" />
+    <ClInclude Include="utils.h" />
     <ClInclude Include="vk_api.h" />
   </ItemGroup>
   <ItemGroup>

@@ -8,3 +8,5 @@
 
 #include "json/reader.h"
 #include "json/value.h"
+
+#define COMPONENT_NAME "foo_vk_uploader"
