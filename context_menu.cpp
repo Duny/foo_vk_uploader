@@ -13,7 +13,7 @@ namespace vk_uploader
         {
             bool get_display_data (pfc::string_base &p_out, unsigned &p_displayflags, metadb_handle_list_cref p_data, const GUID &p_caller) override
             {
-                p_out = m_profile.m_name;
+                p_out = m_profile_name;
                 return true;
             }
 
@@ -28,15 +28,15 @@ namespace vk_uploader
                 return true;
             }
 
-            GUID get_guid () override { return static_api_ptr_t<up::manager>()->get_profile_guid (m_profile.m_name); }
+            GUID get_guid () override { return static_api_ptr_t<up::manager>()->get_profile_guid (m_profile_name); }
 
             bool is_mappable_shortcut () override { return true; }
 
         protected:
-            up::profile m_profile;
+            pfc::string8 m_profile_name;
 
         public:
-            node_root_leaf (const up::profile &p_profile) : m_profile (p_profile) {}
+            node_root_leaf (const pfc::string8 &p_profile_name) : m_profile_name (p_profile_name) {}
         };
 
         class node_root_leaf_default : public node_root_leaf
@@ -47,11 +47,8 @@ namespace vk_uploader
             }
 
         public:
-            node_root_leaf_default () : 
-              node_root_leaf (up::default_profile)
-              {
-                  m_profile.m_name = "Upload to vk..."; // hack to set custom text to the menu item
-              }
+            node_root_leaf_default () : node_root_leaf ("Upload to vk...") // hack to set custom text on the menu item)
+            { }
         };
 
         class node_root_popup : public contextmenu_item_node_root_popup
@@ -64,7 +61,7 @@ namespace vk_uploader
 
             t_size get_children_count () override
             {
-                return static_api_ptr_t<up::manager>()->get_count ()
+                return static_api_ptr_t<up::manager>()->get_profile_count ()
                     + 1 // separator
                     + 1; // default item
             }
@@ -73,9 +70,9 @@ namespace vk_uploader
             {
                 static_api_ptr_t<up::manager> api;
 
-                auto profile_count = api->get_count ();
+                auto profile_count = api->get_profile_count ();
                 if (p_index < profile_count)
-                    return new node_root_leaf (api->get_profile (p_index));
+                    return new node_root_leaf (api->get_profile_name (p_index));
                 else if (p_index == profile_count)
                     return new contextmenu_item_node_separator ();
                 else
@@ -95,7 +92,7 @@ namespace vk_uploader
             //! Instantiates a context menu item (including sub-node tree for items that contain dynamically-generated sub-items).
             contextmenu_item_node_root * instantiate_item (unsigned p_index, metadb_handle_list_cref p_data, const GUID &p_caller) override
             {
-                if (static_api_ptr_t<up::manager>()->get_count () > 0)
+                if (static_api_ptr_t<up::manager>()->get_profile_count () > 0)
                     return new node_root_popup ();
                 else
                     return new node_root_leaf_default ();

@@ -10,7 +10,18 @@ namespace vk_uploader
 
         struct profile_internal : profile
         {
+            pfc::string8 m_name;
             GUID m_guid;
+
+            profile &operator= (const profile &other)
+            {
+                m_album = other.m_album;
+                m_post_on_wall = other.m_post_on_wall;
+
+                return *this;
+            }
+
+            bool operator== (const profile_internal &other) const { return m_name == other.m_name; }
         };
 
         FB2K_STREAM_READER_OVERLOAD(profile_internal)
@@ -27,61 +38,61 @@ namespace vk_uploader
         {
             static const GUID g_profiles_guid;
             static cfg_objList<profile_internal> g_profiles;
+            
+            profile_internal & find_profile (const pfc::string8 &p_name) const
+            {
+                for (t_size i = 0, n = g_profiles.get_size (); i < n; i++)
+                    if (pfc::stricmp_ascii (p_name, g_profiles[i].m_name) == 0)
+                        return g_profiles[i];
 
-        public:
-            t_size get_count () const override
+                throw exception_profile_not_found ();
+            }
+
+            t_size get_profile_count () const override
             {
                 return g_profiles.get_count ();
             }
 
-            const profile &get_profile (t_size p_index) const override
+            pfc::string8 get_profile_name (t_size p_index) const override
             {
                 if (p_index < g_profiles.get_count ())
-                    return g_profiles.get_item_ref (p_index);
+                    return g_profiles[p_index].m_name;
                 else
                     throw exception_profile_not_found ();
             }
 
-            void get_profiles (pfc::list_t<profile> &p_out) const override
+            GUID get_profile_guid (const pfc::string8 &p_name) const override
             {
-                p_out = g_profiles;
+                return find_profile (p_name).m_guid;
             }
 
-            GUID get_profile_guid (pfc::string8 &p_name) const override
+            profile get_profile (const pfc::string8 &p_name) const override
             {
-                for (t_size i = 0, n = g_profiles.get_size (); i < n; i++)
-                    if (pfc::stricmp_ascii (p_name, g_profiles[i].m_name) == 0)
-                        return g_profiles[i].m_guid;
-
-                throw exception_profile_not_found ();
+                return find_profile (p_name);
             }
 
-            profile new_profile (const pfc::string8 &p_name) const override
+            void save_profile (const pfc::string8 &p_profile_name, const profile &p_profile) override
             {
-                for (t_size i = 0, n = g_profiles.get_size (); i < n; i++)
-                    if (pfc::stricmp_ascii (p_name, g_profiles[i].m_name) == 0)
-                        throw exception_duplicated_profile ();
+                try {
+                    profile_internal &p = find_profile (p_profile_name);
+                    p = p_profile;
+                } catch (exception_profile_not_found) {
+                    profile_internal p;
 
-                profile_internal p;
+                    HRESULT res = CoCreateGuid (&p.m_guid);
+                    if (res != S_OK) throw exception_create_guid_fail ();
+                    p.m_name = p_profile_name;
 
-                HRESULT res = CoCreateGuid (&p.m_guid);
-                if (res != S_OK) throw exception_create_guid_fail ();
-                p.m_name = p_name;
-                g_profiles.add_item (p);
-
-                return p;
-            }
-
-            void save_profile (const profile &p_profile) override
-            {
-                for (t_size i = 0, n = g_profiles.get_size (); i < n; i++) {
-                    if (pfc::stricmp_ascii (p_profile.m_name, g_profiles[i].m_name) == 0) {
-                        g_profiles[i].m_album = p_profile.m_album;
-                        g_profiles[i].m_post_on_wall = p_profile.m_post_on_wall;
-                        return;
-                    }
+                    p = p_profile;
+                    g_profiles.add_item (p);
                 }
-                throw exception_profile_not_found ();
+            }
+
+            void delete_profile (const pfc::string8 &p_name)
+            {
+                try {
+                    g_profiles.remove_item (find_profile (p_name));
+                } catch (...) {}
             }
         };
 

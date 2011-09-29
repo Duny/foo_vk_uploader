@@ -22,6 +22,7 @@ namespace vk_uploader
                 COMMAND_ID_HANDLER(IDCANCEL, on_cancel)
                 COMMAND_ID_HANDLER(IDC_BUTTON_SAVE_PROFILE, on_save_profile)
                 COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PROFILE, on_load_profile)
+                COMMAND_ID_HANDLER(IDC_BUTTON_DELETE_PROFILE, on_delete_profile)
                 MSG_WM_CLOSE(close)
                 MSG_WM_DESTROY(on_destroy)
             END_MSG_MAP()
@@ -34,48 +35,33 @@ namespace vk_uploader
                 m_combo_profiles.Attach (GetDlgItem (IDC_COMBO_PRESETS));
                 m_check_post_on_wall.Attach (GetDlgItem (IDC_CHECK_POST_ON_WALL));
 
-                static_api_ptr_t<upload_profiles::manager>()->get_profiles (m_profiles);
-                m_profiles.for_each ([this] (profile p) {
-                    m_combo_profiles.AddString (strcvt::string_os_from_utf8 (p.m_name));
-                });
+                static_api_ptr_t<upload_profiles::manager> api;
+                for (t_size i = 0, n = api->get_profile_count (); i < n; i++)
+                    m_combo_profiles.AddString (strcvt::string_os_from_utf8 (api->get_profile_name (i)));
 
                 ShowWindow (SW_SHOWNORMAL);
                 return 0;
             }
-
-            HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
 
             HRESULT on_save_profile (WORD, WORD, HWND, BOOL&)
             {
                 pfc::string8 profile_name = get_window_text_trimmed (m_combo_profiles);
 
                 if (profile_name.length () > 0) {
-                    static_api_ptr_t<upload_profiles::manager> api;
-
-                    auto index = m_combo_profiles.FindStringExact (0, strcvt::string_os_from_utf8 (profile_name));
                     try {
-                        if (index != CB_ERR) { // update existing profile
-                            profile p;
-                            get_current_profile (p);
-                            api->save_profile (p);
-                            m_profiles[index] = p;
-                        }
-                        else {
-                            profile p = api->new_profile (profile_name);
-                            get_current_profile (p);
-                            api->save_profile (p);
-
-                            m_profiles.add_item (p);
-                            m_combo_profiles.AddString (strcvt::string_os_from_utf8 (profile_name));
-                        }
+                        static_api_ptr_t<upload_profiles::manager>()->save_profile (profile_name, get_current_profile ());
                     }
-                    catch (std::exception &e) {
-                        uMessageBox (*this, e.what (), "Error", MB_OK | MB_ICONERROR);
+                    catch (std::exception e) {
+                        uMessageBox (*this, e.what (), COMPONENT_NAME, MB_OK | MB_ICONERROR);
                         return FALSE;
                     }
                     catch (...) {
                         return FALSE;
                     }
+
+                    strcvt::string_os_from_utf8 p_name (profile_name);
+                    if (m_combo_profiles.FindStringExact (0, p_name) == CB_ERR)
+                        m_combo_profiles.AddString (p_name);
                 }
 
                 return TRUE;
@@ -83,30 +69,46 @@ namespace vk_uploader
 
             HRESULT on_load_profile (WORD, WORD, HWND, BOOL&)
             {
-                auto index = m_combo_profiles.GetCurSel ();
-                if (index != CB_ERR) {
-                    profile p = m_profiles[index];
+                pfc::string8 profile_name = get_window_text_trimmed (m_combo_profiles);
+                if (profile_name.length () > 0) {
+                    try {
+                        profile p = static_api_ptr_t<upload_profiles::manager>()->get_profile (profile_name);
 
-                    auto i = m_combo_albums.FindStringExact (0, strcvt::string_os_from_utf8 (p.m_album);
-                    if (i != CB_ERR)
-                        m_combo_albums.SetCurSel (i);
-                    else
-                        m_combo_albums.SetWindowText (strcvt::string_os_from_utf8 (p.m_album));
+                        auto i = m_combo_albums.FindStringExact (0, strcvt::string_os_from_utf8 (p.m_album));
+                        if (i != CB_ERR)
+                            m_combo_albums.SetCurSel (i);
+                        else
+                            m_combo_albums.SetWindowText (strcvt::string_os_from_utf8 (p.m_album));
 
-                    m_check_post_on_wall.SetCheck (p.m_post_on_wall);
+                        m_check_post_on_wall.ToggleCheck (p.m_post_on_wall);
+                    } catch (...) { }
                 }
 
                 return TRUE;
             }
 
+            HRESULT on_delete_profile (WORD, WORD, HWND, BOOL&)
+            {
+                pfc::string8 profile_name = get_window_text_trimmed (m_combo_profiles);
+                if (profile_name.length () > 0) {
+                    static_api_ptr_t<upload_profiles::manager>()->delete_profile (profile_name);
+                }
+
+                return TRUE;
+            }
+
+            HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
+
             void close () { DestroyWindow (); }
 
             void on_destroy () { m_pos.RemoveWindow (*this); }
 
-            void get_current_profile (profile &p)
+            profile get_current_profile ()
             {
+                profile p;
                 p.m_album = get_window_text_trimmed (m_combo_albums);
                 p.m_post_on_wall = m_check_post_on_wall.IsChecked ();
+                return p;
             }
 
             CComboBox m_combo_albums, m_combo_profiles;
