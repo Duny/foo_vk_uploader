@@ -17,9 +17,11 @@
 #define IDC_COMBO_PRESET                1044
 #define IDC_COMBO_PRESETS               1044
 #define IDC_BUTTON_PRESET_LOAD          1045
+#define IDC_BUTTON_LOAD_PROFILE         1045
 #define IDC_BUTTON_PRESET_SAVE          1046
 #define IDC_BUTTON_SAVE_PROFILE         1046
 #define IDC_BUTTON_PRESET_DELETE        1047
+#define IDC_BUTTON_DELETE_PROFILE       1047
 
 // Next default values for new objects
 // 

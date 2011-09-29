@@ -21,6 +21,7 @@ namespace vk_uploader
                 MSG_WM_INITDIALOG(on_init_dialog)
                 COMMAND_ID_HANDLER(IDCANCEL, on_cancel)
                 COMMAND_ID_HANDLER(IDC_BUTTON_SAVE_PROFILE, on_save_profile)
+                COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PROFILE, on_load_profile)
                 MSG_WM_CLOSE(close)
                 MSG_WM_DESTROY(on_destroy)
             END_MSG_MAP()
@@ -52,14 +53,14 @@ namespace vk_uploader
                     static_api_ptr_t<upload_profiles::manager> api;
 
                     auto index = m_combo_profiles.FindStringExact (0, strcvt::string_os_from_utf8 (profile_name));
-                    if (index != CB_ERR) { // update existing profile
-                        profile p;
-                        get_current_profile (p);
-                        api->save_profile (p);
-                        m_profiles[index] = p;
-                    }
-                    else {
-                        try {
+                    try {
+                        if (index != CB_ERR) { // update existing profile
+                            profile p;
+                            get_current_profile (p);
+                            api->save_profile (p);
+                            m_profiles[index] = p;
+                        }
+                        else {
                             profile p = api->new_profile (profile_name);
                             get_current_profile (p);
                             api->save_profile (p);
@@ -67,11 +68,32 @@ namespace vk_uploader
                             m_profiles.add_item (p);
                             m_combo_profiles.AddString (strcvt::string_os_from_utf8 (profile_name));
                         }
-                        catch (std::exception &e) {
-                            uMessageBox (*this, e.what (), "Error", MB_OK | MB_ICONERROR);
-                            return FALSE;
-                        }  
                     }
+                    catch (std::exception &e) {
+                        uMessageBox (*this, e.what (), "Error", MB_OK | MB_ICONERROR);
+                        return FALSE;
+                    }
+                    catch (...) {
+                        return FALSE;
+                    }
+                }
+
+                return TRUE;
+            }
+
+            HRESULT on_load_profile (WORD, WORD, HWND, BOOL&)
+            {
+                auto index = m_combo_profiles.GetCurSel ();
+                if (index != CB_ERR) {
+                    profile p = m_profiles[index];
+
+                    auto i = m_combo_albums.FindStringExact (0, strcvt::string_os_from_utf8 (p.m_album);
+                    if (i != CB_ERR)
+                        m_combo_albums.SetCurSel (i);
+                    else
+                        m_combo_albums.SetWindowText (strcvt::string_os_from_utf8 (p.m_album));
+
+                    m_check_post_on_wall.SetCheck (p.m_post_on_wall);
                 }
 
                 return TRUE;
