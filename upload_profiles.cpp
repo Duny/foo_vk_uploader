@@ -13,12 +13,10 @@ namespace vk_uploader
             pfc::string8 m_name;
             GUID m_guid;
 
-            profile &operator= (const profile &other)
+            void set (const profile &other)
             {
                 m_album = other.m_album;
                 m_post_on_wall = other.m_post_on_wall;
-
-                return *this;
             }
 
             bool operator== (const profile_internal &other) const { return m_name == other.m_name; }
@@ -63,7 +61,11 @@ namespace vk_uploader
 
             GUID get_profile_guid (const pfc::string8 &p_name) const override
             {
-                return find_profile (p_name).m_guid;
+                try {
+                    return find_profile (p_name).m_guid;
+                } catch (exception_profile_not_found) {
+                    return pfc::guid_null;
+                }
             }
 
             profile get_profile (const pfc::string8 &p_name) const override
@@ -71,28 +73,32 @@ namespace vk_uploader
                 return find_profile (p_name);
             }
 
-            void save_profile (const pfc::string8 &p_profile_name, const profile &p_profile) override
+            bool save_profile (const pfc::string8 &p_profile_name, const profile &p_profile) override
             {
                 try {
-                    profile_internal &p = find_profile (p_profile_name);
-                    p = p_profile;
+                    find_profile (p_profile_name).set (p_profile);
                 } catch (exception_profile_not_found) {
                     profile_internal p;
 
-                    HRESULT res = CoCreateGuid (&p.m_guid);
-                    if (res != S_OK) throw exception_create_guid_fail ();
-                    p.m_name = p_profile_name;
+                    if (CoCreateGuid (&p.m_guid) != S_OK)
+                        return false;
 
-                    p = p_profile;
+                    p.m_name = p_profile_name;
+                    p.set (p_profile);
+
                     g_profiles.add_item (p);
                 }
+                return true;
             }
 
-            void delete_profile (const pfc::string8 &p_name)
+            bool delete_profile (const pfc::string8 &p_name)
             {
                 try {
                     g_profiles.remove_item (find_profile (p_name));
-                } catch (...) {}
+                } catch (exception_profile_not_found) {
+                    return false;
+                }
+                return true;
             }
         };
 

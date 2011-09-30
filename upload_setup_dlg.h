@@ -14,9 +14,10 @@ namespace vk_uploader
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(upload_setup_dialog)
         };
 
-
         // {407762AB-7464-4EF1-B3E6-3E95CBB62367}
         __declspec(selectany) const GUID upload_setup_dialog::class_guid = 
         { 0x407762ab, 0x7464, 0x4ef1, { 0xb3, 0xe6, 0x3e, 0x95, 0xcb, 0xb6, 0x23, 0x67 } };
     }
+
+    typedef static_api_ptr_t<upload_profiles::upload_setup_dialog> get_setup_dialog;
 }

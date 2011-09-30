@@ -9,7 +9,7 @@ namespace vk_uploader
     {
         namespace strcvt = pfc::stringcvt;
 
-        class upload_setup_dlg : public CAxDialogImpl<upload_setup_dlg>
+        class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>
         {
         public:
 	        enum { IDD = IDD_UPLOAD_SETUP };
@@ -48,17 +48,11 @@ namespace vk_uploader
                 pfc::string8 profile_name = get_window_text_trimmed (m_combo_profiles);
 
                 if (profile_name.length () > 0) {
-                    try {
-                        static_api_ptr_t<upload_profiles::manager>()->save_profile (profile_name, get_current_profile ());
-                    }
-                    catch (std::exception e) {
-                        uMessageBox (*this, e.what (), COMPONENT_NAME, MB_OK | MB_ICONERROR);
+                    if (!get_profile_manager ()->save_profile (profile_name, get_profile ())) {
+                        uMessageBox (*this, "Couldn't save preset", COMPONENT_NAME, MB_OK | MB_ICONERROR);
                         return FALSE;
                     }
-                    catch (...) {
-                        return FALSE;
-                    }
-
+                    
                     strcvt::string_os_from_utf8 p_name (profile_name);
                     if (m_combo_profiles.FindStringExact (0, p_name) == CB_ERR)
                         m_combo_profiles.AddString (p_name);
@@ -72,16 +66,10 @@ namespace vk_uploader
                 pfc::string8 profile_name = get_window_text_trimmed (m_combo_profiles);
                 if (profile_name.length () > 0) {
                     try {
-                        profile p = static_api_ptr_t<upload_profiles::manager>()->get_profile (profile_name);
-
-                        auto i = m_combo_albums.FindStringExact (0, strcvt::string_os_from_utf8 (p.m_album));
-                        if (i != CB_ERR)
-                            m_combo_albums.SetCurSel (i);
-                        else
-                            m_combo_albums.SetWindowText (strcvt::string_os_from_utf8 (p.m_album));
-
-                        m_check_post_on_wall.ToggleCheck (p.m_post_on_wall);
-                    } catch (...) { }
+                        set_profile (get_profile_manager ()->get_profile (profile_name));
+                    } catch (exception_profile_not_found) {
+                        ShowTip (m_combo_profiles, L"Specified preset doesn't exists");
+                    }
                 }
 
                 return TRUE;
@@ -91,7 +79,12 @@ namespace vk_uploader
             {
                 pfc::string8 profile_name = get_window_text_trimmed (m_combo_profiles);
                 if (profile_name.length () > 0) {
-                    static_api_ptr_t<upload_profiles::manager>()->delete_profile (profile_name);
+                    if (!get_profile_manager ()->delete_profile (profile_name))
+                        ShowTip (m_combo_profiles, L"Specified preset doesn't exists");
+
+                    auto i = m_combo_profiles.FindStringExact (0, strcvt::string_os_from_utf8 (profile_name));
+                    if (i != CB_ERR)
+                        m_combo_profiles.DeleteString (i);
                 }
 
                 return TRUE;
@@ -103,12 +96,23 @@ namespace vk_uploader
 
             void on_destroy () { m_pos.RemoveWindow (*this); }
 
-            profile get_current_profile ()
+            profile get_profile () const
             {
                 profile p;
                 p.m_album = get_window_text_trimmed (m_combo_albums);
                 p.m_post_on_wall = m_check_post_on_wall.IsChecked ();
                 return p;
+            }
+
+            void set_profile (const profile &p)
+            {
+                auto i = m_combo_albums.FindStringExact (0, strcvt::string_os_from_utf8 (p.m_album));
+                if (i != CB_ERR)
+                    m_combo_albums.SetCurSel (i);
+                else
+                    m_combo_albums.SetWindowText (strcvt::string_os_from_utf8 (p.m_album));
+
+                m_check_post_on_wall.ToggleCheck (p.m_post_on_wall);
             }
 
             CComboBox m_combo_albums, m_combo_profiles;

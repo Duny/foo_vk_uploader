@@ -7,8 +7,6 @@ namespace vk_uploader
 {
     namespace conext_menu
     {
-        namespace up = upload_profiles;
-
         class node_root_leaf : public contextmenu_item_node_root_leaf
         {
             bool get_display_data (pfc::string_base &p_out, unsigned &p_displayflags, metadb_handle_list_cref p_data, const GUID &p_caller) override
@@ -28,7 +26,7 @@ namespace vk_uploader
                 return true;
             }
 
-            GUID get_guid () override { return static_api_ptr_t<up::manager>()->get_profile_guid (m_profile_name); }
+            GUID get_guid () override { return get_profile_manager ()->get_profile_guid (m_profile_name); }
 
             bool is_mappable_shortcut () override { return true; }
 
@@ -43,7 +41,7 @@ namespace vk_uploader
         {
             void execute (metadb_handle_list_cref p_data, const GUID &p_caller) override
             {
-                static_api_ptr_t<up::upload_setup_dialog>()->show (p_data);
+                get_setup_dialog ()->show (p_data);
             }
 
         public:
@@ -61,14 +59,14 @@ namespace vk_uploader
 
             t_size get_children_count () override
             {
-                return static_api_ptr_t<up::manager>()->get_profile_count ()
+                return get_profile_manager ()->get_profile_count ()
                     + 1 // separator
                     + 1; // default item
             }
 
             contextmenu_item_node * get_child (t_size p_index) override
             {
-                static_api_ptr_t<up::manager> api;
+                static_api_ptr_t<upload_profiles::manager> api;
 
                 auto profile_count = api->get_profile_count ();
                 if (p_index < profile_count)
@@ -92,7 +90,7 @@ namespace vk_uploader
             //! Instantiates a context menu item (including sub-node tree for items that contain dynamically-generated sub-items).
             contextmenu_item_node_root * instantiate_item (unsigned p_index, metadb_handle_list_cref p_data, const GUID &p_caller) override
             {
-                if (static_api_ptr_t<up::manager>()->get_profile_count () > 0)
+                if (get_profile_manager ()->get_profile_count () > 0)
                     return new node_root_popup ();
                 else
                     return new node_root_leaf_default ();
