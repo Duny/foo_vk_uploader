@@ -21,7 +21,7 @@ namespace vk_uploader
         public:
             virtual t_size get_profile_count () const = 0;
 
-            // throws exception_profile_not_found if index out of bound
+            // returns empty string if index is out of bound
             virtual pfc::string8 get_profile_name (t_size p_index) const = 0;
 
             // returns pfc::guid_null if profile not found

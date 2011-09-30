@@ -10,7 +10,7 @@ namespace vk_uploader
         return trim (string_utf8_from_window (wnd).get_ptr ());
     }
 
-    class string_utf8_from_combo
+    /*class string_utf8_from_combo
     {
     public:
         string_utf8_from_combo (const CComboBox &p_combo, int p_index)
@@ -32,7 +32,7 @@ namespace vk_uploader
 
     private:
         pfc::string8 m_data;
-    };
+    };*/
 }
 
 #endif

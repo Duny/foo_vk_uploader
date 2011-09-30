@@ -56,7 +56,7 @@ namespace vk_uploader
                 if (p_index < g_profiles.get_count ())
                     return g_profiles[p_index].m_name;
                 else
-                    throw exception_profile_not_found ();
+                    return "";
             }
 
             GUID get_profile_guid (const pfc::string8 &p_name) const override

@@ -50,13 +50,15 @@ namespace vk_uploader
                 if (profile_name.length () > 0) {
                     if (!get_profile_manager ()->save_profile (profile_name, get_profile ())) {
                         uMessageBox (*this, "Couldn't save preset", COMPONENT_NAME, MB_OK | MB_ICONERROR);
-                        return FALSE;
                     }
-                    
-                    strcvt::string_os_from_utf8 p_name (profile_name);
-                    if (m_combo_profiles.FindStringExact (0, p_name) == CB_ERR)
-                        m_combo_profiles.AddString (p_name);
+                    else {
+                        strcvt::string_os_from_utf8 p_name (profile_name);
+                        if (m_combo_profiles.FindStringExact (0, p_name) == CB_ERR)
+                            m_combo_profiles.AddString (p_name);
+                    }
                 }
+                else
+                    ShowTip (m_combo_profiles, L"Please enter preset name");
 
                 return TRUE;
             }
@@ -71,6 +73,8 @@ namespace vk_uploader
                         ShowTip (m_combo_profiles, L"Specified preset doesn't exists");
                     }
                 }
+                else
+                    ShowTip (m_combo_profiles, L"Please enter preset name");
 
                 return TRUE;
             }
@@ -86,6 +90,8 @@ namespace vk_uploader
                     if (i != CB_ERR)
                         m_combo_profiles.DeleteString (i);
                 }
+                else
+                    ShowTip (m_combo_profiles, L"Please enter preset name");
 
                 return TRUE;
             }
