@@ -8,10 +8,9 @@ namespace vk_uploader
     {
         class NOVTABLE upload_setup_dialog : public service_base
         {
+            FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(upload_setup_dialog)
         public:
             virtual void show (metadb_handle_list_cref p_items) = 0;
-
-            FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(upload_setup_dialog)
         };
 
         // {407762AB-7464-4EF1-B3E6-3E95CBB62367}

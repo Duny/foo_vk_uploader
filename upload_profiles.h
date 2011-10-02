@@ -18,6 +18,7 @@ namespace vk_uploader
 
         class NOVTABLE manager : public service_base
         {
+            FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
         public:
             virtual t_size get_profile_count () const = 0;
 
@@ -37,8 +38,6 @@ namespace vk_uploader
 
             // returns false then given profile does not exists
             virtual bool delete_profile (const pfc::string8 &p_name) = 0;
-
-            FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
         };
 
         // {92CF789D-2064-428A-827D-B04CD5320F83}

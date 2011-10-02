@@ -2,6 +2,7 @@
 
 #include "upload_setup_dlg.h"
 #include "utils.h"
+#include "vk_api.h"
 
 namespace vk_uploader
 {
@@ -9,7 +10,7 @@ namespace vk_uploader
     {
         namespace strcvt = pfc::stringcvt;
 
-        class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>
+        class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>, public vk_api::api_callback
         {
         public:
 	        enum { IDD = IDD_UPLOAD_SETUP };
@@ -23,6 +24,7 @@ namespace vk_uploader
                 COMMAND_ID_HANDLER(IDC_BUTTON_SAVE_PROFILE, on_save_profile)
                 COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PROFILE, on_load_profile)
                 COMMAND_ID_HANDLER(IDC_BUTTON_DELETE_PROFILE, on_delete_profile)
+                COMMAND_ID_HANDLER(IDC_BUTTON_REFRESH_ALBUMS, on_refresh_albums)
                 MSG_WM_CLOSE(close)
                 MSG_WM_DESTROY(on_destroy)
             END_MSG_MAP()
@@ -96,6 +98,25 @@ namespace vk_uploader
                 return TRUE;
             }
 
+            HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
+            {
+                static_api_ptr_t<vk_api::profider>()->call_api_async ("audio.getAlbums", *this);
+
+                return TRUE;
+            }
+
+            void on_done (const vk_api::result_t &p_result) override
+            {
+                insync (m_section);
+
+                m_combo_albums.ResetContent ();
+            }
+
+            void on_error (const pfc::string8 &p_message) override
+            {
+                ShowTip (m_combo_albums, strcvt::string_os_from_utf8 (p_message));
+            }
+
             HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
 
             void close () { DestroyWindow (); }
@@ -126,6 +147,8 @@ namespace vk_uploader
 
             metadb_handle_list_cref m_items;
             pfc::list_t<profile> m_profiles;
+
+            critical_section m_section;
 
             static const GUID guid_dialog_pos;
             static cfgDialogPosition m_pos;

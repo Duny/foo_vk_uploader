@@ -6,10 +6,9 @@ namespace vk_uploader
 {
     class NOVTABLE login_dialog : public service_base
     {
+        FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(login_dialog)
     public:
         virtual void show () = 0;
-
-        FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(login_dialog)
     };
 
 

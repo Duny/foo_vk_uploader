@@ -1,25 +1,63 @@
 #include "stdafx.h"
 
+#include "vk_api_invoker.h"
 
-#include "vk_api.h"
+// information about calling vk api can be found here:
+// http://vkontakte.ru/developers.php?oid=-1&p=%D0%92%D0%B7%D0%B0%D0%B8%D0%BC%D0%BE%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B5_%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D1%8F_%D1%81_API
+
+// information about api methods is located there:
+// http://vkontakte.ru/developers.php?o=-1&p=%D0%9E%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5_%D0%BC%D0%B5%D1%82%D0%BE%D0%B4%D0%BE%D0%B2_API&s=0
 
 namespace vk_uploader
 {
     namespace vk_api
     {
-        /*const char *vk_api::g_app_id = "2435833";
-        const char *vk_api::g_redirect_url = "http://api.vkontakte.ru/blank.html";
-        pfc::string8 vk_api::g_auth_url;*/
+        class request_builder
+        {
+            pfc::string8 m_url;
+        public:
+            request_builder () {}
 
-        //void vk_api::init ()
-        //{
-        //    {
-        //        g_auth_url = "http://api.vkontakte.ru/oauth/authorize?client_id="; g_auth_url += g_app_id;
-        //        g_auth_url += "&scope=audio&redirect_uri="; g_auth_url += g_redirect_url;
-        //        g_auth_url += "&display=popup&response_type=token";
-        //    }
-        //}
+            operator const char * () const { return m_url.get_ptr (); }
+        };
 
+        class profider_imp : public profider
+        {            
+            class call_api_thread : public pfc::thread
+            {
+                const char *m_api_name;
+                params_t m_api_params;
+                const api_callback &m_api_callback;
+
+                void threadProc () override
+                {
+                    result_t result = static_api_ptr_t<api_invoker>()->invoke (m_api_name, m_api_params);
+                    const_cast<api_callback&>(m_api_callback).on_done (result);
+
+                    delete this;
+                }
+
+                ~call_api_thread () { waitTillDone (); }
+            public:
+                call_api_thread (const char *p_api_name, params_cref p_params, const api_callback &p_callback)
+                    : m_api_name (p_api_name), m_api_params (p_params), m_api_callback (p_callback)
+                { start (); }
+            };
+            
+
+            result_t call_api (const char *p_api_name, params_cref p_params) override
+            {
+                return static_api_ptr_t<api_invoker>()->invoke (p_api_name, p_params);
+            }
+            
+            void call_api_async (const char *p_api_name, params_cref p_params, const api_callback &p_callback) override
+            {
+                new call_api_thread (p_api_name, p_params, p_callback);
+            }
+        };
+        static service_factory_single_t<profider_imp> g_api_profider_factory;
+
+        /*
         //bool vk_api::get_url_params (const pfc::string8 &url, str2str_map &params)
         //{
         //    params.remove_all ();

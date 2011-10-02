@@ -10,6 +10,7 @@
 #define IDC_COMBO_ALBUM                 1040
 #define IDC_COMBO_ALBUMS                1040
 #define IDC_BUTTON_ALBUMS_REFRESH       1041
+#define IDC_BUTTON_REFRESH_ALBUMS       1041
 #define IDC_BUTTON_ALBUM_NEW            1042
 #define IDC_BUTTON_CLOSE                1042
 #define IDC_BUTTON_ALBUM_DELETE         1043
