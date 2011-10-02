@@ -11,7 +11,8 @@ namespace vk_uploader
         {
             void on_init () override
             {
-                static_api_ptr_t<login_dialog>()->show ();
+                login_dlg dlg;
+                dlg.DoModal (core_api::get_main_window ()); 
             }
             void on_quit () override {}
         public:
@@ -20,121 +21,38 @@ namespace vk_uploader
         //static initquit_factory_t<myinitquit> g_initquit;
     }
 
-    class login_dlg :
-        public CAxDialogImpl<login_dlg>,
-        public CDialogResize<login_dlg>,
-        public IDispEventImpl<IDC_IE, login_dlg>
+    LRESULT login_dlg::on_init_dialog (CWindow, LPARAM)
     {
-    public:
-        enum { IDD = IDD_LOGIN };
+        // Init resizing
+        DlgResize_Init ();
+        m_pos.AddWindow (*this);
 
-        pfc::string8 get_final_url () const { return m_final_url; }
+        CAxWindow ie = GetDlgItem (IDC_IE);
+        if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
+            return FALSE;
 
-    private:
-        BEGIN_MSG_MAP_EX(login_dlg)
-            CHAIN_MSG_MAP(CAxDialogImpl<login_dlg>)
-            CHAIN_MSG_MAP(CDialogResize<login_dlg>)
-            COMMAND_ID_HANDLER(IDC_BUTTON_RELOAD, on_reload)
-            COMMAND_ID_HANDLER(IDC_BUTTON_CLOSE, on_close)
-            MSG_WM_INITDIALOG(on_init_dialog)
-            MSG_WM_CLOSE(close)
-            MSG_WM_DESTROY(on_destroy)
-        END_MSG_MAP()
+        reload ();
 
-        BEGIN_DLGRESIZE_MAP(login_dlg)
-            DLGRESIZE_CONTROL(IDC_IE, DLSZ_SIZE_X | DLSZ_SIZE_Y)
-            DLGRESIZE_CONTROL(IDC_BUTTON_RELOAD, DLSZ_MOVE_X)
-            DLGRESIZE_CONTROL(IDC_BUTTON_CLOSE, DLSZ_MOVE_X)
-        END_DLGRESIZE_MAP()
+        return TRUE;
+    }
 
-        BEGIN_SINK_MAP(login_dlg)
-            SINK_ENTRY(IDC_IE, DISPID_NAVIGATECOMPLETE2, on_navigate_complete2)
-        END_SINK_MAP()
+    void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
+    {
+        m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
 
-        LRESULT on_init_dialog (CWindow, LPARAM)
-        {
-            // Init resizing
-            DlgResize_Init ();
-            m_pos.AddWindow (*this);
+        // if address starts from redirect url that means 
+        // user was successfully authorized and we can close dialog window
+        if (m_final_url.find_first (vk_api::string_constants::redirect_url) == 0)
+            close ();
+    }
 
-            CAxWindow ie = GetDlgItem (IDC_IE);
-            if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
-                return FALSE;
+    void login_dlg::reload ()
+    {
+        CComVariant v;
+        m_wb2->Navigate (CComBSTR (vk_api::string_constants::oauth_url), &v, &v, &v, &v);
+        m_final_url.reset ();
+    }
 
-            reload ();
-
-            return TRUE;
-        }
-
-        void __stdcall on_navigate_complete2 (IDispatch*, VARIANT *p_url)
-        {
-            m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-
-            // if address starts from redirect url that means 
-            // user was successfully authorized and we can close dialog window
-            if (m_final_url.find_first (vk_api::string_constants::redirect_url) == 0)
-                close ();
-        }
-
-        HRESULT on_reload (WORD, WORD, HWND, BOOL&) { reload (); return TRUE; }
-        HRESULT on_close (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
-        void on_destroy () { m_pos.RemoveWindow (*this); }
-
-        void reload ()
-        {
-            CComVariant v;
-            m_wb2->Navigate (CComBSTR (vk_api::string_constants::oauth_url), &v, &v, &v, &v);
-            m_final_url.reset ();
-        }
-
-        void close () { EndDialog (IDOK); }
-
-        pfc::string8 m_final_url;
-        CComPtr<IWebBrowser2> m_wb2;
-
-        static const GUID guid_dialog_pos;
-        static cfgDialogPosition m_pos;
-    };
     const GUID login_dlg::guid_dialog_pos = { 0xcc80a64a, 0x44de, 0x4735, { 0x93, 0xdf, 0xc7, 0x92, 0x63, 0xbb, 0x3a, 0x23 } };
     cfgDialogPosition login_dlg::m_pos (guid_dialog_pos);
-
-    
-    class login_dialog_imp : public login_dialog
-    {
-        void show () override
-        {
-            login_dlg ().DoModal (core_api::get_main_window ());
-        }
-    };
-    static service_factory_single_t<login_dialog_imp> g_login_dialog_factory;
-
-    //HRESULT login_dlg::NavigateComplete (_bstr_t URL)
-    //{
-    //    pfc::string8 url (URL);
-    //    str2str_map params;
-
-    //    if (!vk_api::get_url_params (url, params)) {
-		  //  console::formatter () << "foo_vk_uploader: can't parse \"" << url << "\"";
-		  //  return S_OK;
-	   // }
-
-    //    if (params.have_item (pfc::string8 ("error")) || params.have_item (pfc::string8 ("cancel"))) {
-    //        OnClose ();
-		  //  return S_OK;
-    //    }
-
-    //    if (!vk_api::is_redirect_url (url)) // url should start from redirect address
-		  //  return S_OK;
-
-	   // if (!params.have_item (pfc::string8 ("access_token"))) {
-		  //  console::formatter () << "foo_vk_uploader: access_token not found in responce";
-		  //  return S_OK;
-	   // }
-
-	   // vk_access_token = params[pfc::string8 ("access_token")];
-	   // m_result = true;
-	   // EndDialog (TRUE);
-
-    //    return S_OK;
-    //}
 }
