@@ -14,9 +14,9 @@ namespace vk_uploader
             virtual result_t invoke (const char *p_api_name, params_cref p_params) = 0;
         };
 
-        // {415971BA-5773-4843-9D18-09F28074F5F7}
+        // {14E354B1-45C0-412F-9B2E-5D2296A3D691}
         __declspec(selectany) const GUID api_invoker::class_guid = 
-        { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
+        { 0x14e354b1, 0x45c0, 0x412f, { 0x9b, 0x2e, 0x5d, 0x22, 0x96, 0xa3, 0xd6, 0x91 } };
     }
 }
 #endif

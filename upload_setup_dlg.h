@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _FOO_VK_UPLOADER_UPLOAD_SETUP_DLG_H_
+#define _FOO_VK_UPLOADER_UPLOAD_SETUP_DLG_H_
 
 #include "upload_profiles.h"
 
@@ -20,3 +21,4 @@ namespace vk_uploader
 
     typedef static_api_ptr_t<upload_profiles::upload_setup_dialog> get_setup_dialog;
 }
+#endif

@@ -83,6 +83,9 @@
     <ClInclude Include="vk_api_invoker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vk_api_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_vk_uploader.rc">

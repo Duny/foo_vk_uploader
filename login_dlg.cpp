@@ -32,7 +32,6 @@ namespace vk_uploader
             return FALSE;
 
         reload ();
-
         return TRUE;
     }
 
@@ -42,14 +41,15 @@ namespace vk_uploader
 
         // if address starts from redirect url that means 
         // user was successfully authorized and we can close dialog window
-        if (m_final_url.find_first (vk_api::string_constants::redirect_url) == 0)
+        if (m_final_url.find_first (vk_api::string_constants::redirect_url_ok) == 0)
             close ();
     }
 
     void login_dlg::reload ()
     {
         CComVariant v;
-        m_wb2->Navigate (CComBSTR (vk_api::string_constants::oauth_url), &v, &v, &v, &v);
+        m_wb2->Navigate (CComBSTR (vk_api::string_constants::auth_url), &v, &v, &v, &v);
+        //m_wb2->Navigate (CComBSTR ("vk.com"), &v, &v, &v, &v);
         m_final_url.reset ();
     }
 

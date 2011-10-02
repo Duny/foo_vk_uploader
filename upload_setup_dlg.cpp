@@ -100,7 +100,7 @@ namespace vk_uploader
 
             HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
             {
-                static_api_ptr_t<vk_api::profider>()->call_api_async ("audio.getAlbums", *this);
+                static_api_ptr_t<vk_api::profider>()->call_api_async ("getProfiles", *this);
 
                 return TRUE;
             }

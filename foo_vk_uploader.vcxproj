@@ -54,7 +54,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(FB2KSDK);$(JSONCPP)\include\;$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_VK_UPLOADER_EXPORTS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_VK_UPLOADER_EXPORTS;_WIN32_WINNT=0x0600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -146,6 +146,7 @@
     <ClInclude Include="upload_thread.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="vk_api.h" />
+    <ClInclude Include="vk_api_helpers.h" />
     <ClInclude Include="vk_api_invoker.h" />
   </ItemGroup>
   <ItemGroup>
