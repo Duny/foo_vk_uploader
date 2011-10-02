@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include "utils.h"
 #include "login_dlg.h"
 #include "vk_api_invoker.h"
 #include "vk_api_helpers.h"
@@ -23,7 +24,27 @@ namespace vk_uploader
             {
                 login_dlg dlg;
                 dlg.DoModal (core_api::get_main_window ()); 
-                url_params params = dlg.get_final_url ();
+                pfc::string8 redirect_url = dlg.get_final_url ();
+                if (redirect_url.find_first (vk_api::string_constants::redirect_url_ok) != 0)
+                    throw exception_auth_failed ();
+
+                skip_prefix (redirect_url, vk_api::string_constants::redirect_url_ok);
+                skip_prefix (redirect_url, "#session=");
+                redirect_url = url_decode (redirect_url);
+                console::formatter () << redirect_url;
+
+                Json::Reader reader;
+                Json::Value val;
+
+                const char *begin = redirect_url.get_ptr ();
+                const char *end = begin + redirect_url.get_length ();
+                if (!reader.parse (begin, end, val, false) /*|| !val.isObject ()*/)
+                    throw exception_auth_failed ("Couldn't parse redirect url as json");
+
+                
+
+                
+                /*url_params params = redirect_url;
                 console::formatter () << dlg.get_final_url ();
 
                 if (params.have_item (pfc::string8 ("error")))
@@ -32,7 +53,7 @@ namespace vk_uploader
                     throw exception_auth_failed ("Not enough parameters returned by server");
 
                 user_id = params[pfc::string8 ("user_id")];
-                secret = params[pfc::string8 ("access_token")];
+                secret = params[pfc::string8 ("access_token")];*/
             }
         }
 

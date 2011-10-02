@@ -10,6 +10,34 @@ namespace vk_uploader
         return trim (string_utf8_from_window (wnd).get_ptr ());
     }
 
+    inline bool skip_prefix (pfc::string8 &p_string, const char *p_prefix)
+    {
+        if (pfc::strcmp_partial (p_string.get_ptr (), p_prefix) == 0) {
+            p_string.remove_chars (0, pfc::strlen_max (p_prefix, pfc_infinite));
+            return true;
+        }
+        return false;
+    }
+
+    inline pfc::string8 url_decode (const pfc::string8 &p_str)
+    {
+        pfc::string8 out;
+
+        for (t_size i = 0, n = p_str.get_length (); i < n; i++) {
+            char ch = p_str[i];
+            if (ch == '%') {
+                if (i < n - 2) {
+                    auto res = pfc::char_to_hex (p_str[i + 1]) << 4;
+                    res |= pfc::char_to_hex (p_str[i + 2]);
+                    ch = (char)res;
+                    i += 2;
+                }
+            }
+            out.add_char (ch);
+        }
+        return out;
+    }
+
     /*class string_utf8_from_combo
     {
     public:
