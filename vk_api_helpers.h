@@ -63,7 +63,6 @@ namespace vk_uploader
                     m_url += params[i].second;
                     if (i < n - 1) m_url.add_char ('&');
                 }
-                //m_url = "https://api.vkontakte.ru/method/wall.post
             }
 
             operator const char * () const { return m_url.get_ptr (); }

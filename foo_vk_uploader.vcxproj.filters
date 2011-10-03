@@ -54,6 +54,9 @@
     <ClCompile Include="vk_api_invoker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vk_auth.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -84,6 +87,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vk_api_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vk_auth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
