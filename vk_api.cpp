@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "utils.h"
-#include "login_dlg.h"
 #include "vk_api_invoker.h"
 #include "vk_api_helpers.h"
 
@@ -9,67 +8,16 @@ namespace vk_uploader
 {
     namespace vk_api
     {
-        namespace cfg
-        {
-            /*namespace guid
-            {
-                const GUID user_id = { 0x2e35f7c1, 0xd070, 0x4f01, { 0xb1, 0x2d, 0x6c, 0x21, 0x7f, 0x12, 0xa2, 0x93 } };
-                const GUID secret = { 0xaf320b92, 0x3a7f, 0x490d, { 0xa5, 0x34, 0x91, 0x3a, 0x14, 0xe3, 0x51, 0x68 } };
-            }*/
+        // string constants
+        const pfc::string8 string_constants::app_id = "2435833";
 
-            //static cfg_string cfg_user_id (guid::user_id, ""), cfg_secret (guid::secret, "");
-            static pfc::string8 user_id, secret;
+        const pfc::string8 string_constants::redirect_url_ok = "http://vk.com/api/login_success.html";
+        const pfc::string8 string_constants::redirect_url_err = "http://vk.com/api/login_failure.html";
+        const pfc::string8 string_constants::auth_url = pfc::string_formatter () 
+            << "http://vk.com/login.php?app=" << app_id << "&layout=popup&type=browser&settings=audio,offline";
 
-            void get_auth ()
-            {
-                login_dlg dlg;
-                dlg.DoModal (core_api::get_main_window ()); 
-                pfc::string8 redirect_url = dlg.get_final_url ();
-                if (redirect_url.find_first (vk_api::string_constants::redirect_url_ok) != 0)
-                    throw exception_auth_failed ();
+        const pfc::string8 string_constants::api_frontend_url = "http://api.vk.com/api.php";
 
-                skip_prefix (redirect_url, vk_api::string_constants::redirect_url_ok);
-                skip_prefix (redirect_url, "#session=");
-                redirect_url = url_decode (redirect_url);
-                console::formatter () << redirect_url;
-
-                Json::Reader reader;
-                Json::Value val;
-
-                const char *begin = redirect_url.get_ptr ();
-                const char *end = begin + redirect_url.get_length ();
-                if (!reader.parse (begin, end, val, false) /*|| !val.isObject ()*/)
-                    throw exception_auth_failed ("Couldn't parse redirect url as json");
-
-                
-
-                
-                /*url_params params = redirect_url;
-                console::formatter () << dlg.get_final_url ();
-
-                if (params.have_item (pfc::string8 ("error")))
-                    throw exception_auth_failed (params["error"]);
-                else if (!params.have_item (pfc::string8 ("user_id")) || !params.have_item (pfc::string8 ("access_token")))
-                    throw exception_auth_failed ("Not enough parameters returned by server");
-
-                user_id = params[pfc::string8 ("user_id")];
-                secret = params[pfc::string8 ("access_token")];*/
-            }
-        }
-
-        const char *string_constants::get_user_id ()
-        {
-            if (cfg::user_id.is_empty ())
-                cfg::get_auth ();
-            return cfg::user_id;
-        }
-
-        const char *string_constants::get_sid ()
-        {
-            if (cfg::secret.is_empty ())
-                cfg::get_auth ();
-            return cfg::secret;
-        }
 
         class profider_imp : public profider
         {            

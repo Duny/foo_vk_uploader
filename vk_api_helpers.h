@@ -1,6 +1,8 @@
 #ifndef _FOO_VK_UPLOADER_VK_API_HELPERS_H_
 #define _FOO_VK_UPLOADER_VK_API_HELPERS_H_
 
+#include "vk_auth.h"
+
 namespace vk_uploader
 {
     namespace vk_api
@@ -27,11 +29,12 @@ namespace vk_uploader
             signature (params_cref p_params)
             {
                 string_formatter_hasher_md5 hasher;
+                const auth_info &info = static_api_ptr_t<authorization>()->get_info ();
 
-                hasher << string_constants::get_user_id ();
+                hasher << info.m_user_id;
                 for (t_size i = 0, n = p_params.get_size (); i < n; i++)
                     hasher << p_params[i].first << "=" << p_params[i].second;
-                //hasher << string_constants::get_sid ();
+                hasher << info.m_secret;
 
                 hasher.get_result (m_sig);
             }
@@ -53,7 +56,7 @@ namespace vk_uploader
                 //params.sort ();
 
                 params.add_item (std::make_pair ("sig", signature (p_params)));
-                params.add_item (std::make_pair ("sid", string_constants::get_sid ()));
+                params.add_item (std::make_pair ("sid", static_api_ptr_t<authorization>()->get_info ().m_secret));
 
                 m_url = string_constants::api_frontend_url;
                 m_url.add_char ('?');
@@ -68,37 +71,37 @@ namespace vk_uploader
             operator const char * () const { return m_url.get_ptr (); }
         };
 
-        class url_params : public pfc::map_t<pfc::string8 const, pfc::string8>
-        {
-        public:
-            url_params (const pfc::string8 &p_url)
-            {
-                // find start symbol of url params
-                t_size pos;
+        //class url_params : public pfc::map_t<pfc::string8 const, pfc::string8>
+        //{
+        //public:
+        //    url_params (const pfc::string8 &p_url)
+        //    {
+        //        // find start symbol of url params
+        //        t_size pos;
 
-                if ((pos = p_url.find_first ('#')) != pfc_infinite || (pos = p_url.find_first ('?')) != pfc_infinite) {
-                    t_size len = p_url.length (), pos2, pos3;
-                    pfc::string8 name, value;
-                    for (pos = pos; pos < len; pos = pos3) {
-                        if ((pos2 = p_url.find_first ('=', pos)) == pfc_infinite)
-                            break;
+        //        if ((pos = p_url.find_first ('#')) != pfc_infinite || (pos = p_url.find_first ('?')) != pfc_infinite) {
+        //            t_size len = p_url.length (), pos2, pos3;
+        //            pfc::string8 name, value;
+        //            for (pos = pos; pos < len; pos = pos3) {
+        //                if ((pos2 = p_url.find_first ('=', pos)) == pfc_infinite)
+        //                    break;
 
-                        if ((pos3 = p_url.find_first ('&', pos2)) == pfc_infinite)
-                            pos3 = len;
+        //                if ((pos3 = p_url.find_first ('&', pos2)) == pfc_infinite)
+        //                    pos3 = len;
 
-                        name.reset (); name.prealloc (pos2 - pos);
-                        for (t_size i = pos + 1; i < pos2; i++)
-                            name.add_char (p_url[i]);
+        //                name.reset (); name.prealloc (pos2 - pos);
+        //                for (t_size i = pos + 1; i < pos2; i++)
+        //                    name.add_char (p_url[i]);
 
-                        value.reset (); value.prealloc (pos3 - pos2);
-                        for (t_size i = pos2 + 1; i < pos3; i++)
-                            value.add_char (p_url[i]);
+        //                value.reset (); value.prealloc (pos3 - pos2);
+        //                for (t_size i = pos2 + 1; i < pos3; i++)
+        //                    value.add_char (p_url[i]);
 
-                        this->find_or_add (name) = value;
-                    }
-                }
-            }
-        };
+        //                this->find_or_add (name) = value;
+        //            }
+        //        }
+        //    }
+        //};
     }
 }
 #endif

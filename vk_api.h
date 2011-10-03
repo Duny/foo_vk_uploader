@@ -14,29 +14,12 @@ namespace vk_uploader
         public:
             static const pfc::string8 app_id;
 
-            // !!!Desktop authorization http://vkontakte.ru/developers.php?id=-1_21239305&s=1
-
-            // for meaning of next 2 const see
-            // http://vkontakte.ru/developers.php?oid=-1&p=%D0%94%D0%B8%D0%B0%D0%BB%D0%BE%D0%B3_%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D0%B8_OAuth
+            // Desktop authorization http://vkontakte.ru/developers.php?id=-1_21239305&s=1            
             static const pfc::string8 redirect_url_ok, redirect_url_err;
             static const pfc::string8 auth_url;
 
             static const pfc::string8 api_frontend_url;
-
-            // returns user_id from auth GET request
-            static const char *get_user_id ();
-            // return access_token from auth GET request
-            static const char *get_sid ();
         };
-
-        __declspec(selectany) const pfc::string8 string_constants::app_id = "2435833";
-        __declspec(selectany) const pfc::string8 string_constants::redirect_url_ok = "http://vk.com/api/login_success.html";
-        __declspec(selectany) const pfc::string8 string_constants::redirect_url_err = "http://vk.com/api/login_failure.html";
-        __declspec(selectany) const pfc::string8 string_constants::auth_url = pfc::string_formatter () 
-            << "http://vk.com/login.php?app=" << app_id << "&layout=popup&type=browser&settings=audio,offline";
-
-        __declspec(selectany) const pfc::string8 string_constants::api_frontend_url = "http://api.vk.com/api.php";
-
 
         typedef pfc::list_t<std::pair<pfc::string8, pfc::string8>> params_t;
         typedef params_t const & params_cref;
@@ -46,7 +29,6 @@ namespace vk_uploader
         {
         public:
             virtual void on_done (const result_t &p_result) = 0;
-
             virtual void on_error (const pfc::string8 &p_message) = 0;
         };
 

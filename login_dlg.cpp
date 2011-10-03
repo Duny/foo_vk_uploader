@@ -39,13 +39,13 @@ namespace vk_uploader
     {
         m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
 
-        if (m_final_url.find_first (vk_api::string_constants::redirect_url_err) == 0) {
-            if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDYES)
+        /*if (m_final_url.find_first (vk_api::string_constants::redirect_url_err) == 0) {
+            
                 reload ();
             else
                 close ();
         }
-        else if (m_final_url.find_first (vk_api::string_constants::redirect_url_ok) == 0)
+        else if (m_final_url.find_first (vk_api::string_constants::redirect_url_ok) == 0)*/
             close ();
     }
 
