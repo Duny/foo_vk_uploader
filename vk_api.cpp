@@ -30,7 +30,7 @@ namespace vk_uploader
 
                 void threadProc () override
                 {
-                    result_t result = static_api_ptr_t<api_invoker>()->invoke (m_api_name, m_api_params);
+                    value_t result = static_api_ptr_t<api_invoker>()->invoke (m_api_name, m_api_params);
                     const_cast<api_callback&>(m_api_callback).on_done (result);
                     delete this;
                 }
@@ -43,7 +43,7 @@ namespace vk_uploader
             };
             
 
-            result_t call_api (const char *p_api_name, params_cref p_params) override
+            value_t call_api (const char *p_api_name, params_cref p_params) override
             {
                 return static_api_ptr_t<api_invoker>()->invoke (p_api_name, p_params);
             }

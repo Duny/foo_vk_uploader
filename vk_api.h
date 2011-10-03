@@ -1,8 +1,6 @@
 #ifndef _FOO_VK_UPLOADER_VK_API_H_
 #define _FOO_VK_UPLOADER_VK_API_H_
 
-#include "boost/smart_ptr.hpp"
-
 namespace vk_uploader
 {
     namespace vk_api
@@ -23,12 +21,11 @@ namespace vk_uploader
 
         typedef pfc::list_t<std::pair<pfc::string8, pfc::string8>> params_t;
         typedef params_t const & params_cref;
-        typedef boost::shared_ptr<Json::Value> result_t;
         
         class api_callback
         {
         public:
-            virtual void on_done (const result_t &p_result) = 0;
+            virtual void on_done (const value_t &p_result) = 0;
             virtual void on_error (const pfc::string8 &p_message) = 0;
         };
 
@@ -39,8 +36,8 @@ namespace vk_uploader
             enum { max_api_calls_per_second = 3 };
 
             // makes synchronous api call 
-            virtual result_t call_api (const char *p_api_name, params_cref p_params) = 0;
-            inline result_t call_api (const char *p_api_name) { return call_api (p_api_name, params_t ()); }
+            virtual value_t call_api (const char *p_api_name, params_cref p_params) = 0;
+            inline value_t call_api (const char *p_api_name) { return call_api (p_api_name, params_t ()); }
 
             // make asynchronous call
             virtual void call_api_async (const char *p_api_name, params_cref p_params, const api_callback &p_callback) = 0;

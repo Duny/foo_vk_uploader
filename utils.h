@@ -38,6 +38,15 @@ namespace vk_uploader
         return out;
     }
 
+    inline value_t from_string (const pfc::string8 & p_data) {
+        const char *begin = p_data.get_ptr ();
+        const char *end = begin + p_data.get_length ();
+        Json::Reader reader;
+        value_t out (new Json::Value);
+        if (!reader.parse (begin, end, *out, false))
+            out.reset ();
+        return out;
+    }
     /*class string_utf8_from_combo
     {
     public:

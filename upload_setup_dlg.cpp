@@ -100,12 +100,12 @@ namespace vk_uploader
 
             HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
             {
-                static_api_ptr_t<vk_api::profider>()->call_api_async ("getProfiles", *this);
+                static_api_ptr_t<vk_api::profider>()->call_api_async ("audio.getAlbums", *this);
 
                 return TRUE;
             }
 
-            void on_done (const vk_api::result_t &p_result) override
+            void on_done (const value_t &p_result) override
             {
                 insync (m_section);
 

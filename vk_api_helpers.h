@@ -36,6 +36,8 @@ namespace vk_uploader
                     hasher << p_params[i].first << "=" << p_params[i].second;
                 hasher << info.m_secret;
 
+                console::formatter () << hasher.get_ptr ();
+
                 hasher.get_result (m_sig);
             }
 
@@ -51,11 +53,14 @@ namespace vk_uploader
                 params_t params = p_params;
 
                 params.add_item (std::make_pair ("api_id", string_constants::app_id));
+                //params.add_item (std::make_pair ("format", "json"));
+                
                 params.add_item (std::make_pair ("method", p_api_name));
+                params.add_item (std::make_pair ("v", "3.0"));
 
                 //params.sort ();
 
-                params.add_item (std::make_pair ("sig", signature (p_params)));
+                params.add_item (std::make_pair ("sig", signature (params)));
                 params.add_item (std::make_pair ("sid", static_api_ptr_t<authorization>()->get_info ().m_secret));
 
                 m_url = string_constants::api_frontend_url;

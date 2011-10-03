@@ -11,7 +11,7 @@ namespace vk_uploader
     {
         class NOVTABLE authorization_imp : public authorization
         {
-            auth_info m_info;
+            mutable auth_info m_info;
 
             const auth_info & get_info () const override
             {
@@ -33,16 +33,20 @@ namespace vk_uploader
 
                     skip_prefix (redirect_url, vk_api::string_constants::redirect_url_ok);
                     skip_prefix (redirect_url, "#session=");
-                    redirect_url = url_decode (redirect_url);
-                    console::formatter () << redirect_url;
 
-                    Json::Reader reader;
-                    Json::Value val;
-
-                    const char *begin = redirect_url.get_ptr ();
-                    const char *end = begin + redirect_url.get_length ();
-                    if (!reader.parse (begin, end, val, false) /*|| !val.isObject ()*/)
+                    value_t data = from_string (url_decode (redirect_url));
+                    if (!data || !data->isObject () || data->size () != 5)
                         throw exception_auth_failed ("Couldn't parse redirect url as json");
+
+                    try {
+                        auth_info new_info;
+                        new_info.m_user_id = pfc::format_uint ((*data)["mid"].asUInt ());
+                        new_info.m_secret = (*data)["secret"].asCString ();
+                        new_info.m_sid = (*data)["sid"].asCString ();
+                        m_info = new_info;
+                    } catch (...) {
+                        throw exception_auth_failed ("Not enough parameters");
+                    }
                 }
                 return m_info;
             }

@@ -38,15 +38,7 @@ namespace vk_uploader
     void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
     {
         m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-
-        /*if (m_final_url.find_first (vk_api::string_constants::redirect_url_err) == 0) {
-            
-                reload ();
-            else
-                close ();
-        }
-        else if (m_final_url.find_first (vk_api::string_constants::redirect_url_ok) == 0)*/
-            close ();
+        close ();
     }
 
     void login_dlg::reload ()

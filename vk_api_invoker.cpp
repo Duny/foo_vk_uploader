@@ -23,7 +23,7 @@ namespace vk_uploader
             win32_event m_invoker_avaliable;
 
 
-            result_t make_request (const char *p_api_name, params_cref p_params)
+            value_t make_request (const char *p_api_name, params_cref p_params)
             {
                 try {
                     request_url_builder url (p_api_name, p_params);
@@ -41,10 +41,10 @@ namespace vk_uploader
                 } catch (std::exception e) {
                 }
 
-                return result_t ();
+                return value_t ();
             }
 
-            result_t invoke (const char *p_api_name, params_cref p_params) override
+            value_t invoke (const char *p_api_name, params_cref p_params) override
             {
                 m_invoker_avaliable.wait_for (-1);
                 insync (m_section);
@@ -66,7 +66,7 @@ namespace vk_uploader
                 }
 
                 m_last_call_time = GetTickCount64 ();
-                result_t result = make_request (p_api_name, p_params);
+                value_t result = make_request (p_api_name, p_params);
 
                 return result;
             }

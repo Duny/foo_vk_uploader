@@ -9,7 +9,7 @@ namespace vk_uploader
         {
             pfc::string8 m_user_id;
             pfc::string8 m_secret;
-            pfc::string8 m_sid; // session id
+            pfc::string8 m_sid;
         };
 
         class NOVTABLE authorization : public service_base
