@@ -31,21 +31,20 @@ namespace vk_uploader
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             return FALSE;
 
-        reload ();
+        navigate (vk_api::string_constants::auth_url);
         return TRUE;
     }
 
     void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
     {
         m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-        close ();
+        //close ();
     }
 
-    void login_dlg::reload ()
+    void login_dlg::navigate (const char *to)
     {
         CComVariant v;
-        m_wb2->Navigate (CComBSTR (vk_api::string_constants::auth_url), &v, &v, &v, &v);
-        //m_wb2->Navigate (CComBSTR ("vk.com"), &v, &v, &v, &v);
+        m_wb2->Navigate (CComBSTR (to), &v, &v, &v, &v);
         m_final_url.reset ();
     }
 

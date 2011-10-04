@@ -33,8 +33,9 @@ namespace vk_uploader
 
                     skip_prefix (redirect_url, vk_api::string_constants::redirect_url_ok);
                     skip_prefix (redirect_url, "#session=");
+                    redirect_url = url_decode (redirect_url);
 
-                    value_t data = from_string (url_decode (redirect_url));
+                    value_t data = from_string (redirect_url);
                     if (!data || !data->isObject () || data->size () != 5)
                         throw exception_auth_failed ("Couldn't parse redirect url as json");
 

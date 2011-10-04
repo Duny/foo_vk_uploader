@@ -9,16 +9,19 @@ namespace vk_uploader
     {  
         class string_formatter_hasher_md5 : public pfc::string_formatter
         {
-            mutable hasher_md5_state m_state;
-            static_api_ptr_t<hasher_md5> m_hasher;
         public:
-            string_formatter_hasher_md5 () { m_hasher->initialize(m_state); }
-
-            void get_result (pfc::string8 &p_out) const 
+            void get_result (pfc::string8 &p_out) 
             {
-                const char *str = pfc::string_formatter::get_ptr ();
-                m_hasher->process_string (m_state, str);
-                p_out = pfc::format_hexdump (m_hasher->get_result (m_state).m_data, sizeof (hasher_md5_result), "");
+                hasher_md5_state state;
+                static_api_ptr_t<hasher_md5> hasher;
+                hasher->initialize (state);
+
+                hasher->process_string (state, get_ptr ());
+                p_out = pfc::format_hexdump (hasher->get_result (state).m_data, sizeof (hasher_md5_result), "");
+                /*pfc::string8 s;
+                for (t_size i = 0, n = p_out.get_length (); i < n; i++)
+                    s.add_char (pfc::ascii_tolower (p_out[i]));
+                p_out = s;*/
             }
         };
 
