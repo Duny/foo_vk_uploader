@@ -9,7 +9,7 @@ namespace vk_uploader
     namespace vk_api
     {
         // string constants
-        const pfc::string8 string_constants::app_id = "2435833";
+        const pfc::string8 string_constants::app_id = "2632594";
 
         const pfc::string8 string_constants::redirect_url_ok = "http://vk.com/api/login_success.html";
         const pfc::string8 string_constants::redirect_url_err = "http://vk.com/api/login_failure.html";
