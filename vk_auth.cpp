@@ -9,6 +9,9 @@ namespace vk_uploader
 {
     namespace vk_api
     {
+        const char *redirect_url_ok = "http://vk.com/api/login_success.html";
+        const char *redirect_url_err = "http://vk.com/api/login_failure.html";
+
         class NOVTABLE authorization_imp : public authorization
         {
             mutable auth_info m_info;
@@ -23,7 +26,7 @@ namespace vk_uploader
                         login_dlg dlg;
                         dlg.DoModal (core_api::get_main_window ()); 
                         redirect_url = dlg.get_final_url ();
-                        if (redirect_url.find_first (vk_api::string_constants::redirect_url_ok) == 0)
+                        if (redirect_url.find_first (redirect_url_ok) == 0)
                             done = true;
                         else {
                             if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
@@ -31,7 +34,7 @@ namespace vk_uploader
                         }
                     }
 
-                    skip_prefix (redirect_url, vk_api::string_constants::redirect_url_ok);
+                    skip_prefix (redirect_url, redirect_url_ok);
                     skip_prefix (redirect_url, "#session=");
                     redirect_url = url_decode (redirect_url);
 

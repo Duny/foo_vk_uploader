@@ -31,14 +31,17 @@ namespace vk_uploader
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             return FALSE;
 
-        navigate (vk_api::string_constants::auth_url);
+        pfc::string_formatter auth_url;
+        auth_url << "http://vk.com/login.php?app=" << vk_api::app_id << "&layout=popup&type=browser&settings=audio,offline";
+
+        navigate (auth_url);
         return TRUE;
     }
 
     void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
     {
         m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-        //close ();
+        close ();
     }
 
     void login_dlg::navigate (const char *to)

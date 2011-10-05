@@ -7,19 +7,10 @@ namespace vk_uploader
     {   
         PFC_DECLARE_EXCEPTION (exception_auth_failed, pfc::exception, "Authorization failed");
 
-        class string_constants
-        {
-        public:
-            static const pfc::string8 app_id;
+        __declspec(selectany) extern const char *app_id = "2632594";
 
-            // Desktop authorization http://vkontakte.ru/developers.php?id=-1_21239305&s=1            
-            static const pfc::string8 redirect_url_ok, redirect_url_err;
-            static const pfc::string8 auth_url;
-
-            static const pfc::string8 api_frontend_url;
-        };
-
-        typedef pfc::list_t<std::pair<pfc::string8, pfc::string8>> params_t;
+        typedef std::pair<pfc::string8, pfc::string8> url_parameter; // pain of name=value
+        typedef pfc::list_t<url_parameter> params_t;
         typedef params_t const & params_cref;
         
         class api_callback

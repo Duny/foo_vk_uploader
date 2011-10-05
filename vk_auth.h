@@ -12,6 +12,8 @@ namespace vk_uploader
             pfc::string8 m_sid;
         };
 
+        // Authorization process for desktop apps: http://vkontakte.ru/developers.php?id=-1_21239305&s=1
+
         class NOVTABLE authorization : public service_base
         {
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(authorization)

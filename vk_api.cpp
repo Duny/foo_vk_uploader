@@ -8,17 +8,6 @@ namespace vk_uploader
 {
     namespace vk_api
     {
-        // string constants
-        const pfc::string8 string_constants::app_id = "2632594";
-
-        const pfc::string8 string_constants::redirect_url_ok = "http://vk.com/api/login_success.html";
-        const pfc::string8 string_constants::redirect_url_err = "http://vk.com/api/login_failure.html";
-        const pfc::string8 string_constants::auth_url = pfc::string_formatter () 
-            << "http://vk.com/login.php?app=" << app_id << "&layout=popup&type=browser&settings=audio,offline";
-
-        const pfc::string8 string_constants::api_frontend_url = "http://api.vk.com/api.php";
-
-
         class profider_imp : public profider
         {            
             // must be instanced with operator new

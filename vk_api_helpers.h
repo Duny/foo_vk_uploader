@@ -49,31 +49,26 @@ namespace vk_uploader
 
         class request_url_builder
         {
-            pfc::string8 m_url;
+            pfc::string_formatter m_url;
         public:
             request_url_builder (const char *p_api_name, params_cref p_params) 
             {
                 params_t params = p_params;
-
-                params.add_item (std::make_pair ("api_id", string_constants::app_id));
+                params.add_item (std::make_pair ("api_id", vk_api::app_id));
                 //params.add_item (std::make_pair ("format", "json"));
-                
                 params.add_item (std::make_pair ("method", p_api_name));
                 params.add_item (std::make_pair ("v", "3.0"));
 
-                //params.sort ();
+                params.sort_t<>([] (const url_parameter &one, const url_parameter &two) -> int 
+                    { return pfc::stricmp_ascii (one.first, two.first); }
+                );
 
                 params.add_item (std::make_pair ("sig", signature (params)));
-                params.add_item (std::make_pair ("sid", static_api_ptr_t<authorization>()->get_info ().m_secret));
+                params.add_item (std::make_pair ("sid", static_api_ptr_t<authorization>()->get_info ().m_sid));
 
-                m_url = string_constants::api_frontend_url;
-                m_url.add_char ('?');
-                for (t_size i = 0, n = params.get_size (); i < n; i++) {
-                    m_url += params[i].first;
-                    m_url.add_char ('=');
-                    m_url += params[i].second;
-                    if (i < n - 1) m_url.add_char ('&');
-                }
+                m_url << "http://api.vk.com/api.php?";
+                for (t_size i = 0, n = params.get_size (); i < n; i++)
+                    m_url << params[i].first << "=" << params[i].second << (i < n - 1 ? "&" : "");
             }
 
             operator const char * () const { return m_url.get_ptr (); }
