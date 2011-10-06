@@ -2,6 +2,7 @@
 
 #include "login_dlg.h"
 #include "vk_api.h"
+#include "vk_api_helpers.h"
 
 namespace vk_uploader
 {
@@ -33,7 +34,6 @@ namespace vk_uploader
 
         pfc::string_formatter auth_url;
         auth_url << "http://vk.com/login.php?app=" << vk_api::app_id << "&layout=popup&type=browser&settings=audio,offline";
-
         navigate (auth_url);
         return TRUE;
     }

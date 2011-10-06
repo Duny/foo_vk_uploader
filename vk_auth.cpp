@@ -14,45 +14,64 @@ namespace vk_uploader
 
         class NOVTABLE authorization_imp : public authorization
         {
-            mutable auth_info m_info;
+            mutable pfc::string8 m_user_id;
+            mutable pfc::string8 m_secret;
+            mutable pfc::string8 m_sid;
 
-            const auth_info & get_info () const override
+            void get_auth () const
             {
-                if (m_info.m_secret.is_empty () || m_info.m_sid.is_empty () || m_info.m_user_id.is_empty ()) {
-                    pfc::string8 redirect_url;
+                pfc::string8 redirect_url;
 
-                    bool done = false;
-                    while (!done) {
-                        login_dlg dlg;
-                        dlg.DoModal (core_api::get_main_window ()); 
-                        redirect_url = dlg.get_final_url ();
-                        if (redirect_url.find_first (redirect_url_ok) == 0)
-                            done = true;
-                        else {
-                            if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
-                                throw exception_auth_failed ();
-                        }
-                    }
-
-                    skip_prefix (redirect_url, redirect_url_ok);
-                    skip_prefix (redirect_url, "#session=");
-                    redirect_url = url_decode (redirect_url);
-
-                    value_t data = from_string (redirect_url);
-                    if (!data || !data->isObject () || data->size () != 5)
-                        throw exception_auth_failed ("Couldn't parse redirect url as json");
-
-                    try {
-                        auth_info new_info;
-                        new_info.m_user_id = pfc::format_uint ((*data)["mid"].asUInt ());
-                        new_info.m_secret = (*data)["secret"].asCString ();
-                        new_info.m_sid = (*data)["sid"].asCString ();
-                        m_info = new_info;
-                    } catch (...) {
-                        throw exception_auth_failed ("Not enough parameters");
+                bool done = false;
+                while (!done) {
+                    login_dlg dlg;
+                    dlg.DoModal (core_api::get_main_window ()); 
+                    redirect_url = dlg.get_final_url ();
+                    if (redirect_url.find_first (redirect_url_ok) == 0)
+                        done = true;
+                    else {
+                        if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
+                            throw exception_auth_failed ();
                     }
                 }
-                return m_info;
+
+                skip_prefix (redirect_url, redirect_url_ok);
+                skip_prefix (redirect_url, "#session=");
+                redirect_url = url_decode (redirect_url);
+
+                value_t data = from_string (redirect_url);
+                if (!data || !data->isObject () || data->size () != 5)
+                    throw exception_auth_failed ("Couldn't parse redirect url as json");
+
+                try {
+                    pfc::string8 new_user_id = pfc::format_uint ((*data)["mid"].asUInt ());
+                    pfc::string8 new_secret = (*data)["secret"].asCString ();
+                    pfc::string8 new__sid = (*data)["sid"].asCString ();
+                    
+                    m_user_id = new_user_id;
+                    m_secret = new_secret;
+                    m_sid = new__sid;
+                } catch (...) {
+                    throw exception_auth_failed ("Not enough parameters");
+                }
+            }
+
+            const char *get_user_id () const override
+            {
+                if (m_user_id.is_empty ()) get_auth ();
+                return m_user_id;
+            }
+
+            const char *get_secret () const override
+            {
+                if (m_secret.is_empty ()) get_auth ();
+                return m_secret;
+            }
+
+            const char *get_sid () const override
+            {
+                if (m_sid.is_empty ()) get_auth ();
+                return m_sid;
             }
         };
 

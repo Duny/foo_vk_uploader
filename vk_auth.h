@@ -5,20 +5,15 @@ namespace vk_uploader
 {
     namespace vk_api
     {
-        struct auth_info
-        {
-            pfc::string8 m_user_id;
-            pfc::string8 m_secret;
-            pfc::string8 m_sid;
-        };
-
         // Authorization process for desktop apps: http://vkontakte.ru/developers.php?id=-1_21239305&s=1
 
         class NOVTABLE authorization : public service_base
         {
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(authorization)
         public:
-            virtual const auth_info & get_info () const = 0;
+            virtual const char *get_user_id () const = 0;
+            virtual const char *get_secret () const = 0;
+            virtual const char *get_sid () const = 0;
         };
 
         // {911ED77D-3820-4B8E-BE4F-6EF30029670B}

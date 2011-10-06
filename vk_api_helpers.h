@@ -32,12 +32,11 @@ namespace vk_uploader
             signature (params_cref p_params)
             {
                 string_formatter_hasher_md5 hasher;
-                const auth_info &info = static_api_ptr_t<authorization>()->get_info ();
 
-                hasher << info.m_user_id;
+                hasher << static_api_ptr_t<authorization>()->get_user_id ();
                 for (t_size i = 0, n = p_params.get_size (); i < n; i++)
                     hasher << p_params[i].first << "=" << p_params[i].second;
-                hasher << info.m_secret;
+                hasher << static_api_ptr_t<authorization>()->get_secret ();
 
                 console::formatter () << hasher.get_ptr ();
 
@@ -64,7 +63,7 @@ namespace vk_uploader
                 );
 
                 params.add_item (std::make_pair ("sig", signature (params)));
-                params.add_item (std::make_pair ("sid", static_api_ptr_t<authorization>()->get_info ().m_sid));
+                params.add_item (std::make_pair ("sid", static_api_ptr_t<authorization>()->get_sid ()));
 
                 m_url << "http://api.vk.com/api.php?";
                 for (t_size i = 0, n = params.get_size (); i < n; i++)

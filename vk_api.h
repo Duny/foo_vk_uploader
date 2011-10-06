@@ -26,7 +26,7 @@ namespace vk_uploader
         public:
             enum { max_api_calls_per_second = 3 };
 
-            // makes synchronous api call 
+            // makes synchronous api call
             virtual value_t call_api (const char *p_api_name, params_cref p_params) = 0;
             inline value_t call_api (const char *p_api_name) { return call_api (p_api_name, params_t ()); }
 
