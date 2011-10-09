@@ -2,7 +2,6 @@
 
 #include "login_dlg.h"
 #include "vk_api.h"
-#include "vk_api_helpers.h"
 
 namespace vk_uploader
 {
@@ -32,16 +31,17 @@ namespace vk_uploader
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             return FALSE;
 
-        pfc::string_formatter auth_url;
-        auth_url << "http://vk.com/login.php?app=" << vk_api::app_id << "&layout=popup&type=browser&settings=audio,offline";
+        pfc::string8 auth_url = "http://api.vk.com/oauth/authorize?display=popup&settings=audio,offline&response_type=token&redirect_uri=http://api.vk.com/blank.html&client_id=";
+        auth_url += vk_api::app_id;
         navigate (auth_url);
+        //navigate ("vk.com");
         return TRUE;
     }
 
     void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
     {
         m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-        close ();
+        //close ();
     }
 
     void login_dlg::navigate (const char *to)

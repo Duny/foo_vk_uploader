@@ -2,6 +2,7 @@
 
 #include "vk_api.h"
 #include "vk_auth.h"
+#include "vk_api_helpers.h"
 #include "utils.h"
 #include "login_dlg.h"
 
@@ -9,14 +10,12 @@ namespace vk_uploader
 {
     namespace vk_api
     {
-        const char *redirect_url_ok = "http://vk.com/api/login_success.html";
-        const char *redirect_url_err = "http://vk.com/api/login_failure.html";
+        const char *redirect_url_ok = "http://api.vk.com/blank.html";
 
         class NOVTABLE authorization_imp : public authorization
         {
             mutable pfc::string8 m_user_id;
-            mutable pfc::string8 m_secret;
-            mutable pfc::string8 m_sid;
+            mutable pfc::string8 m_access_token;
 
             void get_auth () const
             {
@@ -35,25 +34,18 @@ namespace vk_uploader
                     }
                 }
 
-                skip_prefix (redirect_url, redirect_url_ok);
-                skip_prefix (redirect_url, "#session=");
-                redirect_url = url_decode (redirect_url);
+                url_params params (redirect_url);
 
-                value_t data = from_string (redirect_url);
-                if (!data || !data->isObject () || data->size () != 5)
-                    throw exception_auth_failed ("Couldn't parse redirect url as json");
+                if (params.have_item (pfc::string8 ("error")))
+                    throw exception_auth_failed (params[pfc::string8 ("error")]);
 
-                try {
-                    pfc::string8 new_user_id = pfc::format_uint ((*data)["mid"].asUInt ());
-                    pfc::string8 new_secret = (*data)["secret"].asCString ();
-                    pfc::string8 new__sid = (*data)["sid"].asCString ();
-                    
-                    m_user_id = new_user_id;
-                    m_secret = new_secret;
-                    m_sid = new__sid;
-                } catch (...) {
-                    throw exception_auth_failed ("Not enough parameters");
+                if (params.have_item (pfc::string8 ("access_token")) && 
+                    params.have_item (pfc::string8 ("user_id"))) {
+                    m_access_token = params[pfc::string8 ("access_token")];
+                    m_user_id = params[pfc::string8 ("user_id")];
                 }
+                else
+                    throw exception_auth_failed ("Unexpected server redirect");
             }
 
             const char *get_user_id () const override
@@ -62,16 +54,10 @@ namespace vk_uploader
                 return m_user_id;
             }
 
-            const char *get_secret () const override
+            const char *get_access_token () const override
             {
-                if (m_secret.is_empty ()) get_auth ();
-                return m_secret;
-            }
-
-            const char *get_sid () const override
-            {
-                if (m_sid.is_empty ()) get_auth ();
-                return m_sid;
+                if (m_access_token.is_empty ()) get_auth ();
+                return m_access_token;
             }
         };
 
