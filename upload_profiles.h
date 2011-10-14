@@ -7,7 +7,10 @@ namespace vk_uploader
     {
         struct profile
         {
-            pfc::string8 m_album; // put uploaded tracks to the album
+            profile () {}
+            profile (t_uint32 album, bool post_on_wall) : m_album (album), m_post_on_wall (post_on_wall) {}
+
+            t_uint32 m_album; // put uploaded tracks to the album
             bool m_post_on_wall;
         };
         extern profile default_profile;
@@ -38,6 +41,13 @@ namespace vk_uploader
 
             // returns false then given profile does not exists
             virtual bool delete_profile (const pfc::string8 &p_name) = 0;
+
+            template <typename t_func>
+            void for_each_profile (t_func p_func) {
+                static_api_ptr_t<upload_profiles::manager> api;
+                t_size n, max = api->get_profile_count ();
+                for (n = 0; n < max; n++) p_func (api->get_profile_name (n));
+            }
         };
 
         // {92CF789D-2064-428A-827D-B04CD5320F83}

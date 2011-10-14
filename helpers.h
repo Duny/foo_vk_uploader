@@ -53,10 +53,12 @@ namespace vk_uploader
     public:
         url_params () {}
         url_params (const pfc::string8 &p_url);
+        // construct from single p_name=p_value pair
+        url_params (const char *p_name, const char *p_value) { find_or_add (pfc::string8 (p_name)) = p_value; }
 
         bool have (const char *p_name) const { return have_item (pfc::string8 (p_name)); }
 
-        pfc::string8 &operator [] (const char *key) { return find_or_add (pfc::string8 (key)); }
+        pfc::string8 &operator [] (const char *p_name) { return find_or_add (pfc::string8 (p_name)); }
     };
     typedef url_params const& params_cref;
         
@@ -69,7 +71,8 @@ namespace vk_uploader
 
         operator const char * () const { return m_url.get_ptr (); }
     };
-    /*class string_utf8_from_combo
+
+    class string_utf8_from_combo
     {
     public:
         string_utf8_from_combo (const CComboBox &p_combo, int p_index)
@@ -79,7 +82,7 @@ namespace vk_uploader
                 pfc::array_t<TCHAR> buf;
                 buf.set_size (str_len + 1);
                 int actual_len = p_combo.GetLBText (p_index, buf.get_ptr ());
-                if (actual_len - 1 == str_len)
+                if (actual_len == str_len)
                     m_data = pfc::stringcvt::string_utf8_from_os (buf.get_ptr ());
             }
         }
@@ -88,10 +91,11 @@ namespace vk_uploader
         inline t_size length () const  {return m_data.length (); }
         inline bool is_empty () const { return length () == 0; }
         inline const char * get_ptr () const { return m_data.get_ptr (); }
+        inline operator const pfc::string8& () const { return m_data; }
 
     private:
         pfc::string8 m_data;
-    };*/
+    };
 }
 
 #endif

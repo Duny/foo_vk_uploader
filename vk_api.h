@@ -36,6 +36,8 @@ namespace vk_uploader
         __declspec(selectany) const GUID profider::class_guid = 
         { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
     }
+
+    typedef static_api_ptr_t<vk_api::profider> get_api_provider;
 }
 
 #include "vk_api_invoker.h"

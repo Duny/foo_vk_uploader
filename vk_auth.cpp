@@ -22,11 +22,11 @@ namespace vk_uploader
 
         FB2K_STREAM_READER_OVERLOAD(auth_data_t)
         {
-            return stream /*>> value.m_user_id >> value.m_access_token >> value.m_timestamp >> value.m_expires_in*/;
+            return stream >> value.m_user_id >> value.m_access_token >> value.m_timestamp >> value.m_expires_in;
         }
         FB2K_STREAM_WRITER_OVERLOAD(auth_data_t)
         {
-            return stream /*<< value.m_user_id << value.m_access_token << value.m_timestamp << value.m_expires_in*/;
+            return stream << value.m_user_id << value.m_access_token << value.m_timestamp << value.m_expires_in;
         }
 
         class NOVTABLE authorization_imp : public authorization
