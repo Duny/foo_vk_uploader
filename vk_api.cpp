@@ -1,8 +1,6 @@
 #include "stdafx.h"
 
-#include "utils.h"
-#include "vk_api_invoker.h"
-#include "vk_api_helpers.h"
+#include "vk_api.h"
 
 namespace vk_uploader
 {
@@ -15,18 +13,18 @@ namespace vk_uploader
             {
                 const char *m_api_name;
                 params_t m_api_params;
-                const api_callback &m_api_callback;
+                api_callback &m_api_callback;
 
                 void threadProc () override
                 {
                     value_t result = static_api_ptr_t<api_invoker>()->invoke (m_api_name, m_api_params);
-                    const_cast<api_callback&>(m_api_callback).on_done (result);
+                    m_api_callback.on_request_done (m_api_name, result);
                     delete this;
                 }
 
                 ~call_api_thread () { waitTillDone (); }
             public:
-                call_api_thread (const char *p_api_name, params_cref p_params, const api_callback &p_callback)
+                call_api_thread (const char *p_api_name, params_cref p_params, api_callback &p_callback)
                     : m_api_name (p_api_name), m_api_params (p_params), m_api_callback (p_callback)
                 { start (); }
             };
@@ -37,7 +35,7 @@ namespace vk_uploader
                 return static_api_ptr_t<api_invoker>()->invoke (p_api_name, p_params);
             }
             
-            void call_api_async (const char *p_api_name, params_cref p_params, const api_callback &p_callback) override
+            void call_api_async (const char *p_api_name, params_cref p_params, api_callback &p_callback) override
             {
                 new call_api_thread (p_api_name, p_params, p_callback);
             }

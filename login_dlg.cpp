@@ -31,7 +31,7 @@ namespace vk_uploader
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             return FALSE;
 
-        pfc::string8 auth_url = "http://api.vk.com/oauth/authorize?display=popup&settings=audio,offline&response_type=token&redirect_uri=http://api.vk.com/blank.html&client_id=";
+        pfc::string8 auth_url = "http://api.vk.com/oauth/authorize?display=popup&scope=audio&response_type=token&redirect_uri=http://api.vk.com/blank.html&client_id=";
         auth_url += vk_api::app_id;
         navigate (auth_url);
         //navigate ("vk.com");
@@ -41,16 +41,15 @@ namespace vk_uploader
     void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
     {
         m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-        //close ();
+        if (m_final_url.find_first ("http://api.vk.com/blank.html") == 0) close ();
     }
 
     void login_dlg::navigate (const char *to)
     {
-        CComVariant v;
-        m_wb2->Navigate (CComBSTR (to), &v, &v, &v, &v);
         m_final_url.reset ();
+        m_wb2->Navigate (CComBSTR (to), nullptr, nullptr, nullptr, nullptr);
     }
 
-    const GUID login_dlg::guid_dialog_pos = { 0xcc80a64a, 0x44de, 0x4735, { 0x93, 0xdf, 0xc7, 0x92, 0x63, 0xbb, 0x3a, 0x23 } };
+    const GUID login_dlg::guid_dialog_pos = { 0xcc80a64a, 0x45de, 0x4735, { 0x93, 0xdf, 0xc7, 0x92, 0x63, 0xbb, 0x3a, 0x23 } };
     cfgDialogPosition login_dlg::m_pos (guid_dialog_pos);
 }

@@ -1,8 +1,6 @@
 #ifndef _FOO_VK_UPLOADER_VK_API_INVOKER_H_
 #define _FOO_VK_UPLOADER_VK_API_INVOKER_H_
 
-#include "vk_api.h"
-
 namespace vk_uploader
 {
     namespace vk_api

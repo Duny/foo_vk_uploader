@@ -1,9 +1,8 @@
 #include "stdafx.h"
 
+#include <time.h>
+
 #include "vk_api.h"
-#include "vk_auth.h"
-#include "vk_api_helpers.h"
-#include "utils.h"
 #include "login_dlg.h"
 
 namespace vk_uploader
@@ -14,13 +13,15 @@ namespace vk_uploader
 
         class NOVTABLE authorization_imp : public authorization
         {
-            mutable pfc::string8 m_user_id;
-            mutable pfc::string8 m_access_token;
-
-            void get_auth () const
+            pfc::string8 m_user_id;
+            pfc::string8 m_access_token;
+            time_t m_timestamp; // time then auth was done
+            t_uint32 m_expires_in; 
+            
+            void get_auth ()
             {
                 pfc::string8 redirect_url;
-
+                
                 bool done = false;
                 while (!done) {
                     login_dlg dlg;
@@ -36,27 +37,35 @@ namespace vk_uploader
 
                 url_params params (redirect_url);
 
-                if (params.have_item (pfc::string8 ("error")))
+                if (params.have ("error"))
                     throw exception_auth_failed (params[pfc::string8 ("error")]);
 
-                if (params.have_item (pfc::string8 ("access_token")) && 
-                    params.have_item (pfc::string8 ("user_id"))) {
-                    m_access_token = params[pfc::string8 ("access_token")];
-                    m_user_id = params[pfc::string8 ("user_id")];
+                if (params.have ("access_token") && params.have ("user_id") && params.have ("expires_in")) {
+                    m_timestamp = time (nullptr);
+                    m_access_token = params["access_token"];
+                    m_user_id = params["user_id"];
+                    m_expires_in = pfc::atoui_ex (params["expires_in"], pfc_infinite);
                 }
                 else
                     throw exception_auth_failed ("Unexpected server redirect");
             }
 
-            const char *get_user_id () const override
+            void check_auth ()
             {
-                if (m_user_id.is_empty ()) get_auth ();
+                if (m_user_id.is_empty () || m_access_token.is_empty () || 
+                    time (nullptr) > (m_timestamp + m_expires_in))
+                    get_auth ();
+            }
+
+            const char *get_user_id () override
+            {
+                check_auth ();
                 return m_user_id;
             }
 
-            const char *get_access_token () const override
+            const char *get_access_token () override
             {
-                if (m_access_token.is_empty ()) get_auth ();
+                check_auth ();
                 return m_access_token;
             }
         };

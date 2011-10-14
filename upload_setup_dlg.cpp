@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "upload_setup_dlg.h"
-#include "utils.h"
 #include "vk_api.h"
 
 namespace vk_uploader
@@ -10,14 +9,29 @@ namespace vk_uploader
     {
         namespace strcvt = pfc::stringcvt;
 
-        class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>, public vk_api::api_callback
+        struct album_t
         {
-        public:
-	        enum { IDD = IDD_UPLOAD_SETUP };
+            album_t (const char *title, t_uint32 id) : m_title (title), m_id  (id) {}
+            album_t () {}
 
-            upload_setup_dlg (metadb_handle_list_cref p_items) : m_items (p_items) {}
+            pfc::string8 m_title;
+            t_uint32 m_id;
+        };
+        typedef cfg_objList<album_t> cfg_album_list_t;
 
-        private:
+        FB2K_STREAM_READER_OVERLOAD(album_t)
+        {
+            return stream >> value.m_title >> value.m_id;
+        }
+        FB2K_STREAM_WRITER_OVERLOAD(album_t)
+        {
+            return stream << value.m_title << value.m_id;
+        }
+
+
+        class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>
+        {
+        
             BEGIN_MSG_MAP_EX(upload_setup_dlg)
                 MSG_WM_INITDIALOG(on_init_dialog)
                 COMMAND_ID_HANDLER(IDCANCEL, on_cancel)
@@ -100,21 +114,31 @@ namespace vk_uploader
 
             HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
             {
-                static_api_ptr_t<vk_api::profider>()->call_api_async ("isAppUser", *this);
+                vk_api::params_t params;
+
+                params.add_item (std::make_pair ("count", "100"));
+                value_t result = static_api_ptr_t<vk_api::profider>()->call_api ("audio.getAlbums", params);
+
+                if (is_response_ok (result)) {
+                    const Json::Value &items = (*result)["response"];
+                    if (items.type () != Json::arrayValue) {
+                        ShowTip (m_combo_albums, L"Unexpected json in album list");
+                        return TRUE;
+                    }
+
+                    m_combo_albums.ResetContent ();
+                    m_albums.remove_all ();
+
+                    for (t_size i = 0, n = items.size (); i < n; i) {
+                        const Json::Value &item = items[i];
+                        m_combo_albums.AddString (pfc::stringcvt::string_os_from_utf8 (items[i]["title"].asCString ()));
+                        m_albums.add_item (album_t (items[i]["title"].asCString (), items[i]["album_id"].asUInt ()));
+                    }
+                }
+                else
+                    ShowTip (m_combo_albums, strcvt::string_os_from_utf8 (get_error_msg (result)));
 
                 return TRUE;
-            }
-
-            void on_done (const value_t &p_result) override
-            {
-                insync (m_section);
-
-                m_combo_albums.ResetContent ();
-            }
-
-            void on_error (const pfc::string8 &p_message) override
-            {
-                ShowTip (m_combo_albums, strcvt::string_os_from_utf8 (p_message));
             }
 
             HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
@@ -148,13 +172,17 @@ namespace vk_uploader
             metadb_handle_list_cref m_items;
             pfc::list_t<profile> m_profiles;
 
-            critical_section m_section;
-
             static const GUID guid_dialog_pos;
             static cfgDialogPosition m_pos;
+
+            static const GUID guid_albums;
+            static cfg_album_list_t m_albums;
+
+            public:
+                enum { IDD = IDD_UPLOAD_SETUP };
+
+                upload_setup_dlg (metadb_handle_list_cref p_items) : m_items (p_items) {}
         };
-        const GUID upload_setup_dlg::guid_dialog_pos = { 0x42daae47, 0x20c, 0x4c25, { 0xba, 0xa1, 0x27, 0x55, 0x7e, 0x75, 0x3d, 0x42 } };
-        cfgDialogPosition upload_setup_dlg::m_pos (guid_dialog_pos);
 
         namespace
         {
@@ -180,5 +208,12 @@ namespace vk_uploader
             }
         };
         static service_factory_single_t<upload_setup_dialog_imp> g_upload_dialog_factory;
+
+
+        const GUID upload_setup_dlg::guid_dialog_pos = { 0x42daae47, 0x20c, 0x4c25, { 0xba, 0xa1, 0x27, 0x55, 0x7e, 0x75, 0x3d, 0x42 } };
+        cfgDialogPosition upload_setup_dlg::m_pos (guid_dialog_pos);
+
+        const GUID upload_setup_dlg::guid_albums = { 0x7a5b3e69, 0xe2b0, 0x4bca, { 0x96, 0xca, 0x3c, 0x4b, 0x52, 0x21, 0xd1, 0x86 } };
+        cfg_album_list_t upload_setup_dlg::m_albums (guid_albums);
     }
 }

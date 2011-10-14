@@ -11,8 +11,8 @@ namespace vk_uploader
         {
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(authorization)
         public:
-            virtual const char *get_user_id () const = 0;
-            virtual const char *get_access_token () const = 0;
+            virtual const char *get_user_id () = 0;
+            virtual const char *get_access_token () = 0;
         };
 
         // {911ED77D-3820-4B8E-BE4F-6EF30029670B}
