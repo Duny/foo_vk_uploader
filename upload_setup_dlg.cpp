@@ -5,7 +5,7 @@
 
 namespace vk_uploader
 {
-    namespace upload_profiles
+    namespace upload_presets
     {
         namespace strcvt = pfc::stringcvt;
 
@@ -37,9 +37,9 @@ namespace vk_uploader
             BEGIN_MSG_MAP_EX(upload_setup_dlg)
                 MSG_WM_INITDIALOG(on_init_dialog)
                 COMMAND_ID_HANDLER(IDCANCEL, on_cancel)
-                COMMAND_ID_HANDLER(IDC_BUTTON_SAVE_PROFILE, on_save_profile)
-                COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PROFILE, on_load_profile)
-                COMMAND_ID_HANDLER(IDC_BUTTON_DELETE_PROFILE, on_delete_profile)
+                COMMAND_ID_HANDLER(IDC_BUTTON_SAVE_PRESET, on_save_preset)
+                COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PRESET, on_load_preset)
+                COMMAND_ID_HANDLER(IDC_BUTTON_DELETE_PRESET, on_delete_preset)
                 COMMAND_ID_HANDLER(IDC_BUTTON_REFRESH_ALBUMS, on_refresh_albums)
                 MSG_WM_CLOSE(close)
                 MSG_WM_DESTROY(on_destroy)
@@ -50,10 +50,10 @@ namespace vk_uploader
                 cfg::pos.AddWindow (*this);
 
                 m_combo_albums.Attach (GetDlgItem (IDC_COMBO_ALBUMS));
-                m_combo_profiles.Attach (GetDlgItem (IDC_COMBO_PRESETS));
+                m_combo_presets.Attach (GetDlgItem (IDC_COMBO_PRESETS));
                 m_check_post_on_wall.Attach (GetDlgItem (IDC_CHECK_POST_ON_WALL));
 
-                get_profile_manager ()->for_each_profile ([&](const pfc::string8 &p_name) { combo_add_string (m_combo_profiles, p_name); });
+                get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name) { combo_add_string (m_combo_presets, p_name); });
 
                 combo_albums_reset ();
                 cfg::albums.for_each ([&](const cfg::album_t &p_album) { combo_albums_add (p_album); });
@@ -62,45 +62,45 @@ namespace vk_uploader
                 return 0;
             }
 
-            HRESULT on_save_profile (WORD, WORD, HWND, BOOL&)
+            HRESULT on_save_preset (WORD, WORD, HWND, BOOL&)
             {
-                pfc::string8 profile_name = get_window_text_trimmed (m_combo_profiles);
+                pfc::string8 profile_name = get_window_text_trimmed (m_combo_presets);
                 if (!profile_name.is_empty ()) {
-                    if (get_profile_manager ()->save_profile (profile_name, get_current_profile ())) {
+                    if (get_preset_manager ()->save_preset (profile_name, get_current_preset ())) {
                         strcvt::string_os_from_utf8 p_name (profile_name);
-                        if (m_combo_profiles.FindStringExact (0, p_name) == CB_ERR)
-                            m_combo_profiles.AddString (p_name);
+                        if (m_combo_presets.FindStringExact (0, p_name) == CB_ERR)
+                            m_combo_presets.AddString (p_name);
                     }
                 }
                 else
-                    ShowTip (m_combo_profiles, L"Please enter preset name");
+                    ShowTip (m_combo_presets, L"Please enter preset name");
 
                 return TRUE;
             } 
 
-            HRESULT on_load_profile (WORD, WORD, HWND, BOOL&)
+            HRESULT on_load_preset (WORD, WORD, HWND, BOOL&)
             {
-                auto index = m_combo_profiles.GetCurSel ();
+                auto index = m_combo_presets.GetCurSel ();
                 if (index != CB_ERR) {
                     try {
-                        set_current_profile (get_profile_manager ()->get_profile (string_utf8_from_combo (m_combo_profiles, index)));
-                    } catch (...) { }
+                        set_current_preset (get_preset_manager ()->get_preset (string_utf8_from_combo (m_combo_presets, index)));
+                    } catch (exception_preset_not_found) { }
                 }
                 else
-                    ShowTip (m_combo_profiles, L"Please select preset to load");
+                    ShowTip (m_combo_presets, L"Please select preset to load");
 
                 return TRUE;
             }
 
-            HRESULT on_delete_profile (WORD, WORD, HWND, BOOL&)
+            HRESULT on_delete_preset (WORD, WORD, HWND, BOOL&)
             {
-                auto index = m_combo_profiles.GetCurSel ();
+                auto index = m_combo_presets.GetCurSel ();
                 if (index != CB_ERR) {
-                    get_profile_manager ()->delete_profile (string_utf8_from_combo (m_combo_profiles, index));
-                    m_combo_profiles.DeleteString (index);
+                    get_preset_manager ()->delete_preset (string_utf8_from_combo (m_combo_presets, index));
+                    m_combo_presets.DeleteString (index);
                 }
                 else
-                    ShowTip (m_combo_profiles, L"Please select preset to delete");
+                    ShowTip (m_combo_presets, L"Please select preset to delete");
 
                 return TRUE;
             }
@@ -142,9 +142,9 @@ namespace vk_uploader
 
             void on_destroy () { cfg::pos.RemoveWindow (*this); }
 
-            inline profile get_current_profile () const { return profile (get_current_album_by_id (), m_check_post_on_wall.IsChecked ()); }
+            inline preset get_current_preset () const { return preset (get_current_album_by_id (), m_check_post_on_wall.IsChecked ()); }
 
-            void set_current_profile (const profile &p)
+            void set_current_preset (const preset &p)
             {
                 m_check_post_on_wall.ToggleCheck (p.m_post_on_wall);
                 set_current_album_by_id (p.m_album);
@@ -183,11 +183,11 @@ namespace vk_uploader
                 m_combo_albums.AddString (L"");
             }
 
-            CComboBox m_combo_albums, m_combo_profiles;
+            CComboBox m_combo_albums, m_combo_presets;
             CCheckBox m_check_post_on_wall;
 
             metadb_handle_list_cref m_items;
-            pfc::list_t<profile> m_profiles;
+            //pfc::list_t<profile> m_presets;
 
         public:
             enum { IDD = IDD_UPLOAD_SETUP };

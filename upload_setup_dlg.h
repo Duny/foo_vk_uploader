@@ -1,11 +1,11 @@
 #ifndef _FOO_VK_UPLOADER_UPLOAD_SETUP_DLG_H_
 #define _FOO_VK_UPLOADER_UPLOAD_SETUP_DLG_H_
 
-#include "upload_profiles.h"
+#include "upload_preset.h"
 
 namespace vk_uploader
 {
-    namespace upload_profiles
+    namespace upload_presets
     {
         class NOVTABLE upload_setup_dialog : public service_base
         {
@@ -19,6 +19,6 @@ namespace vk_uploader
         { 0x407762ab, 0x7464, 0x4ef1, { 0xb3, 0xe6, 0x3e, 0x95, 0xcb, 0xb6, 0x23, 0x67 } };
     }
 
-    typedef static_api_ptr_t<upload_profiles::upload_setup_dialog> get_setup_dialog;
+    typedef static_api_ptr_t<upload_presets::upload_setup_dialog> get_setup_dialog;
 }
 #endif
