@@ -41,58 +41,5 @@ namespace vk_uploader
             }*/
         };
         static service_factory_single_t<profider_imp> g_api_profider_factory;
-
-        /*
-        //bool vk_api::make_get_request (const pfc::string8_fast &url, pfc::string8_fast &answer)
-        //{
-	       // 
-        //}
-
-        /*bool vk_api::call (const char *method, const char *params, Json::Value &out)
-        {
-	        if (vk_access_token.is_empty () && !vk_login_dialog ().show ())
-		        return false;
-
-	        pfc::string8_fast url = 
-		        pfc::string_formatter () << "https://api.vkontakte.ru/method/" << method << "?"
-		        << params << (params && *params ? "&" : "") << "access_token=" << vk_access_token;
-	        pfc::string8_fast answer;
-
-	        if (!make_get_request (url, answer))
-		        return false;
-
-	        Json::Reader reader;
-	        Json::Value val;
-
-	        out.clear ();
-            if (!reader.parse (std::string (answer.get_ptr ()), out, false) || !out.isObject ()) {
-                console::formatter () << "foo_vk_uploader: unexpected reply:\n" << answer;
-		        return false;
-            }
-
-	        if (!(val = out["error_code"]).isNull ()) {
-		        if (!val.isInt ())
-			        return false;
-
-		        int error_code = val.asInt ();
-		        if (error_code == 4 || error_code == 5) {
-			        if (!vk_login_dialog ().show () || vk_access_token.is_empty () || !make_get_request (url, answer))
-				        return false;
-			
-			        out.clear ();
-                    if (!reader.parse (std::string (answer.get_ptr ()), out, false) || !out.isObject ()) {
-                        console::formatter () << "foo_vk_uploader: unexpected reply:\n" << answer;
-				        return false;
-                    }
-
-			        if (!(val = out["error_code"]).isNull ())
-				        return false;
-		        }
-		        else
-			        return false;
-	        }
-	
-	        return true;
-        }*/
     }
 }

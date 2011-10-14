@@ -1,12 +1,13 @@
 #include "stdafx.h"
 
+#include "helpers.h"
 #include "upload_preset.h"
 
 namespace vk_uploader
 {
     namespace upload_presets
     {
-        preset default_preset;
+        PFC_DECLARE_EXCEPTION (exception_preset_not_found, pfc::exception, "");
 
         namespace cfg
         {
@@ -27,8 +28,7 @@ namespace vk_uploader
             FB2K_STREAM_READER_OVERLOAD(preset_internal) { return stream >> value.m_guid >> value.m_name >> value.m_album >> value.m_post_on_wall; }
             FB2K_STREAM_WRITER_OVERLOAD(preset_internal) { return stream << value.m_guid << value.m_name << value.m_album << value.m_post_on_wall; }
 
-            const GUID guid_presets = { 0xbfeaa7ea, 0x6810, 0x41c6, { 0x82, 0x6, 0x12, 0x95, 0x5a, 0x89, 0xdf, 0x49 } };
-            cfg_objList<preset_internal> presets (guid_presets);
+            cfg_objList<preset_internal> presets (guid_inline<0xbfeaa7ea, 0x6810, 0x41c6, 0x82, 0x6, 0x12, 0x95, 0x5a, 0x89, 0xdf, 0x49>::guid);
         }
 
         class NOVTABLE manager_imp : public manager
@@ -44,12 +44,10 @@ namespace vk_uploader
 
             t_size get_preset_count () const override { return cfg::presets.get_count (); }
 
-            pfc::string8 get_preset_name (t_size p_index) const override
+            const pfc::string8 & get_preset_name (t_size p_index) const override
             {
-                if (p_index < cfg::presets.get_count ())
-                    return cfg::presets[p_index].m_name;
-                else
-                    return "";
+                static pfc::string8 dummy = "";
+                return (p_index < cfg::presets.get_count ()) ? cfg::presets[p_index].m_name : dummy;
             }
 
             GUID get_preset_guid (const pfc::string8 &p_name) const override
@@ -61,7 +59,15 @@ namespace vk_uploader
                 }
             }
 
-            preset get_preset (const pfc::string8 &p_name) const override { return find_preset (p_name); }
+            const preset & get_preset (const pfc::string8 &p_name) const override
+            {
+                try {
+                    return find_preset (p_name);
+                } catch (exception_preset_not_found) {
+                    static preset dummy;
+                    return dummy;
+                }
+            }
 
             bool save_preset (const pfc::string8 &p_preset_name, const preset &p_preset) override
             {

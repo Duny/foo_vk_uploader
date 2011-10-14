@@ -13,11 +13,6 @@ namespace vk_uploader
             t_uint32 m_album; // put uploaded tracks to the album
             bool m_post_on_wall;
         };
-        extern preset default_preset;
-
-
-        PFC_DECLARE_EXCEPTION (exception_presets_manager, pfc::exception, COMPONENT_NAME);
-        PFC_DECLARE_EXCEPTION (exception_preset_not_found, exception_presets_manager, "Preset with this name does not exists");
 
         class NOVTABLE manager : public service_base
         {
@@ -26,13 +21,13 @@ namespace vk_uploader
             virtual t_size get_preset_count () const = 0;
 
             // returns empty string if index is out of bound
-            virtual pfc::string8 get_preset_name (t_size p_index) const = 0;
+            virtual const pfc::string8 & get_preset_name (t_size p_index) const = 0;
 
             // returns pfc::guid_null if preset not found
             virtual GUID get_preset_guid (const pfc::string8 &p_name) const = 0;
 
-            // throws exception_preset_not_found if preset not found
-            virtual preset get_preset (const pfc::string8 &p_name) const = 0;
+            // returns empty preset if preset not found
+            virtual const preset & get_preset (const pfc::string8 &p_name) const = 0;
 
             // will create new preset if given preset does not exists
             // returns false on error

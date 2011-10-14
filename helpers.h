@@ -15,6 +15,11 @@ namespace vk_uploader
         return trim (string_utf8_from_window (wnd).get_ptr ());
     }
 
+    template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
+    struct guid_inline { static const GUID guid;};
+    template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
+    __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
+
     class response_json : public boost::shared_ptr<Json::Value>
     {
     public:
@@ -43,8 +48,8 @@ namespace vk_uploader
     class response_error : public response_json
     {
     public:
-        response_error (const char *p_msg) : response_json (pfc::string_formatter () 
-            << "{\"error\":{\"error_code\":-1,\"error_msg\":" << p_msg << "}}") {}
+        response_error (const char *p_msg)
+            : response_json (pfc::string_formatter () << "{\"error\":{\"error_code\":-1,\"error_msg\":" << p_msg << "}}") {}
     };
 
 
