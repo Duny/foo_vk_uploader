@@ -31,22 +31,23 @@ namespace vk_uploader
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             return FALSE;
 
-        pfc::string8 auth_url = "http://api.vk.com/oauth/authorize?display=popup&scope=audio&response_type=token&redirect_uri=http://api.vk.com/blank.html&client_id=";
-        auth_url += vk_api::app_id;
-        navigate (auth_url);
+        navigate (pfc::string_formatter () << 
+            "http://api.vk.com/oauth/authorize?display=popup&scope=audio&response_type=token&redirect_uri=" << g_blank_html
+                << "&client_id=" << vk_api::app_id);
+        
         //navigate ("vk.com");
         return TRUE;
     }
 
     void __stdcall login_dlg::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
     {
-        m_final_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-        if (m_final_url.find_first ("http://api.vk.com/blank.html") == 0) close ();
+        m_url = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
+        if (is_blank_page (m_url)) close ();
     }
 
     void login_dlg::navigate (const char *to)
     {
-        m_final_url.reset ();
+        m_url.reset ();
         m_wb2->Navigate (CComBSTR (to), nullptr, nullptr, nullptr, nullptr);
     }
 

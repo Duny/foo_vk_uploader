@@ -21,26 +21,25 @@ namespace vk_uploader
 
             win32_event m_invoker_avaliable;
 
-            value_t make_request (const char *p_api_name, params_cref p_params)
+            response_json make_request (const char *p_api_name, params_cref p_params)
             {
                 try {
-                    request_url_builder url (p_api_name, p_params);
-                    static_api_ptr_t<http_client> client;
                     http_request::ptr request;
+                    static_api_ptr_t<http_client>()->create_request ("GET")->service_query_t (request);
 
-                    client->create_request ("GET")->service_query_t (request);
+                    abort_callback_dummy p_abort;
+                    file_ptr response = request->run_ex (request_url_builder (p_api_name, p_params), p_abort);
 
-                    file::ptr response = request->run_ex (url, abort_callback_dummy ());
                     pfc::string8_fast answer;
-                    response->read_string_raw (answer, abort_callback_dummy ());
-                    popup_message::g_show (answer, "");
-                    return from_string (answer);
+                    response->read_string_raw (answer, p_abort);
+                    //popup_message::g_show (answer, "");
+                    return response_json (answer);
                 } catch (const std::exception &e) {
-                    return make_error (e.what ());
+                    return response_error (e.what ());
                 }
             }
 
-            value_t invoke (const char *p_api_name, params_cref p_params) override
+            response_json invoke (const char *p_api_name, params_cref p_params) override
             {
                 m_invoker_avaliable.wait_for (-1);
 
@@ -66,7 +65,7 @@ namespace vk_uploader
                     }
                 }
 
-                value_t result = make_request (p_api_name, p_params);
+                response_json result = make_request (p_api_name, p_params);
                 ULONGLONG current_time = GetTickCount64 ();
                 {
                     insync (m_section);

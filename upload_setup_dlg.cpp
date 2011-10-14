@@ -31,6 +31,10 @@ namespace vk_uploader
 
         class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>
         {
+            inline void combo_add_string (CComboBox &p_combo, const char *p_str)
+            {
+                p_combo.AddString (pfc::stringcvt::string_os_from_utf8 (p_str));
+            }
         
             BEGIN_MSG_MAP_EX(upload_setup_dlg)
                 MSG_WM_INITDIALOG(on_init_dialog)
@@ -53,7 +57,9 @@ namespace vk_uploader
 
                 static_api_ptr_t<upload_profiles::manager> api;
                 for (t_size i = 0, n = api->get_profile_count (); i < n; i++)
-                    m_combo_profiles.AddString (strcvt::string_os_from_utf8 (api->get_profile_name (i)));
+                   combo_add_string (m_combo_profiles, api->get_profile_name (i));
+
+                m_albums.for_each ([&](const album_t &p_album) { combo_add_string (m_combo_albums, p_album.m_title); });
 
                 ShowWindow (SW_SHOWNORMAL);
                 return 0;
@@ -114,12 +120,11 @@ namespace vk_uploader
 
             HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
             {
-                vk_api::params_t params;
+                url_params parameters;
+                parameters["count"] = "100";
 
-                params.add_item (std::make_pair ("count", "100"));
-                value_t result = static_api_ptr_t<vk_api::profider>()->call_api ("audio.getAlbums", params);
-
-                if (is_response_ok (result)) {
+                response_json result = static_api_ptr_t<vk_api::profider>()->call_api ("audio.getAlbums", parameters);
+                if (result.is_valid ()) {
                     const Json::Value &items = (*result)["response"];
                     if (items.type () != Json::arrayValue) {
                         ShowTip (m_combo_albums, L"Unexpected json in album list");
@@ -129,14 +134,15 @@ namespace vk_uploader
                     m_combo_albums.ResetContent ();
                     m_albums.remove_all ();
 
-                    for (t_size i = 0, n = items.size (); i < n; i) {
-                        const Json::Value &item = items[i];
-                        m_combo_albums.AddString (pfc::stringcvt::string_os_from_utf8 (items[i]["title"].asCString ()));
-                        m_albums.add_item (album_t (items[i]["title"].asCString (), items[i]["album_id"].asUInt ()));
+                    for (auto i = items.begin (); i != items.end (); i++) {
+                        if ((*i).isObject ()) {
+                            combo_add_string (m_combo_albums, (*i)["title"].asCString ());
+                            m_albums.add_item (album_t ((*i)["title"].asCString (), (*i)["album_id"].asUInt ()));
+                        }
                     }
                 }
                 else
-                    ShowTip (m_combo_albums, strcvt::string_os_from_utf8 (get_error_msg (result)));
+                    ShowTip (m_combo_albums, strcvt::string_os_from_utf8 (result.get_error ()));
 
                 return TRUE;
             }
@@ -178,10 +184,10 @@ namespace vk_uploader
             static const GUID guid_albums;
             static cfg_album_list_t m_albums;
 
-            public:
-                enum { IDD = IDD_UPLOAD_SETUP };
+        public:
+            enum { IDD = IDD_UPLOAD_SETUP };
 
-                upload_setup_dlg (metadb_handle_list_cref p_items) : m_items (p_items) {}
+            upload_setup_dlg (metadb_handle_list_cref p_items) : m_items (p_items) {}
         };
 
         namespace

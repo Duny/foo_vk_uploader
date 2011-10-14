@@ -12,5 +12,3 @@
 #include "boost/smart_ptr.hpp"
 
 #define COMPONENT_NAME "foo_vk_uploader"
-
-typedef boost::shared_ptr<Json::Value> value_t;

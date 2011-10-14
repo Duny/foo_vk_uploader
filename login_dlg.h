@@ -9,9 +9,11 @@ namespace vk_uploader
         public IDispEventImpl<IDC_IE, login_dlg>
     {
     public:
+        login_dlg () { DoModal (core_api::get_main_window ()); }
+
         enum { IDD = IDD_LOGIN };
 
-        pfc::string8 get_final_url () const { return m_final_url; }
+        const pfc::string8 & get_browser_location () const { return m_url; }
 
     private:
         BEGIN_MSG_MAP_EX(login_dlg)
@@ -40,7 +42,7 @@ namespace vk_uploader
 
         void navigate (const char *to);
 
-        pfc::string8 m_final_url;
+        pfc::string8 m_url;
         CComPtr<IWebBrowser2> m_wb2;
 
         static const GUID guid_dialog_pos;

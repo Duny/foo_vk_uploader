@@ -9,7 +9,7 @@ namespace vk_uploader
         {
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(api_invoker)
         public:
-            virtual value_t invoke (const char *p_api_name, params_cref p_params) = 0;
+            virtual response_json invoke (const char *p_api_name, params_cref p_params) = 0;
         };
 
         // {14E354B1-45C0-412F-9B2E-5D2296A3D691}
