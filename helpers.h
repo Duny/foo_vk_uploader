@@ -20,36 +20,51 @@ namespace vk_uploader
     template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
     __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
 
-    class response_json : public boost::shared_ptr<Json::Value>
+    class response_json_ptr : public boost::shared_ptr<Json::Value>
     {
     public:
-        response_json (const pfc::string8 & p_data) {
+        response_json_ptr (const pfc::string8 & p_data) {
             const char *begin = p_data.get_ptr ();
             const char *end = begin + p_data.get_length ();
-            Json::Value *out = new Json::Value;
-            if (Json::Reader ().parse (begin, end, *out, false)) reset (out);
+            /*Json::Value *out = new Json::Value;
+            if (Json::Reader ().parse (begin, end, *out, false)) reset (out);*/
+            Json::Value val;
+            if (Json::Reader ().parse (begin, end, val, false)) {
+                Json::Value *out;
+                if (val.isObject () && pfc::stricmp_ascii (val.begin ().memberName (), "response") == 0)
+                    out = new Json::Value (val["response"]);
+                else
+                    out = new Json::Value (val);
+                reset (out);
+            }
         }
 
         inline bool is_valid () const {
             const Json::Value *val = get ();
-            return val->isObject () && pfc::stricmp_ascii ("response", val->begin ().memberName ()) == 0;
+            return !(val->isObject () && pfc::stricmp_ascii ("error", val->begin ().memberName ()) == 0);
         };
 
         const char *get_error ()
         {
             const Json::Value *val = get ();
-            if (val->isMember ("error_msg"))
+            if (val->isObject () && val->isMember ("error_msg"))
                 return (*val)["error_msg"].asCString ();
             else
-                return "Unknown error";
+                return (*get ()).toStyledString ().c_str ();
         }
+
+        Json::Value &operator[] (Json::UInt index) { return (*get ())[index]; }
+        const Json::Value &operator[] (Json::UInt index) const { return (*get ())[index]; }
+
+        Json::Value & operator[] (const char *key) { return (*get ())[key]; }
+        const Json::Value & operator[]( const char *key ) const { return (*get ())[key]; }
     };
 
-    class response_error : public response_json
+    class response_error : public response_json_ptr
     {
     public:
         response_error (const char *p_msg)
-            : response_json (pfc::string_formatter () << "{\"error\":{\"error_code\":-1,\"error_msg\":" << p_msg << "}}") {}
+            : response_json_ptr (pfc::string_formatter () << "{\"error\":{\"error_code\":-1,\"error_msg\":" << p_msg << "}}") {}
     };
 
 

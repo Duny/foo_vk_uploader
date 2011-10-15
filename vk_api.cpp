@@ -30,7 +30,7 @@ namespace vk_uploader
             };*/
             
 
-            response_json call_api (const char *p_api_name, params_cref p_params) override
+            response_json_ptr call_api (const char *p_api_name, params_cref p_params) override
             {
                 return static_api_ptr_t<api_invoker>()->invoke (p_api_name, p_params);
             }

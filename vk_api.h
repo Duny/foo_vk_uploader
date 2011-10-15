@@ -14,7 +14,7 @@ namespace vk_uploader
         class api_callback
         {
         public:
-            virtual void on_request_done (const pfc::string8 &p_api_name, const response_json &p_result) = 0;
+            virtual void on_request_done (const pfc::string8 &p_api_name, const response_json_ptr &p_result) = 0;
         };
 
         class NOVTABLE profider : public service_base
@@ -24,8 +24,8 @@ namespace vk_uploader
             enum { max_api_calls_per_second = 3 };
 
             // makes synchronous api call
-            virtual response_json call_api (const char *p_api_name, params_cref p_params) = 0;
-            inline response_json call_api (const char *p_api_name) { return call_api (p_api_name, url_params ()); }
+            virtual response_json_ptr call_api (const char *p_api_name, params_cref p_params) = 0;
+            inline response_json_ptr call_api (const char *p_api_name) { return call_api (p_api_name, url_params ()); }
 
             // make asynchronous call
             //virtual void call_api_async (const char *p_api_name, params_cref p_params, api_callback &p_callback) = 0;

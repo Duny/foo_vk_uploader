@@ -21,7 +21,7 @@ namespace vk_uploader
 
             win32_event m_invoker_avaliable;
 
-            response_json make_request (const char *p_api_name, params_cref p_params)
+            response_json_ptr make_request (const char *p_api_name, params_cref p_params)
             {
                 try {
                     http_request::ptr request;
@@ -33,13 +33,13 @@ namespace vk_uploader
                     pfc::string8_fast answer;
                     response->read_string_raw (answer, p_abort);
                     //popup_message::g_show (answer, "");
-                    return response_json (answer);
+                    return response_json_ptr (answer);
                 } catch (const std::exception &e) {
                     return response_error (e.what ());
                 }
             }
 
-            response_json invoke (const char *p_api_name, params_cref p_params) override
+            response_json_ptr invoke (const char *p_api_name, params_cref p_params) override
             {
                 m_invoker_avaliable.wait_for (-1);
 
@@ -65,7 +65,7 @@ namespace vk_uploader
                     }
                 }
 
-                response_json result = make_request (p_api_name, p_params);
+                response_json_ptr result = make_request (p_api_name, p_params);
                 ULONGLONG current_time = GetTickCount64 ();
                 {
                     insync (m_section);

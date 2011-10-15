@@ -13,7 +13,9 @@ namespace vk_uploader
             {
                 album_t (const char *title, t_uint32 id) : m_title (title), m_id (id) {}
                 album_t (const Json::Value &p_val) : m_title (p_val["title"].asCString ()), m_id (p_val["album_id"].asUInt ()) {}
-                album_t () {}
+                album_t () : m_id (pfc_infinite) {}
+
+                bool operator== (const album_t &other) const { return m_id == other.m_id && pfc::stricmp_ascii (m_title, other.m_title) == 0; }
 
                 pfc::string8 m_title;
                 t_uint32 m_id;
@@ -36,6 +38,8 @@ namespace vk_uploader
                 COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PRESET, on_load_preset)
                 COMMAND_ID_HANDLER(IDC_BUTTON_DELETE_PRESET, on_delete_preset)
                 COMMAND_ID_HANDLER(IDC_BUTTON_REFRESH_ALBUMS, on_refresh_albums)
+                COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_NEW, on_album_new)
+                COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_DELETE, on_album_delete)
                 MSG_WM_CLOSE(close)
                 MSG_WM_DESTROY(on_destroy)
             END_MSG_MAP()
@@ -99,31 +103,69 @@ namespace vk_uploader
 
             HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
             {
-                class album_selection_restorer
+                class combo_album_state_restorer
                 {
                     upload_setup_dlg &m_dlg;
                     t_uint32 m_id;
+                    pfc::string8 m_text;
                 public:
-                    album_selection_restorer (upload_setup_dlg &dlg) : m_dlg (dlg), m_id (dlg.get_current_album_by_id ()) {}
-                    ~album_selection_restorer () { m_dlg.set_current_album_by_id (m_id); }
+                    combo_album_state_restorer (upload_setup_dlg &dlg) : m_dlg (dlg), m_id (dlg.get_current_album_id ()), m_text (string_utf8_from_window (dlg.m_combo_albums)) {}
+                    ~combo_album_state_restorer () { m_dlg.set_current_album_by_id (m_id); uSetWindowText (m_dlg.m_combo_albums, m_text); }
                 };
 
-                response_json result = get_api_provider ()->call_api ("audio.getAlbums", url_params ("count", "100"));
+                response_json_ptr result = get_api_provider ()->call_api ("audio.getAlbums", url_params ("count", "100"));
                 if (result.is_valid ()) {
-                    album_selection_restorer restorer (*this);
+                    combo_album_state_restorer restorer (*this);
 
                     combo_albums_reset ();
                     cfg::albums.remove_all ();
-                    try {
-                        const Json::Value &items = result->get ("response", Json::nullValue);
-                        for (t_size n = items.size (), i = 1; i < n; ++i)
-                            cfg::albums.add_item (combo_albums_add (items[i]));
-                    } catch (const std::exception &) {
-                        ShowTip (m_combo_albums, L"Unexpected json in album list");
-                    }
+                    for (t_size n = result->size (), i = 1; i < n; ++i)
+                        cfg::albums.add_item (combo_albums_add (result[i]));
                 }
                 else
                     ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
+
+                return TRUE;
+            }
+
+            HRESULT on_album_new (WORD, WORD, HWND, BOOL&)
+            {
+                pfc::string8 album_title = get_window_text_trimmed (m_combo_albums);
+                if (!album_title.is_empty ()) {
+                    response_json_ptr result = get_api_provider ()->call_api ("audio.addAlbum", url_params ("title", album_title));
+                    if (result.is_valid ())
+                        cfg::albums.add_item (combo_albums_add (cfg::album_t (album_title, result["album_id"].asUInt ())));
+                    else
+                        ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
+                }
+                else
+                    ShowTip (m_combo_albums, L"Please enter album title");
+
+                return TRUE;
+            }
+
+            HRESULT on_album_delete (WORD, WORD, HWND, BOOL&)
+            {
+                auto index = m_combo_albums.GetCurSel ();
+                if (index != CB_ERR) {
+                    cfg::album_t album_to_delete (string_utf8_from_combo (m_combo_albums, index), get_current_album_id ());
+                    pfc::string_formatter message;
+                    message << "Are you sure what you want to delete album \"" << album_to_delete.m_title << "\"?";
+                    if (uMessageBox (*this, message, COMPONENT_NAME, MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                        if (album_to_delete.m_id != 0 && album_to_delete.m_id != pfc_infinite) {
+                            pfc::string_formatter id; id << album_to_delete.m_id;
+                            response_json_ptr result = get_api_provider ()->call_api ("audio.deleteAlbum", url_params ("album_id", id));
+                            if (result.is_valid () && result->asBool () == true) {
+                                cfg::albums.remove_item (album_to_delete);
+                                m_combo_albums.DeleteString (index);
+                            }
+                            else
+                                ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
+                        }
+                    }
+                }
+                else
+                    ShowTip (m_combo_albums, L"Please select album to delete");
 
                 return TRUE;
             }
@@ -134,7 +176,7 @@ namespace vk_uploader
 
             void on_destroy () { cfg::pos.RemoveWindow (*this); }
 
-            inline preset get_current_preset () const { return preset (get_current_album_by_id (), m_check_post_on_wall.IsChecked ()); }
+            inline preset get_current_preset () const { return preset (get_current_album_id (), m_check_post_on_wall.IsChecked ()); }
 
             void set_current_preset (const preset &p)
             {
@@ -142,7 +184,7 @@ namespace vk_uploader
                 set_current_album_by_id (p.m_album);
             }
 
-            t_uint32 get_current_album_by_id () const
+            t_uint32 get_current_album_id () const
             {
                 auto index = m_combo_albums.GetCurSel ();
                 return (index != 0 && index != CB_ERR) ? (t_uint32)m_combo_albums.GetItemData (index) : pfc_infinite;
