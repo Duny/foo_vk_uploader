@@ -35,9 +35,20 @@ namespace vk_uploader
         {
             cfg::preset_internal & find_preset (const pfc::string8 &p_name) const
             {
-                for (t_size i = 0, n = cfg::presets.get_size (); i < n; i++)
+                for (t_size i = 0, n = cfg::presets.get_size (); i < n; i++) {
                     if (pfc::stricmp_ascii (p_name, cfg::presets[i].m_name) == 0)
                         return cfg::presets[i];
+                }
+
+                throw exception_preset_not_found ();
+            }
+
+            cfg::preset_internal & find_preset (const GUID &p_guid) const
+            {
+                for (t_size i = 0, n = cfg::presets.get_size (); i < n; i++) {
+                    if (p_guid == cfg::presets[i].m_guid)
+                        return cfg::presets[i];
+                }
 
                 throw exception_preset_not_found ();
             }
@@ -59,10 +70,28 @@ namespace vk_uploader
                 }
             }
 
+            bool has_preset (const GUID &p_guid) const override
+            {
+                try {
+                    return find_preset (p_guid), true;
+                } catch (exception_preset_not_found) { }
+                return false;
+            }
+
             const preset & get_preset (const pfc::string8 &p_name) const override
             {
                 try {
                     return find_preset (p_name);
+                } catch (exception_preset_not_found) {
+                    static preset dummy;
+                    return dummy;
+                }
+            }
+
+            const preset & get_preset (const GUID &p_guid) const override
+            {
+                try {
+                    return find_preset (p_guid);
                 } catch (exception_preset_not_found) {
                     static preset dummy;
                     return dummy;

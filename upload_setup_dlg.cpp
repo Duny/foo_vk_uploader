@@ -2,6 +2,7 @@
 
 #include "upload_setup_dlg.h"
 #include "vk_api.h"
+#include "upload_queue.h"
 
 namespace vk_uploader
 {
@@ -33,6 +34,7 @@ namespace vk_uploader
         {
             BEGIN_MSG_MAP_EX(upload_setup_dlg)
                 MSG_WM_INITDIALOG(on_init_dialog)
+                COMMAND_ID_HANDLER(IDOK, on_ok)
                 COMMAND_ID_HANDLER(IDCANCEL, on_cancel)
                 COMMAND_ID_HANDLER(IDC_BUTTON_SAVE_PRESET, on_save_preset)
                 COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PRESET, on_load_preset)
@@ -43,6 +45,10 @@ namespace vk_uploader
                 MSG_WM_CLOSE(close)
                 MSG_WM_DESTROY(on_destroy)
             END_MSG_MAP()
+
+            HRESULT on_ok (WORD, WORD, HWND, BOOL&) { get_upload_queue ()->push_back (m_items, get_current_preset ()); close (); return TRUE; }
+
+            HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
 
             LRESULT on_init_dialog (CWindow wndFocus, LPARAM lInitParam)
             {
@@ -70,6 +76,8 @@ namespace vk_uploader
                         if (m_combo_presets.FindStringExact (0, p_name) == CB_ERR)
                             m_combo_presets.AddString (p_name);
                     }
+                    else
+                        ShowTip (m_combo_presets, L"An error occurred while saving preset");
                 }
                 else
                     ShowTip (m_combo_presets, L"Please enter preset name");
@@ -170,8 +178,6 @@ namespace vk_uploader
                 return TRUE;
             }
 
-            HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
-
             void close () { DestroyWindow (); }
 
             void on_destroy () { cfg::pos.RemoveWindow (*this); }
@@ -219,7 +225,7 @@ namespace vk_uploader
             CComboBox m_combo_albums, m_combo_presets;
             CCheckBox m_check_post_on_wall;
 
-            metadb_handle_list_cref m_items;
+            metadb_handle_list m_items;
         public:
             enum { IDD = IDD_UPLOAD_SETUP };
 
@@ -230,16 +236,10 @@ namespace vk_uploader
         {
             class myinitquit : public initquit
             {
-                void on_init () override
-                {
-                    static_api_ptr_t<upload_setup_dialog>()->show (metadb_handle_list ());
-            
-                }
+                void on_init () override { static_api_ptr_t<upload_setup_dialog>()->show (metadb_handle_list ()); }
                 void on_quit () override {}
-            public:
-                myinitquit () {}
             };
-            static initquit_factory_t<myinitquit> g_initquit;
+            //static initquit_factory_t<myinitquit> g_initquit;
         }
 
         class upload_setup_dialog_imp : public upload_setup_dialog

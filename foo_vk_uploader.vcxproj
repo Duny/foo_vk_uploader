@@ -120,6 +120,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="upload_queue.cpp" />
     <ClCompile Include="upload_setup_dlg.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="vk_api.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="login_dlg.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="upload_queue.h" />
     <ClInclude Include="upload_setup_dlg.h" />
     <ClInclude Include="upload_thread.h" />
     <ClInclude Include="helpers.h" />

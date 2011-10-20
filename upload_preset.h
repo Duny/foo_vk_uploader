@@ -14,6 +14,7 @@ namespace vk_uploader
             bool m_post_on_wall;
         };
 
+
         class NOVTABLE manager : public service_base
         {
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
@@ -25,9 +26,13 @@ namespace vk_uploader
 
             // returns pfc::guid_null if preset not found
             virtual GUID get_preset_guid (const pfc::string8 &p_name) const = 0;
+            inline GUID get_preset_guid (t_size p_index) const { return get_preset_guid (get_preset_name (p_index)); }
 
-            // returns empty preset if preset not found
+            virtual bool has_preset (const GUID &p_guid) const = 0;
+
+            // returns empty preset if not found
             virtual const preset & get_preset (const pfc::string8 &p_name) const = 0;
+            virtual const preset & get_preset (const GUID &p_guid) const = 0;
 
             // will create new preset if given preset does not exists
             // returns false on error

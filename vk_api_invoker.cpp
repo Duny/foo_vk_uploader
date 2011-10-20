@@ -35,7 +35,7 @@ namespace vk_uploader
                     //popup_message::g_show (answer, "");
                     return response_json_ptr (answer);
                 } catch (const std::exception &e) {
-                    return response_error (e.what ());
+                    return make_error_response (e.what ());
                 }
             }
 

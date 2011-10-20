@@ -15,6 +15,11 @@ namespace vk_uploader
         return trim (string_utf8_from_window (wnd).get_ptr ());
     }
 
+    struct debug_log : public pfc::string_formatter
+    {
+        ~debug_log () { if (!is_empty()) console::formatter () << "Debug("COMPONENT_NAME"):" << get_ptr (); }
+    };
+
     template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
     struct guid_inline { static const GUID guid;};
     template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
@@ -26,8 +31,6 @@ namespace vk_uploader
         response_json_ptr (const pfc::string8 & p_data) {
             const char *begin = p_data.get_ptr ();
             const char *end = begin + p_data.get_length ();
-            /*Json::Value *out = new Json::Value;
-            if (Json::Reader ().parse (begin, end, *out, false)) reset (out);*/
             Json::Value val;
             if (Json::Reader ().parse (begin, end, val, false)) {
                 Json::Value *out;
@@ -41,16 +44,24 @@ namespace vk_uploader
 
         inline bool is_valid () const {
             const Json::Value *val = get ();
-            return !(val->isObject () && pfc::stricmp_ascii ("error", val->begin ().memberName ()) == 0);
+            return !(val && val->isObject () && pfc::stricmp_ascii ("error", val->begin ().memberName ()) == 0);
         };
 
         const char *get_error ()
         {
             const Json::Value *val = get ();
-            if (val->isObject () && val->isMember ("error_msg"))
-                return (*val)["error_msg"].asCString ();
-            else
-                return (*get ()).toStyledString ().c_str ();
+            if (val) {
+                if (val->isObject () && val->isMember ("error")) {
+                    const Json::Value &error = val->get ("error", Json::nullValue);
+                    if (error.isObject () && error.isMember ("error_msg")) {
+                        const char *error_str = error["error_msg"].asCString ();
+                        return error_str;
+                    }
+                }
+                else
+                    return val->toStyledString ().c_str ();
+            }
+            return "Unknown error occurred";
         }
 
         Json::Value &operator[] (Json::UInt index) { return (*get ())[index]; }
@@ -60,11 +71,9 @@ namespace vk_uploader
         const Json::Value & operator[]( const char *key ) const { return (*get ())[key]; }
     };
 
-    class response_error : public response_json_ptr
+    inline response_json_ptr make_error_response (const char *p_msg)
     {
-    public:
-        response_error (const char *p_msg)
-            : response_json_ptr (pfc::string_formatter () << "{\"error\":{\"error_code\":-1,\"error_msg\":" << p_msg << "}}") {}
+        return response_json_ptr (pfc::string_formatter () << "{\"error\": {\"error_code\": -1, \"error_msg\": \"" << p_msg << "\"}}");
     };
 
 

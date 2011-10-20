@@ -1,7 +1,8 @@
 #include "stdafx.h"
 
-#include "upload_preset.h"
+#include "upload_queue.h"
 #include "upload_setup_dlg.h"
+#include "helpers.h"
 
 namespace vk_uploader
 {
@@ -15,14 +16,9 @@ namespace vk_uploader
                 return true;
             }
 
-            void execute (metadb_handle_list_cref p_data, const GUID &p_caller) override
-            {
-                // TODO
-            }
-
             bool get_description (pfc::string_base &p_out) override
             {
-                p_out = "Uploads selected files to vk.com";
+                p_out = "Uploads selected files to your vk.com account";
                 return true;
             }
 
@@ -35,25 +31,31 @@ namespace vk_uploader
 
         public:
             node_root_leaf (const pfc::string8 &p_preset_name) : m_preset_name (p_preset_name) {}
+
+            void execute (metadb_handle_list_cref p_data, const GUID &p_caller) override
+            {
+                get_upload_queue ()->push_back (p_data, get_preset_manager ()->get_preset (m_preset_name));
+            }
         };
 
         class node_root_leaf_default : public node_root_leaf
         {
+            GUID get_guid () override { return guid_inline<0x232ddfd8, 0x6655, 0x4eee, 0xa0, 0x2a, 0x41, 0x26, 0xea, 0x8d, 0x7f, 0xe9>::guid; }
+
             void execute (metadb_handle_list_cref p_data, const GUID &p_caller) override
             {
                 get_setup_dialog ()->show (p_data);
             }
 
         public:
-            node_root_leaf_default () : node_root_leaf ("Upload to vk...") // hack to set custom text on the menu item)
-            { }
+            node_root_leaf_default () : node_root_leaf ("Upload to vk.com...") { } // hack to set custom text on the menu item)
         };
 
         class node_root_popup : public contextmenu_item_node_root_popup
         {
             bool get_display_data (pfc::string_base &p_out, unsigned &p_displayflags, metadb_handle_list_cref p_data, const GUID &p_caller) override
             {
-                p_out = "Upload to vk";
+                p_out = "Upload to vk.com";
                 return true;
             }
 
@@ -68,10 +70,10 @@ namespace vk_uploader
             {
                 static_api_ptr_t<upload_presets::manager> api;
 
-                auto profile_count = api->get_preset_count ();
-                if (p_index < profile_count)
+                auto preset_count = api->get_preset_count ();
+                if (p_index < preset_count)
                     return new node_root_leaf (api->get_preset_name (p_index));
-                else if (p_index == profile_count)
+                else if (p_index == preset_count)
                     return new contextmenu_item_node_separator ();
                 else
                     return new node_root_leaf_default (); // default  item
@@ -112,7 +114,12 @@ namespace vk_uploader
             //! Executes the menu item command without going thru the instantiate_item path. For items with dynamically-generated sub-items, p_node is identifies of the sub-item command to execute.
             void item_execute_simple (unsigned p_index, const GUID &p_node, metadb_handle_list_cref p_data, const GUID &p_caller) override
             {
-                int i = 0;
+                static_api_ptr_t<upload_presets::manager> api;
+
+                if (api->has_preset (p_node))
+                    get_upload_queue ()->push_back (p_data, api->get_preset (p_node));
+                else
+                    get_setup_dialog ()->show (p_data);
             }
 
             GUID get_parent () override { return contextmenu_groups::fileoperations; }
