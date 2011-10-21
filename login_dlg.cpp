@@ -9,16 +9,19 @@ namespace vk_uploader
     {
         class myinitquit : public initquit
         {
+            CComModule m_module;
+
             void on_init () override
             {
-                login_dlg dlg;
-                dlg.DoModal (core_api::get_main_window ()); 
+                /*login_dlg dlg;
+                dlg.DoModal (core_api::get_main_window ()); */
+                m_module.Init (NULL, NULL, &LIBID_ATLLib);
             }
-            void on_quit () override {}
+            void on_quit () override { m_module.Term (); }
         public:
             myinitquit () {}
         };
-        //static initquit_factory_t<myinitquit> g_initquit;
+        static initquit_factory_t<myinitquit> g_initquit;
     }
 
     LRESULT login_dlg::on_init_dialog (CWindow, LPARAM)
@@ -33,7 +36,7 @@ namespace vk_uploader
 
         navigate (pfc::string_formatter () << 
             "http://api.vk.com/oauth/authorize?display=popup&scope=audio&response_type=token&redirect_uri=" << g_blank_html
-                << "&client_id=" << vk_api::app_id);
+            << "&client_id=" << vk_api::app_id);
         
         //navigate ("vk.com");
         return TRUE;

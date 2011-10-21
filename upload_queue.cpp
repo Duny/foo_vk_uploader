@@ -155,23 +155,17 @@ namespace vk_uploader
                                     popup_message::g_show (result->toStyledString ().c_str (), "");
                                     debug_log () << "Finished upload of " << p_task.m_location;
                                 }
-                                else {
-                                    static char buf[1024];
-
-                                    strcpy_s (buf, result.get_error ());
-                                    throw pfc::exception (buf);
-                                }
+                                else
+                                    throw pfc::exception (result.get_error_code ());
                             }
-                            else {
-                                pfc::string8 error_mgs = result.get_error ();
-                                throw pfc::exception (error_mgs);
-                            }
+                            else
+                                throw pfc::exception (result.get_error_code ());
                         } catch (const std::exception &e) {
                             debug_log () << "Uploading file " << p_task.m_location << " resulted in error: " << e.what ();
                         }
                     }
                     else
-                        debug_log () << "getUploadServer returned: " << result.get_error ();
+                        debug_log () << "getUploadServer returned: " << result.get_error_code ();
                 }
             }
 

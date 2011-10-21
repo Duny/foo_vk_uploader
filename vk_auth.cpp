@@ -17,7 +17,7 @@ namespace vk_uploader
 
                 pfc::string8 m_user_id;
                 pfc::string8 m_access_token;
-                time_t m_timestamp; // time then auth was done
+                time_t m_timestamp; // time, then auth was done
                 t_uint32 m_expires_in; 
             };
 

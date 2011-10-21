@@ -47,16 +47,14 @@ namespace vk_uploader
             return !(val && val->isObject () && pfc::stricmp_ascii ("error", val->begin ().memberName ()) == 0);
         };
 
-        const char *get_error ()
+        pfc::string8 get_error_code ()
         {
             const Json::Value *val = get ();
             if (val) {
                 if (val->isObject () && val->isMember ("error")) {
                     const Json::Value &error = val->get ("error", Json::nullValue);
-                    if (error.isObject () && error.isMember ("error_msg")) {
-                        const char *error_str = error["error_msg"].asCString ();
-                        return error_str;
-                    }
+                    if (error.isObject () && error.isMember ("error_msg"))
+                        return error["error_msg"].asCString ();
                 }
                 else
                     return val->toStyledString ().c_str ();

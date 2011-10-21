@@ -131,7 +131,7 @@ namespace vk_uploader
                         cfg::albums.add_item (combo_albums_add (result[i]));
                 }
                 else
-                    ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
+                    ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error_code ()));
 
                 return TRUE;
             }
@@ -144,7 +144,7 @@ namespace vk_uploader
                     if (result.is_valid ())
                         cfg::albums.add_item (combo_albums_add (cfg::album_t (album_title, result["album_id"].asUInt ())));
                     else
-                        ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
+                        ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error_code ()));
                 }
                 else
                     ShowTip (m_combo_albums, L"Please enter album title");
@@ -168,7 +168,7 @@ namespace vk_uploader
                                 m_combo_albums.DeleteString (index);
                             }
                             else
-                                ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
+                                ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error_code ()));
                         }
                     }
                 }
