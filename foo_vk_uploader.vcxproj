@@ -123,6 +123,7 @@
     <ClCompile Include="upload_queue.cpp" />
     <ClCompile Include="upload_setup_dlg.cpp" />
     <ClCompile Include="helpers.cpp" />
+    <ClCompile Include="upload_thread.cpp" />
     <ClCompile Include="vk_api.cpp" />
     <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

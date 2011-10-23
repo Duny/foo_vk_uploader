@@ -2,6 +2,7 @@
 
 #include "upload_queue.h"
 #include "vk_api.h"
+#include "upload_thread.h"
 
 namespace vk_uploader
 {
@@ -98,29 +99,6 @@ namespace vk_uploader
                 return false;
             }
 
-            typedef boost::shared_ptr<pfc::array_t<t_uint8>> membuf_ptr;
-
-            membuf_ptr get_file_contents (const playable_location &p_location) const
-            {
-                file_ptr p_file;
-                abort_callback_impl p_abort;
-
-                filesystem::g_open_read (p_file, p_location.get_path (), p_abort);
-                if (p_file.is_valid ()) {
-                    t_size file_size = (t_size)p_file->get_size (p_abort);
-                    membuf_ptr data (new pfc::array_t<t_uint8>);
-                    data->set_size (file_size);
-                    t_size read = p_file->read (data->get_ptr (), file_size, p_abort);
-                    if (read == file_size)
-                        return data;
-                    else
-                        throw exception_io ();
-                }
-                else
-                    throw exception_io_not_found ();
-
-            }
-
             void run_task (const cfg::upload_task &p_task)
             {
                 metadb_handle_ptr item;
@@ -132,34 +110,7 @@ namespace vk_uploader
                     if (result.is_valid ()) {
                         try {
                             membuf_ptr file_contents = get_file_contents (p_task.m_location);
-                            http_request_post::ptr request;
-                            static_api_ptr_t<http_client>()->create_request ("POST")->service_query_t (request);
-                            request->add_post_data ("file", file_contents->get_ptr (), file_contents->get_size (), pfc::string_filename_ext (p_task.m_location.get_path ()), "");
-
-                            abort_callback_dummy p_abort;
-                            file_ptr response = request->run_ex (result["upload_url"].asCString (), p_abort);
-
-                            pfc::string8_fast answer;
-                            response->read_string_raw (answer, p_abort);
-
-                            response_json_ptr result (answer);
-                            if (result.is_valid ()) {
-                                url_params params;
-
-                                params["server"] = result["server"].asCString ();
-                                params["audio"] = result["audio"].asCString ();
-                                params["hash"] = result["hash"].asCString ();
-
-                                response_json_ptr result = get_api_provider ()->call_api ("audio.save", params);
-                                if (result.is_valid ()) {
-                                    popup_message::g_show (result->toStyledString ().c_str (), "");
-                                    debug_log () << "Finished upload of " << p_task.m_location;
-                                }
-                                else
-                                    throw pfc::exception (result.get_error_code ());
-                            }
-                            else
-                                throw pfc::exception (result.get_error_code ());
+                            
                         } catch (const std::exception &e) {
                             debug_log () << "Uploading file " << p_task.m_location << " resulted in error: " << e.what ();
                         }
