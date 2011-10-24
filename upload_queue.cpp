@@ -66,7 +66,7 @@ namespace vk_uploader
         cfg::upload_queue_mt tasks_queue;
 
         
-        class que_manage_thread_t : public pfc::thread
+        class que_manager_thread_t : public pfc::thread
         {
             bool filter_bad_file (const metadb_handle_ptr &p_item)
             {
@@ -104,19 +104,13 @@ namespace vk_uploader
                 metadb_handle_ptr item;
                 static_api_ptr_t<metadb>()->handle_create (item, p_task.m_location);
                 if (item.is_valid () && filter_bad_file (item) == false) {
-                    static_api_ptr_t<vk_api::profider> api;
-                    
-                    response_json_ptr result = get_api_provider ()->call_api ("audio.getUploadServer");
-                    if (result.is_valid ()) {
-                        try {
-                            membuf_ptr file_contents = get_file_contents (p_task.m_location);
-                            
-                        } catch (const std::exception &e) {
-                            debug_log () << "Uploading file " << p_task.m_location << " resulted in error: " << e.what ();
-                        }
-                    }
-                    else
-                        debug_log () << "getUploadServer returned: " << result.get_error_code ();
+                    m_upload_finished.set_state (false);
+
+                    service_ptr_t<upload_thread> thread = new service_impl_t<upload_thread> (p_task.m_location.get_path (), m_upload_finished);
+                    threaded_process::g_run_modeless (thread, 
+                        threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_show_progress,
+                        core_api::get_main_window (), "Uploading file...");
+                    m_upload_finished.wait_for (-1);
                 }
             }
 
@@ -136,13 +130,13 @@ namespace vk_uploader
                 }
             }
 
-            win32_event m_new_data_avalible; // user added tracks for upload
+            win32_event m_new_data_avalible, m_upload_finished;
         public:
-            que_manage_thread_t () { m_new_data_avalible.create (true, false); }
-            ~que_manage_thread_t () { waitTillDone (); }
+            que_manager_thread_t () { m_new_data_avalible.create (true, false); m_upload_finished.create (true, false); }
+            ~que_manager_thread_t () { waitTillDone (); }
 
-            void signalize_new_data () { m_new_data_avalible.set_state (true); }
-        } que_manage_thread;
+            void new_data_avaliable () { m_new_data_avalible.set_state (true); }
+        } que_manager_thread;
 
         namespace
         {
@@ -150,8 +144,8 @@ namespace vk_uploader
             {
                 void on_init () override
                 {
-                    que_manage_thread.startWithPriority (THREAD_PRIORITY_LOWEST);
-                    if (tasks_queue.get_task_count ()) que_manage_thread.signalize_new_data ();
+                    que_manager_thread.startWithPriority (THREAD_PRIORITY_IDLE);
+                    if (tasks_queue.get_task_count ()) que_manager_thread.new_data_avaliable ();
                 }
 
                 void on_quit () override {}
@@ -164,7 +158,7 @@ namespace vk_uploader
             void push_back (metadb_handle_list_cref p_items, const upload_presets::preset &p_preset) override
             {
                 tasks_queue.push_back (p_items, p_preset);
-                que_manage_thread.signalize_new_data ();
+                que_manager_thread.new_data_avaliable ();
             }
         };
         static service_factory_single_t<manager_imp> g_upload_que_manager_factory;

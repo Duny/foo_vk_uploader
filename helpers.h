@@ -15,28 +15,6 @@ namespace vk_uploader
         return trim (string_utf8_from_window (wnd).get_ptr ());
     }
 
-    typedef boost::shared_ptr<pfc::array_t<t_uint8>> membuf_ptr;
-
-    inline membuf_ptr get_file_contents (const playable_location &p_location)
-    {
-        file_ptr p_file;
-        abort_callback_impl p_abort;
-
-        filesystem::g_open_read (p_file, p_location.get_path (), p_abort);
-        if (p_file.is_valid ()) {
-            t_size file_size = (t_size)p_file->get_size (p_abort);
-            membuf_ptr data (new pfc::array_t<t_uint8>);
-            data->set_size (file_size);
-            t_size read = p_file->read (data->get_ptr (), file_size, p_abort);
-            if (read == file_size)
-                return data;
-            else
-                throw exception_io ();
-        }
-        else
-            throw exception_io_not_found ();
-
-    }
 
     struct debug_log : public pfc::string_formatter
     {

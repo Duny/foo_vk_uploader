@@ -24,15 +24,13 @@ namespace vk_uploader
 
     request_url_builder::request_url_builder (const char *p_method_name, params_cref p_params) 
     {
-        pfc::string_formatter tmp, tmp2;
-
         m_url << "https://api.vk.com/method/" << p_method_name << "?";
 
-        p_params.enumerate ([&] (const pfc::string8 &p_name, const pfc::string8 &p_value) { tmp << p_name << "=" << p_value << "&"; });
-        tmp << "access_token=" << static_api_ptr_t<vk_api::authorization>()->get_access_token ();
+        pfc::string8_fast tmp;
+        p_params.enumerate ([&] (const pfc::string8 &p_name, const pfc::string8 &p_value) { pfc::urlEncode (tmp, p_value); m_url << p_name << "=" << tmp << "&"; });
 
-        pfc::urlEncode (tmp2, tmp);
-        m_url += tmp2;
+        m_url << "access_token=" << static_api_ptr_t<vk_api::authorization>()->get_access_token ();
+
         popup_message::g_show (m_url, "");
     }
 
