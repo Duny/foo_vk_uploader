@@ -23,6 +23,9 @@ namespace vk_uploader
         ~debug_log () { if (!is_empty()) console::formatter () << "Debug("COMPONENT_NAME"):" << get_ptr (); }
     };
 
+    void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_list ());
+
+
     template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
     struct guid_inline { static const GUID guid;};
     template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>

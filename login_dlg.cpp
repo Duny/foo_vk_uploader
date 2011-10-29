@@ -10,16 +10,12 @@ namespace vk_uploader
         class myinitquit : public initquit
         {
             CComModule m_module;
-
             void on_init () override
             {
                 m_module.Init (NULL, NULL, &LIBID_ATLLib);
-
-                login_dlg dlg ();
+                //login_dlg dlg;
             }
             void on_quit () override { m_module.Term (); }
-        public:
-            myinitquit () {}
         };
         static initquit_factory_t<myinitquit> g_initquit;
     }

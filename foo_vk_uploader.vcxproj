@@ -110,6 +110,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="main_menu.cpp" />
     <ClCompile Include="upload_preset.cpp" />
     <ClCompile Include="context_menu.cpp" />
     <ClCompile Include="foo_vk_uploader.cpp" />
@@ -146,7 +147,6 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="upload_queue.h" />
-    <ClInclude Include="upload_setup_dlg.h" />
     <ClInclude Include="upload_thread.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="vk_api.h" />

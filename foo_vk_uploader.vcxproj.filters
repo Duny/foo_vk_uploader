@@ -63,6 +63,9 @@
     <ClCompile Include="upload_thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="main_menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -78,9 +81,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="login_dlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="upload_setup_dlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vk_api_invoker.h">
