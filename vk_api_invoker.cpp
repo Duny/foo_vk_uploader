@@ -32,7 +32,7 @@ namespace vk_uploader
 
                     pfc::string8_fast answer;
                     response->read_string_raw (answer, p_abort);
-                    //popup_message::g_show (answer, "");
+
                     return response_json_ptr (answer);
                 } catch (const std::exception &e) {
                     return make_error_response (e.what ());
@@ -53,7 +53,7 @@ namespace vk_uploader
                         m_call_count = 0;
                     }
 
-                    m_call_count = (m_call_count + 1) % profider::max_api_calls_per_second;
+                    m_call_count = (m_call_count + 1) % api_profider::max_api_calls_per_second;
 
                     if (m_call_count == 0) {
                         if ((m_last_call_time - m_first_call_time) < 1000) {

@@ -10,15 +10,14 @@ namespace vk_uploader
         public:
 	        upload_thread (const char *p_file, const win32_event &p_event_upload_finished)
                 : m_file (p_file), m_event_upload_finished (p_event_upload_finished) {}
-            ~upload_thread () {
-                int i = 0;
-            }
+
+            void start ();
 
             bool successed () const { return m_error.is_empty (); }
             const pfc::string8 &get_error () const { return m_error; }
 
         private:
-            void run (threaded_process_status &p_status, abort_callback &p_abort);
+            void run (threaded_process_status &p_status, abort_callback &p_abort) override;
 
             void on_done (HWND p_wnd, bool p_was_aborted) override;
 

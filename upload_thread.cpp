@@ -7,10 +7,17 @@ namespace vk_uploader
 {
     namespace upload_queue
     {
+        void upload_thread::start ()
+        {
+            threaded_process::g_run_modeless (this, 
+                threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_show_progress | threaded_process::flag_no_focus,
+                core_api::get_main_window (), "Uploading file...");
+        }
+
         void upload_thread::run (threaded_process_status &p_status, abort_callback &p_abort)
         {
             try {
-                static_api_ptr_t<vk_api::profider> api;
+                get_api_provider api;
 
                 response_json_ptr result = api->call_api ("audio.getUploadServer");
                 if (result.is_valid ()) {
@@ -19,7 +26,7 @@ namespace vk_uploader
 
                     http_request_post::ptr request;
                     static_api_ptr_t<http_client>()->create_request ("POST")->service_query_t (request);
-                    request->add_post_data ("file", data.get_ptr (), data.get_size (), "", "");
+                    request->add_post_data ("file", data.get_ptr (), data.get_size (), pfc::string_filename_ext (m_file), "");
 
                     file_ptr response = request->run_ex (result["upload_url"].asCString (), p_abort);
 
@@ -51,6 +58,7 @@ namespace vk_uploader
                     throw pfc::exception (result.get_error_code ());
             } catch (const std::exception &e) {
                 m_error = e.what ();
+                popup_message::g_show (m_error, "");
             }
         }
 

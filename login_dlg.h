@@ -3,17 +3,23 @@
 
 namespace vk_uploader
 {
+    enum t_login_action {
+        action_login,
+        action_logout,
+        action_relogin
+    };
+
     class login_dlg :
         public CAxDialogImpl<login_dlg>,
         public CDialogResize<login_dlg>,
         public IDispEventImpl<IDC_IE, login_dlg>
     {
     public:
-        login_dlg () { DoModal (core_api::get_main_window ()); }
+        login_dlg (t_login_action action = action_login);
 
         enum { IDD = IDD_LOGIN };
 
-        const pfc::string8 & get_browser_location () const { return m_url; }
+        const pfc::string8 & get_browser_location () const { return m_current_location; }
 
     private:
         BEGIN_MSG_MAP_EX(login_dlg)
@@ -42,10 +48,11 @@ namespace vk_uploader
 
         void navigate (const char *to);
 
-        pfc::string8 m_url;
+        pfc::string8 m_current_location;
         CComPtr<IWebBrowser2> m_wb2;
+        t_login_action m_action;
+        pfc::string_formatter m_login_url, m_logout_url;
 
-        static const GUID guid_dialog_pos;
         static cfgDialogPosition m_pos;
     };
 }

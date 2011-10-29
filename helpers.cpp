@@ -31,7 +31,7 @@ namespace vk_uploader
 
         m_url << "access_token=" << static_api_ptr_t<vk_api::authorization>()->get_access_token ();
 
-        popup_message::g_show (m_url, "");
+        //popup_message::g_show (m_url, "");
     }
 
     url_params::url_params (const pfc::string8 &p_url)

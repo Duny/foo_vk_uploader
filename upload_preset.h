@@ -8,12 +8,19 @@ namespace vk_uploader
         struct preset
         {
             preset () {}
-            preset (t_uint32 album, bool post_on_wall) : m_album (album), m_post_on_wall (post_on_wall) {}
+            preset (t_album_id album_id, bool post_on_wall, const char *post_mgs = "") 
+                : m_album_id (album_id), m_post_on_wall (post_on_wall), m_post_mgs (post_mgs) {}
 
-            t_uint32 m_album; // put uploaded tracks to the album
+            template <bool isBigEndian> void set_data_raw (stream_reader_formatter<isBigEndian> & stream)
+            { stream >> m_album_id >> m_post_on_wall >> m_post_mgs; }
+
+            template <bool isBigEndian> void get_data_raw (stream_writer_formatter<isBigEndian> & stream) const
+            { stream << m_album_id << m_post_on_wall << m_post_mgs; }
+
+            t_album_id m_album_id;
             bool m_post_on_wall;
+            pfc::string8 m_post_mgs;
         };
-
 
         class NOVTABLE manager : public service_base
         {

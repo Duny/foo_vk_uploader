@@ -2,36 +2,40 @@
 
 #include "upload_setup_dlg.h"
 #include "vk_api.h"
+#include "upload_preset.h"
 #include "upload_queue.h"
 
 namespace vk_uploader
 {
     namespace upload_presets
     {
-        namespace cfg
+        struct album_info
         {
-            struct album_t
-            {
-                album_t (const char *title, t_uint32 id) : m_title (title), m_id (id) {}
-                album_t (const Json::Value &p_val) : m_title (p_val["title"].asCString ()), m_id (p_val["album_id"].asUInt ()) {}
-                album_t () : m_id (pfc_infinite) {}
+            album_info (const pfc::string8 &title, t_album_id id) : m_title (title), m_id (id) {}
+            album_info (const Json::Value &p_val) : m_title (p_val["title"].asCString ()), m_id (p_val["album_id"].asUInt ()) {}
+            album_info () {}
 
-                bool operator== (const album_t &other) const { return m_id == other.m_id && pfc::stricmp_ascii (m_title, other.m_title) == 0; }
+            bool operator== (const album_info &other) const { return m_id == other.m_id && pfc::stricmp_ascii (m_title, other.m_title) == 0; }
 
-                pfc::string8 m_title;
-                t_uint32 m_id;
-            };
+            pfc::string8 m_title;
+            t_album_id m_id;
+        };
 
-            FB2K_STREAM_READER_OVERLOAD(album_t) { return stream >> value.m_title >> value.m_id; }
-            FB2K_STREAM_WRITER_OVERLOAD(album_t) { return stream << value.m_title << value.m_id; }
-
-            cfgDialogPosition pos (guid_inline<0x42daae47, 0x20c, 0x4c25, 0xba, 0xa1, 0x27, 0x55, 0x7e, 0x75, 0x3d, 0x42>::guid);
-            cfg_objList<album_t> albums (guid_inline<0x7a5b3e69, 0xe2b0, 0x4bca, 0x96, 0xca, 0x3c, 0x4b, 0x52, 0x21, 0xd1, 0x86>::guid);
-        }
+        FB2K_STREAM_READER_OVERLOAD(album_info) { return stream >> value.m_title >> value.m_id; }
+        FB2K_STREAM_WRITER_OVERLOAD(album_info) { return stream << value.m_title << value.m_id; }
 
 
         class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>
         {
+            class combo_state_restorer
+            {
+                CComboBox &m_combo;
+                pfc::string8 m_text;
+            public:
+                combo_state_restorer (CComboBox &combo) : m_combo (combo), m_text (string_utf8_from_window (combo)) {}
+                ~combo_state_restorer () { uSetWindowText (m_combo, m_text); }
+            };
+
             BEGIN_MSG_MAP_EX(upload_setup_dlg)
                 MSG_WM_INITDIALOG(on_init_dialog)
                 COMMAND_ID_HANDLER(IDOK, on_ok)
@@ -52,16 +56,17 @@ namespace vk_uploader
 
             LRESULT on_init_dialog (CWindow wndFocus, LPARAM lInitParam)
             {
-                cfg::pos.AddWindow (*this);
+                m_pos.AddWindow (*this);
 
                 m_combo_albums.Attach (GetDlgItem (IDC_COMBO_ALBUMS));
                 m_combo_presets.Attach (GetDlgItem (IDC_COMBO_PRESETS));
                 m_check_post_on_wall.Attach (GetDlgItem (IDC_CHECK_POST_ON_WALL));
+                m_edit_post_msg.Attach (GetDlgItem (IDC_EDIT_POST_MESSAGE));
+
+                combo_albums_init ();
+                m_albums.for_each ([&](const album_info &p_album) { combo_album_add (p_album); });
 
                 get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name) { combo_add_string (m_combo_presets, p_name); });
-
-                combo_albums_reset ();
-                cfg::albums.for_each ([&](const cfg::album_t &p_album) { combo_albums_add (p_album); });
 
                 ShowWindow (SW_SHOWNORMAL);
                 return 0;
@@ -111,27 +116,15 @@ namespace vk_uploader
 
             HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
             {
-                class combo_album_state_restorer
-                {
-                    upload_setup_dlg &m_dlg;
-                    t_uint32 m_id;
-                    pfc::string8 m_text;
-                public:
-                    combo_album_state_restorer (upload_setup_dlg &dlg) : m_dlg (dlg), m_id (dlg.get_current_album_id ()), m_text (string_utf8_from_window (dlg.m_combo_albums)) {}
-                    ~combo_album_state_restorer () { m_dlg.set_current_album_by_id (m_id); uSetWindowText (m_dlg.m_combo_albums, m_text); }
-                };
-
-                response_json_ptr result = get_api_provider ()->call_api ("audio.getAlbums", url_params ("count", "100"));
-                if (result.is_valid ()) {
-                    combo_album_state_restorer restorer (*this);
-
-                    combo_albums_reset ();
-                    cfg::albums.remove_all ();
-                    for (t_size n = result->size (), i = 1; i < n; ++i)
-                        cfg::albums.add_item (combo_albums_add (result[i]));
+                vk_api::api_audio_getAlbums album_list;
+                if (album_list.is_valid ()) {
+                    combo_state_restorer restorer (m_combo_albums);
+                    combo_albums_init ();
+                    m_albums.remove_all ();
+                    album_list.enumerate ([&] (pfc::string8 name, t_album_id id) { m_albums.add_item (combo_album_add (album_info (name, id))); });
                 }
                 else
-                    ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error_code ()));
+                    ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (album_list.get_error ()));
 
                 return TRUE;
             }
@@ -140,11 +133,11 @@ namespace vk_uploader
             {
                 pfc::string8 album_title = get_window_text_trimmed (m_combo_albums);
                 if (!album_title.is_empty ()) {
-                    response_json_ptr result = get_api_provider ()->call_api ("audio.addAlbum", url_params ("title", album_title));
+                    vk_api::api_audio_addAlbum result (album_title);
                     if (result.is_valid ())
-                        cfg::albums.add_item (combo_albums_add (cfg::album_t (album_title, result["album_id"].asUInt ())));
+                        m_albums.add_item (combo_album_add (album_info (album_title, result.get_album_id ())));
                     else
-                        ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error_code ()));
+                        ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
                 }
                 else
                     ShowTip (m_combo_albums, L"Please enter album title");
@@ -155,82 +148,92 @@ namespace vk_uploader
             HRESULT on_album_delete (WORD, WORD, HWND, BOOL&)
             {
                 auto index = m_combo_albums.GetCurSel ();
-                if (index != CB_ERR) {
-                    cfg::album_t album_to_delete (string_utf8_from_combo (m_combo_albums, index), get_current_album_id ());
-                    pfc::string_formatter message;
-                    message << "Are you sure what you want to delete album \"" << album_to_delete.m_title << "\"?";
-                    if (uMessageBox (*this, message, COMPONENT_NAME, MB_YESNO | MB_ICONQUESTION) == IDYES) {
-                        if (album_to_delete.m_id != 0 && album_to_delete.m_id != pfc_infinite) {
-                            pfc::string_formatter id; id << album_to_delete.m_id;
-                            response_json_ptr result = get_api_provider ()->call_api ("audio.deleteAlbum", url_params ("album_id", id));
-                            if (result.is_valid () && result->asBool () == true) {
-                                cfg::albums.remove_item (album_to_delete);
-                                m_combo_albums.DeleteString (index);
-                            }
-                            else
-                                ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error_code ()));
+                if (index == CB_ERR)
+                    ShowTip (m_combo_albums, L"Please select album to delete");
+                else if (index > 0) { // item with index 0 is reserved
+                    album_info to_delete (string_utf8_from_combo (m_combo_albums, index), get_current_album_id ());
+                    pfc::string8_fast message ("Are you sure what you want to delete album \"");
+                    message += to_delete.m_title; message += "\"?";
+                    int dlg_result = uMessageBox (*this, message, COMPONENT_NAME, MB_YESNO | MB_ICONQUESTION);
+                    if (dlg_result == IDYES) {
+                        vk_api::api_audio_deleteAlbum result (to_delete.m_id);
+                        if (result.is_valid ()) {
+                            m_albums.remove_item (to_delete);
+                            m_combo_albums.DeleteString (index);
                         }
+                        else
+                            ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
                     }
                 }
-                else
-                    ShowTip (m_combo_albums, L"Please select album to delete");
 
                 return TRUE;
             }
 
             void close () { DestroyWindow (); }
 
-            void on_destroy () { cfg::pos.RemoveWindow (*this); }
+            void on_destroy () { m_pos.RemoveWindow (*this); }
 
-            inline preset get_current_preset () const { return preset (get_current_album_id (), m_check_post_on_wall.IsChecked ()); }
-
-            void set_current_preset (const preset &p)
+            inline preset get_current_preset () const
             {
-                m_check_post_on_wall.ToggleCheck (p.m_post_on_wall);
-                set_current_album_by_id (p.m_album);
+                return preset (get_current_album_id (), m_check_post_on_wall.IsChecked (), get_window_text_trimmed (m_edit_post_msg));
             }
 
-            t_uint32 get_current_album_id () const
+            inline void set_current_preset (const preset &p)
+            {
+                set_current_album_by_id (p.m_album_id);
+                m_check_post_on_wall.ToggleCheck (p.m_post_on_wall);
+                m_edit_post_msg.SetWindowText (pfc::stringcvt::string_os_from_utf8 (p.m_post_mgs));
+            }
+
+            inline t_album_id get_current_album_id () const
             {
                 auto index = m_combo_albums.GetCurSel ();
-                return (index != 0 && index != CB_ERR) ? (t_uint32)m_combo_albums.GetItemData (index) : pfc_infinite;
-            }
-
-            void set_current_album_by_id (t_uint32 id)
-            {
-                m_combo_albums.SetCurSel (CB_ERR);
-                for (auto n = m_combo_albums.GetCount (), i = 0; i < n; i++) {
-                    if (id == (t_uint32)m_combo_albums.GetItemData (i)) {
-                        m_combo_albums.SetCurSel (i);
-                        break;
-                    }
-                }
+                return index != CB_ERR ? static_cast<t_album_id>(m_combo_albums.GetItemData (index)) : 0;
             }
 
             inline int combo_add_string (CComboBox &p_combo, const char *p_str) { return p_combo.AddString (pfc::stringcvt::string_os_from_utf8 (p_str)); }
 
-            inline const cfg::album_t& combo_albums_add (const cfg::album_t &p_album)
-            {
-                auto index = combo_add_string (m_combo_albums, p_album.m_title);
-                if (index != CB_ERR) m_combo_albums.SetItemData (index, (DWORD_PTR)p_album.m_id);
-                return p_album;
-            }
-
-            inline void combo_albums_reset ()
+            inline void combo_albums_init ()
             {
                 m_combo_albums.ResetContent ();
                 m_combo_albums.AddString (L"");
+                m_combo_albums.SetItemData (0, 0);
+            }
+
+            inline void set_current_album_by_id (t_album_id id)
+            {
+                m_combo_albums.SetCurSel (CB_ERR);
+                for (auto n = m_combo_albums.GetCount (), i = 0; i < n; i++) {
+                    if (id == static_cast<t_album_id>(m_combo_albums.GetItemData (i))) {
+                        m_combo_albums.SetCurSel (i);
+                        return;
+                    }
+                }
+            }
+
+            inline const album_info& combo_album_add (const album_info &p_album)
+            {
+                auto index = combo_add_string (m_combo_albums, p_album.m_title);
+                if (index != CB_ERR) m_combo_albums.SetItemData (index, static_cast<DWORD_PTR>(p_album.m_id));
+                return p_album;
             }
 
             CComboBox m_combo_albums, m_combo_presets;
             CCheckBox m_check_post_on_wall;
+            CEditNoEnterEscSteal m_edit_post_msg;
 
             metadb_handle_list m_items;
+
+            static cfgDialogPosition m_pos;
+            static cfg_objList<album_info> m_albums;
         public:
             enum { IDD = IDD_UPLOAD_SETUP };
 
             upload_setup_dlg (metadb_handle_list_cref p_items) : m_items (p_items) {}
         };
+
+        cfgDialogPosition upload_setup_dlg::m_pos (guid_inline<0x42daae47, 0x20c, 0x4c25, 0xba, 0xa1, 0x27, 0x55, 0x7e, 0x75, 0x3d, 0x42>::guid);
+        cfg_objList<album_info> upload_setup_dlg::m_albums (guid_inline<0x7a5b3e69, 0xe2b0, 0x4bca, 0x96, 0xca, 0x3c, 0x4b, 0x52, 0x21, 0xd1, 0x86>::guid);
 
         namespace
         {

@@ -3,6 +3,8 @@
 
 namespace vk_uploader
 {
+    typedef t_uint32 t_album_id;
+
     __declspec (selectany) extern const char *g_blank_html = "http://api.vk.com/blank.html";
 
     inline bool is_blank_page (const pfc::string8 &p_url) { return p_url.find_first (g_blank_html) == 0; }
@@ -25,6 +27,18 @@ namespace vk_uploader
     struct guid_inline { static const GUID guid;};
     template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
     __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
+
+    template<typename t_function> static void main_thread_callback_spawn (const t_function & p_func) {
+        class run_in_main_thread_callback : public main_thread_callback
+        {
+            t_function m_func;
+            void callback_run() override { m_func (); }
+        public:
+            run_in_main_thread_callback (const t_function & p_func) : m_func (p_func) {}
+        };
+
+        main_thread_callback_add (new service_impl_t<run_in_main_thread_callback> (p_func));
+    }
 
     class response_json_ptr : public boost::shared_ptr<Json::Value>
     {

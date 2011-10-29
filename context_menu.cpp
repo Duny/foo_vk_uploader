@@ -1,8 +1,11 @@
 #include "stdafx.h"
 
+#include "vk_api.h"
+#include "upload_preset.h"
 #include "upload_queue.h"
 #include "upload_setup_dlg.h"
 #include "helpers.h"
+#include "upload_thread.h"
 
 namespace vk_uploader
 {

@@ -1,8 +1,9 @@
 #include "stdafx.h"
 
-#include "upload_queue.h"
 #include "vk_api.h"
+#include "upload_preset.h"
 #include "upload_thread.h"
+#include "upload_queue.h"
 
 namespace vk_uploader
 {
@@ -10,16 +11,22 @@ namespace vk_uploader
     {
         namespace cfg
         {
+            struct upload_item
+            {
+                playable_location_impl m_location;
+                t_size m_fail_count; // number of failed upload retries
+            };
+
             struct upload_task
             {
-                upload_task (metadb_handle_ptr p_item, const upload_presets::preset &p_preset) : m_location (p_item->get_location ()), m_preset (p_preset) {}
+                upload_task (metadb_handle_ptr p_item, const upload_presets::preset &p_preset) : m_preset (p_preset) {}
                 upload_task () {}
 
-                playable_location_impl m_location;
                 upload_presets::preset m_preset;
 
-                bool operator== (const upload_task &other) { return m_location == other.m_location; }
-                bool operator!= (const upload_task &other) { return m_location != other.m_location; }
+                // FIXME!!!!!!!!
+                bool operator== (const upload_task &other) { return true; }
+                bool operator!= (const upload_task &other) { return false; }
             };
 
             FB2K_STREAM_READER_OVERLOAD(playable_location_impl) 
@@ -31,12 +38,10 @@ namespace vk_uploader
                 return stream;
             }
             FB2K_STREAM_WRITER_OVERLOAD(playable_location_impl) { return stream << pfc::string8_fast (value.get_path ()) << value.get_subsong (); }
-
-            FB2K_STREAM_READER_OVERLOAD(upload_presets::preset) { return stream >> value.m_album >> value.m_post_on_wall; }
-            FB2K_STREAM_WRITER_OVERLOAD(upload_presets::preset) { return stream << value.m_album << value.m_post_on_wall; }
         
-            FB2K_STREAM_READER_OVERLOAD(upload_task) { return stream >> value.m_location >> value.m_preset; }
-            FB2K_STREAM_WRITER_OVERLOAD(upload_task) { return stream << value.m_location << value.m_preset; }
+            // FIXME!!!!!!!!
+            FB2K_STREAM_READER_OVERLOAD(upload_task) { value.m_preset.set_data_raw (stream); return stream; }
+            FB2K_STREAM_WRITER_OVERLOAD(upload_task) { value.m_preset.get_data_raw (stream); return stream; }
         
             class upload_queue_mt : private cfg_objList<upload_task>
             {
@@ -101,17 +106,26 @@ namespace vk_uploader
 
             void run_task (const cfg::upload_task &p_task)
             {
-                metadb_handle_ptr item;
+                /*metadb_handle_ptr item;
                 static_api_ptr_t<metadb>()->handle_create (item, p_task.m_location);
                 if (item.is_valid () && filter_bad_file (item) == false) {
-                    m_upload_finished.set_state (false);
+                    class my_callback : public main_thread_callback
+                    {
+                        pfc::string8 m_path;
+                        const win32_event & m_event;
 
-                    service_ptr_t<upload_thread> thread = new service_impl_t<upload_thread> (p_task.m_location.get_path (), m_upload_finished);
-                    threaded_process::g_run_modeless (thread, 
-                        threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_show_progress,
-                        core_api::get_main_window (), "Uploading file...");
+                        void callback_run() override {
+                            service_ptr_t<upload_thread> thread = new service_impl_t<upload_thread> (m_path, m_event);
+                            thread->start ();
+                        }
+                    public:
+                        my_callback (const char *p_path, const win32_event & p_event) : m_path (p_path), m_event (p_event) {}
+                    };
+                   
+                    m_upload_finished.set_state (false);
+                    main_thread_callback_spawn<my_callback> (p_task.m_location.get_path (), m_upload_finished);
                     m_upload_finished.wait_for (-1);
-                }
+                }*/
             }
 
             void threadProc () override
