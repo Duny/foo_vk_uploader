@@ -11,7 +11,6 @@ namespace vk_uploader
     struct album_info
     {
         album_info (const pfc::string8 &title, t_album_id id) : m_title (title), m_id (id) {}
-        album_info (const Json::Value &p_val) : m_title (p_val["title"].asCString ()), m_id (p_val["album_id"].asUInt ()) {}
         album_info () {}
 
         bool operator== (const album_info &other) const { return m_id == other.m_id && pfc::stricmp_ascii (m_title, other.m_title) == 0; }
@@ -49,9 +48,9 @@ namespace vk_uploader
             MSG_WM_DESTROY(on_destroy)
         END_MSG_MAP()
 
-        HRESULT on_ok (WORD, WORD, HWND, BOOL&) { get_upload_queue ()->push_back (m_items, get_current_preset ()); close (); return TRUE; }
+        inline HRESULT on_ok (WORD, WORD, HWND, BOOL&) { upload_queue::push_back (m_items, get_upload_params ()); close (); return TRUE; }
 
-        HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
+        inline HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
 
         LRESULT on_init_dialog (CWindow wndFocus, LPARAM lInitParam)
         {
@@ -75,7 +74,7 @@ namespace vk_uploader
         {
             pfc::string8 profile_name = get_window_text_trimmed (m_combo_presets);
             if (!profile_name.is_empty ()) {
-                if (get_preset_manager ()->save_preset (profile_name, get_current_preset ())) {
+                if (get_preset_manager ()->save_preset (profile_name, get_upload_params ())) {
                     pfc::stringcvt::string_os_from_utf8 p_name (profile_name);
                     if (m_combo_presets.FindStringExact (0, p_name) == CB_ERR)
                         m_combo_presets.AddString (p_name);
@@ -149,7 +148,7 @@ namespace vk_uploader
             auto index = m_combo_albums.GetCurSel ();
             if (index == CB_ERR)
                 ShowTip (m_combo_albums, L"Please select album to delete");
-            else if (index > 0) { // item with index 0 is reserved
+            else if (index > 0) { // item with index 0 is reserved for empty album
                 album_info to_delete (string_utf8_from_combo (m_combo_albums, index), get_current_album_id ());
                 pfc::string8_fast message ("Are you sure what you want to delete album \"");
                 message += to_delete.m_title; message += "\"?";
@@ -168,16 +167,16 @@ namespace vk_uploader
             return TRUE;
         }
 
-        void close () { DestroyWindow (); }
+        inline void close () { DestroyWindow (); }
 
-        void on_destroy () { m_pos.RemoveWindow (*this); }
+        inline void on_destroy () { m_pos.RemoveWindow (*this); }
 
-        inline preset get_current_preset () const
+        inline upload_params get_upload_params () const
         {
-            return preset (get_current_album_id (), m_check_post_on_wall.IsChecked (), get_window_text_trimmed (m_edit_post_msg));
+            return upload_params (get_current_album_id (), m_check_post_on_wall.IsChecked (), get_window_text_trimmed (m_edit_post_msg));
         }
 
-        inline void set_current_preset (const preset &p)
+        inline void set_current_preset (const upload_params &p)
         {
             set_current_album_by_id (p.m_album_id);
             m_check_post_on_wall.ToggleCheck (p.m_post_on_wall);

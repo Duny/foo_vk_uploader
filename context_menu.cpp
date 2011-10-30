@@ -33,7 +33,7 @@ namespace vk_uploader
 
         void execute (metadb_handle_list_cref p_data, const GUID &p_caller) override
         {
-            get_upload_queue ()->push_back (p_data, get_preset_manager ()->get_preset (m_preset_name));
+            upload_queue::push_back (p_data, get_preset_manager ()->get_preset (m_preset_name));
         }
     };
 
@@ -73,7 +73,7 @@ namespace vk_uploader
             else if (p_index == preset_count)
                 return new contextmenu_item_node_separator ();
             else
-                return new node_root_leaf_default (); // default  item
+                return new node_root_leaf_default (); // default item
         }
 
         bool is_mappable_shortcut () override { return false; }
@@ -114,7 +114,7 @@ namespace vk_uploader
             static_api_ptr_t<upload_presets::manager> api;
 
             if (api->has_preset (p_node))
-                get_upload_queue ()->push_back (p_data, api->get_preset (p_node));
+                upload_queue::push_back (p_data, api->get_preset (p_node));
             else
                 show_upload_setup_dialog (p_data);
         }

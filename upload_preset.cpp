@@ -15,11 +15,10 @@ namespace vk_uploader
             {
                 pfc::string8 m_name;
                 GUID m_guid;
-                preset m_preset;
+                upload_params m_preset;
 
                 preset_internal () {}
-                preset_internal (const pfc::string8 &p_name, const GUID &p_guid, const preset &p_preset)
-                    : m_name (p_name), m_guid (p_guid), m_preset (p_preset) {}
+                preset_internal (const pfc::string8 &p_name, const GUID &p_guid, const upload_params &p_preset) : m_name (p_name), m_guid (p_guid), m_preset (p_preset) {}
 
                 bool operator== (const preset_internal &other) const { return pfc::stricmp_ascii (m_name, other.m_name) == 0; }
             };
@@ -77,27 +76,27 @@ namespace vk_uploader
                 return false;
             }
 
-            const preset & get_preset (const pfc::string8 &p_name) const override
+            const upload_params & get_preset (const pfc::string8 &p_name) const override
             {
                 try {
                     return find_preset_internal (p_name).m_preset;
                 } catch (exception_preset_not_found) {
-                    static preset dummy;
+                    static upload_params dummy;
                     return dummy;
                 }
             }
 
-            const preset & get_preset (const GUID &p_guid) const override
+            const upload_params & get_preset (const GUID &p_guid) const override
             {
                 try {
                     return find_preset_internal (p_guid).m_preset;
                 } catch (exception_preset_not_found) {
-                    static preset dummy;
+                    static upload_params dummy;
                     return dummy;
                 }
             }
 
-            bool save_preset (const pfc::string8 &p_preset_name, const preset &p_preset) override
+            bool save_preset (const pfc::string8 &p_preset_name, const upload_params &p_preset) override
             {
                 try {
                     find_preset_internal (p_preset_name).m_preset = p_preset;

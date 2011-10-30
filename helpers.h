@@ -4,11 +4,14 @@
 namespace vk_uploader
 {
     typedef t_uint32 t_album_id;
+    typedef t_uint32 t_audio_id;
 
     __declspec (selectany) extern const char *g_blank_html = "http://api.vk.com/blank.html";
 
     inline bool is_blank_page (const pfc::string8 &p_url) { return p_url.find_first (g_blank_html) == 0; }
     
+    // returns true then file must be skipped
+    bool filter_bad_file (metadb_handle_ptr p_item, pfc::string8_fast &p_reason);
 
     pfc::string8 trim (const pfc::string8 &p_str);
 
@@ -22,6 +25,7 @@ namespace vk_uploader
     {
         ~debug_log () { if (!is_empty()) console::formatter () << "Debug("COMPONENT_NAME"):" << get_ptr (); }
     };
+
 
     void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_list ());
 

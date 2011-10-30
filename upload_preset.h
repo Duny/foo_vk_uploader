@@ -1,27 +1,12 @@
 #ifndef _FOO_VK_UPLOADER_UPLOAD_PRESET_H_
 #define _FOO_VK_UPLOADER_UPLOAD_PRESET_H_
 
+#include "upload_queue.h"
+
 namespace vk_uploader
 {
     namespace upload_presets
     {
-        struct preset
-        {
-            preset () {}
-            preset (t_album_id album_id, bool post_on_wall, const char *post_mgs = "") 
-                : m_album_id (album_id), m_post_on_wall (post_on_wall), m_post_mgs (post_mgs) {}
-
-            template <bool isBigEndian> void set_data_raw (stream_reader_formatter<isBigEndian> & stream)
-            { stream >> m_album_id >> m_post_on_wall >> m_post_mgs; }
-
-            template <bool isBigEndian> void get_data_raw (stream_writer_formatter<isBigEndian> & stream) const
-            { stream << m_album_id << m_post_on_wall << m_post_mgs; }
-
-            t_album_id m_album_id;
-            bool m_post_on_wall;
-            pfc::string8 m_post_mgs;
-        };
-
         class NOVTABLE manager : public service_base
         {
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
@@ -37,13 +22,13 @@ namespace vk_uploader
 
             virtual bool has_preset (const GUID &p_guid) const = 0;
 
-            // returns empty preset if not found
-            virtual const preset & get_preset (const pfc::string8 &p_name) const = 0;
-            virtual const preset & get_preset (const GUID &p_guid) const = 0;
+            // returns empty upload_params if not found
+            virtual const upload_params & get_preset (const pfc::string8 &p_name) const = 0;
+            virtual const upload_params & get_preset (const GUID &p_guid) const = 0;
 
             // will create new preset if given preset does not exists
             // returns false on error
-            virtual bool save_preset (const pfc::string8 &p_name, const preset &p_preset) = 0;
+            virtual bool save_preset (const pfc::string8 &p_name, const upload_params &p_preset) = 0;
 
             // returns false then given preset does not exists
             virtual bool delete_preset (const pfc::string8 &p_name) = 0;

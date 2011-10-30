@@ -3,109 +3,65 @@
 #include "vk_api.h"
 #include "upload_preset.h"
 #include "upload_thread.h"
-#include "upload_queue.h"
 
 namespace vk_uploader
 {
     namespace upload_queue
     {
-        namespace cfg
+        struct upload_job
         {
-            struct upload_item
-            {
-                playable_location_impl m_location;
-                t_size m_fail_count; // number of failed upload retries
-            };
+            upload_job () {}
+            upload_job (metadb_handle_list_cref p_items, const upload_params &p_preset) : m_preset (p_preset)
+            { /*p_items.enumerate ([&] (metadb_handle_ptr p_item) { m_items.add_item (p_item); });*/ m_items.add_items (p_items); }
 
-            struct upload_task
-            {
-                upload_task (metadb_handle_ptr p_item, const upload_presets::preset &p_preset) : m_preset (p_preset) {}
-                upload_task () {}
+            // TESTE ME!!!!!!!! Multiple file upload
+                
+            metadb_handle_list m_items;
+            upload_params m_preset;
 
-                upload_presets::preset m_preset;
+            pfc::array_t<t_audio_id> m_ids; // ids of uploaded items
 
-                // FIXME!!!!!!!!
-                bool operator== (const upload_task &other) { return true; }
-                bool operator!= (const upload_task &other) { return false; }
-            };
+            bool operator== (const upload_job &other) { return m_preset == other.m_preset; }
+            bool operator!= (const upload_job &other) { return !operator== (other); }
+        };
 
-            FB2K_STREAM_READER_OVERLOAD(playable_location_impl) 
-            {
-                pfc::string8_fast path;
-                t_uint32 subsong;
-                stream >> path >> subsong;
-                value.set_path (path); value.set_subsong (subsong);
-                return stream;
-            }
-            FB2K_STREAM_WRITER_OVERLOAD(playable_location_impl) { return stream << pfc::string8_fast (value.get_path ()) << value.get_subsong (); }
-        
-            // FIXME!!!!!!!!
-            FB2K_STREAM_READER_OVERLOAD(upload_task) { value.m_preset.set_data_raw (stream); return stream; }
-            FB2K_STREAM_WRITER_OVERLOAD(upload_task) { value.m_preset.get_data_raw (stream); return stream; }
-        
-            class upload_queue_mt : private cfg_objList<upload_task>
-            {
-                mutable critical_section m_section;
-            public:
-                upload_queue_mt () : cfg_objList<upload_task> (guid_inline<0x1052cea1, 0x728f, 0x4d79, 0xa2, 0xdf, 0xc2, 0xda, 0xb4, 0x7a, 0x66, 0xeb>::guid) {}
 
-                t_size get_task_count () const { insync (m_section); return get_count (); }
-
-                bool get_top_task (upload_task &p_out) const
-                {
-                    insync (m_section);
-                    bool result = get_count () != 0;
-                    if (result) p_out = get_item (0);
-                    return result;
-                }
-
-                void delete_task (const upload_task &p_task) { insync (m_section); remove_item (p_task); }
-
-                void push_back (metadb_handle_list_cref p_items, const upload_presets::preset &p_preset)
-                {
-                    insync (m_section);
-                    p_items.enumerate ([&] (metadb_handle_ptr p_item) { add_item (upload_task (p_item, p_preset)); });
-                }
-            };
-        }
-        cfg::upload_queue_mt tasks_queue;
-
-        
-        class que_manager_thread_t : public pfc::thread
+        class job_queue_mt : private pfc::list_t<upload_job>
         {
-            bool filter_bad_file (const metadb_handle_ptr &p_item)
+            mutable critical_section m_section;
+        public:
+            t_size get_count () const { insync (m_section); return pfc::list_t<upload_job>::get_count (); }
+
+            bool get_top (upload_job &p_out) const
             {
-                const t_size max_file_size = 20 * (1 << 20); // 20Mb
-
-                // first test: file size
-                t_filesize size = p_item->get_filesize ();
-                if (!(size > 0 && size < max_file_size)) return true;
-
-                // second test: file type (mp3, lossy)
-                metadb_handle_lock lock (p_item);
-                const file_info *p_info;
-                if (p_item->get_info_locked (p_info)) {
-                    const char *codec = p_info->info_get ("codec");
-                    if (codec) {
-                        if (pfc::stricmp_ascii ("MP3", codec) != 0) {
-                            debug_log () << "Skipping location " << p_item->get_location () << " (File is not MP3. Codec:" << codec << ")";
-                            return true;
-                        }   
-                    }
-
-                    const char *encoding = p_info->info_get ("encoding");
-                    if (encoding) {
-                        if (pfc::stricmp_ascii ("lossy", encoding) != 0) {
-                            debug_log () << "Skipping location " << p_item->get_location () << " (File is not lossy. Encoding:" << encoding << ")";
-                            return true;
-                        }
-                    }
-                }
-                return false;
+                insync (m_section);
+                bool result = get_count () != 0;
+                if (result) p_out = get_item (0);
+                return result;
             }
 
-            void run_task (const cfg::upload_task &p_task)
+            void remove (const upload_job &p_job) { insync (m_section); remove_item (p_job); }
+
+            void push_back (metadb_handle_list_cref p_items, const upload_params &p_params)
             {
+                insync (m_section);
+                add_item (upload_job (p_items, p_params));
+            }
+        };
+
+        
+        class queue_manager_thread_t : private pfc::thread
+        {
+            pfc::string8_fast upload_items (upload_job &p_job)
+            {
+                pfc::string8_fast errors;
+
+                p_job.m_items.for_each ([&] (metadb_handle_ptr p_item)
+                {
+                    pfc::string8_fast reason;
+                    if (filter_bad_file (p_item, reason))
+                        errors << "Skipping file " << p_item->get_location ().get_path ();
+                });
                 /*metadb_handle_ptr item;
                 static_api_ptr_t<metadb>()->handle_create (item, p_task.m_location);
                 if (item.is_valid () && filter_bad_file (item) == false) {
@@ -126,6 +82,12 @@ namespace vk_uploader
                     main_thread_callback_spawn<my_callback> (p_task.m_location.get_path (), m_upload_finished);
                     m_upload_finished.wait_for (-1);
                 }*/
+                return "";
+            }
+
+            pfc::string8_fast post_process (const upload_job &p_job)
+            {
+                return "";
             }
 
             void threadProc () override
@@ -133,48 +95,53 @@ namespace vk_uploader
                 while (1) {
                     m_new_data_avalible.wait_for (-1);
 
-                    while (tasks_queue.get_task_count () > 0) {
-                        cfg::upload_task top_task;
-                        if (tasks_queue.get_top_task (top_task)) {
-                            run_task (top_task);
-                            tasks_queue.delete_task (top_task);
+                    while (m_queue.get_count () > 0) {
+                        upload_job j;
+                        if (m_queue.get_top (j)) {
+                            m_queue.remove (j);
+                            
+                            if (j.m_items.get_count ()) {
+                                pfc::string8_fast errors = upload_items (j);
+                                errors += post_process (j);
+
+                                if (!errors.is_empty ())
+                                    popup_message::g_show (errors, "Some items failed to upload", popup_message::icon_error);
+                            }
                         }
                     }
                     m_new_data_avalible.set_state (false);
                 }
             }
 
-            win32_event m_new_data_avalible, m_upload_finished;
+            win32_event m_new_data_avalible, m_item_upload_done;
+            job_queue_mt m_queue;
         public:
-            que_manager_thread_t () { m_new_data_avalible.create (true, false); m_upload_finished.create (true, false); }
-            ~que_manager_thread_t () { waitTillDone (); }
+            queue_manager_thread_t () { m_new_data_avalible.create (true, false); m_item_upload_done.create (true, false); }
+            ~queue_manager_thread_t () { waitTillDone (); }
 
-            void new_data_avaliable () { m_new_data_avalible.set_state (true); }
-        } que_manager_thread;
+            void start () { if (!isActive ()) startWithPriority (THREAD_PRIORITY_IDLE); }
 
+            void push_back (metadb_handle_list_cref p_items, const upload_params &p_params)
+            {
+                m_queue.push_back (p_items, p_params);
+                m_new_data_avalible.set_state (true);
+            }
+        } queue_manager_thread;
+        
         namespace
         {
             class myinitquit : public initquit
             {
-                void on_init () override
-                {
-                    que_manager_thread.startWithPriority (THREAD_PRIORITY_IDLE);
-                    if (tasks_queue.get_task_count ()) que_manager_thread.new_data_avaliable ();
-                }
-
+                void on_init () override { queue_manager_thread.start (); }
                 void on_quit () override {}
             };
             static initquit_factory_t<myinitquit> g_initquit;
         }
 
-        class NOVTABLE manager_imp : public manager
+
+        void push_back (metadb_handle_list_cref p_items, const upload_params &p_params)
         {
-            void push_back (metadb_handle_list_cref p_items, const upload_presets::preset &p_preset) override
-            {
-                tasks_queue.push_back (p_items, p_preset);
-                que_manager_thread.new_data_avaliable ();
-            }
-        };
-        static service_factory_single_t<manager_imp> g_upload_que_manager_factory;
+            queue_manager_thread.push_back (p_items, p_params);
+        }
     }
 }
