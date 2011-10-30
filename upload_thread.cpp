@@ -10,80 +10,33 @@ namespace vk_uploader
         void upload_thread::start ()
         {
             threaded_process::g_run_modeless (this, 
-                threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_show_progress | threaded_process::flag_no_focus,
-                core_api::get_main_window (), "Uploading file...");
+                threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_no_focus,
+                core_api::get_main_window (), "vk.com audio upload in progress...");
         }
 
         void upload_thread::run (threaded_process_status &p_status, abort_callback &p_abort)
         {
             try {
-                get_api_provider api;
+                p_status.set_item ("getting server address for upload...");
+                vk_api::api_audio_getUploadServer url_for_upload;
 
-                response_json_ptr result = api->call_api ("audio.getUploadServer");
-                if (result.is_valid ()) {
-                    membuf_ptr data;
-                    get_file_contents (m_file, data);
+                p_status.set_item ("sending file to server...");
+                pfc::string8_fast answer = get_api_provider ()->file_upload (url_for_upload, m_item->get_path (), p_abort);
 
-                    http_request_post::ptr request;
-                    static_api_ptr_t<http_client>()->create_request ("POST")->service_query_t (request);
-                    request->add_post_data ("file", data.get_ptr (), data.get_size (), pfc::string_filename_ext (m_file), "");
-
-                    file_ptr response = request->run_ex (result["upload_url"].asCString (), p_abort);
-
-                    pfc::string8_fast answer;
-                    response->read_string_raw (answer, p_abort);
-
-                    popup_message::g_show (answer, "");
-
-                    response_json_ptr result (answer);
-                    if (result.is_valid ()) {
-                        url_params params;
-
-                        params["server"] = result["server"].asCString ();
-                        params["audio"] = result["audio"].asCString ();
-                        params["hash"] = result["hash"].asCString ();
-
-                        response_json_ptr result = get_api_provider ()->call_api ("audio.save", params);
-                        if (result.is_valid ()) {
-                            popup_message::g_show (result->toStyledString ().c_str (), "");
-                            //debug_log () << "Finished upload of " << p_task.m_location;
-                        }
-                        else
-                            throw pfc::exception (result.get_error_code ());
-                    }
-                    else
-                        throw pfc::exception (result.get_error_code ());
-                }
-                else
-                    throw pfc::exception (result.get_error_code ());
+                p_status.set_item ("saving file on server...");
+                vk_api::api_audio_save uploaded_audio_file (answer);
+                m_id = uploaded_audio_file.get_id ();
+                p_status.set_item ("upload finished.");
             } catch (const std::exception &e) {
                 m_error = e.what ();
-                popup_message::g_show (m_error, "");
             }
         }
 
         void upload_thread::on_done (HWND p_wnd, bool p_was_aborted)
         { 
             if (p_was_aborted)
-                m_error = "upload was aborted by user.";
+                m_error = "uploading was aborted by user.";
             const_cast<win32_event&>(m_event_upload_finished).set_state (true);
-        }
-
-        void upload_thread::get_file_contents (const char *p_location, membuf_ptr &p_out)
-        {
-            file_ptr p_file;
-            abort_callback_impl p_abort;
-
-            filesystem::g_open_read (p_file, p_location, p_abort);
-            if (p_file.is_valid ()) {
-                t_size file_size = (t_size)p_file->get_size (p_abort);
-                p_out.set_size (file_size);
-                t_size read = p_file->read (p_out.get_ptr (), file_size, p_abort);
-                if (read != file_size)
-                    throw exception_io ();
-            }
-            else
-                throw exception_io_not_found ();
         }
     }
 }

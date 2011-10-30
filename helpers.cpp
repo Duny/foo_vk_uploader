@@ -33,7 +33,7 @@ namespace vk_uploader
             const char *codec = p_info->info_get ("codec");
             if (codec) {
                 if (pfc::stricmp_ascii ("MP3", codec) != 0) {
-                    p_reason << "file is not an mp3.(codec:" << codec << ")";
+                    p_reason << "file is not an mp3.(codec: " << codec << ")";
                     return true;
                 }   
             }
@@ -41,7 +41,7 @@ namespace vk_uploader
             const char *encoding = p_info->info_get ("encoding");
             if (encoding) {
                 if (pfc::stricmp_ascii ("lossy", encoding) != 0) {
-                    p_reason << "file is not lossy.(encoding:" << encoding << ")";
+                    p_reason << "file is not lossy.(encoding: " << encoding << ")";
                     return true;
                 }
             }
@@ -51,13 +51,30 @@ namespace vk_uploader
         const t_size max_file_size = 20 * (1 << 20); // 20Mb
 
         t_filesize size = p_item->get_filesize ();
-        if (size >= max_file_size) { // TESTE ME!!!!!!!! Mp3 with size > 20mb
-            p_reason << "file is too big " << pfc::format_file_size_short (size) << ".(maximum file size is " 
-                << pfc::format_file_size_short (max_file_size) << ")";
-            return true;
-        }
+        //if (size >= max_file_size) {
+        //    p_reason << "file is too big - " << pfc::format_file_size_short (size) << ".(maximum file size is " 
+        //        << pfc::format_file_size_short (max_file_size) << ")";
+        //    return true;
+        //}
 
         return false;
+    }
+
+    void get_file_contents (const char *p_path, membuf_ptr &p_out)
+    {
+        file_ptr p_file;
+        abort_callback_impl p_abort;
+
+        filesystem::g_open_read (p_file, p_path, p_abort);
+        if (p_file.is_valid ()) {
+            t_size file_size = (t_size)p_file->get_size (p_abort);
+            p_out.set_size (file_size);
+            t_size read = p_file->read (p_out.get_ptr (), file_size, p_abort);
+            if (read != file_size)
+                throw exception_io ();
+        }
+        else
+            throw exception_io_not_found ();
     }
 
     request_url_builder::request_url_builder (const char *p_method_name, params_cref p_params) 

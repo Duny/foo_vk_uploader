@@ -36,6 +36,23 @@ namespace vk_uploader
             {
                 api_call_thread (p_api_name, p_params, p_callback);
             }
+
+            pfc::string8_fast file_upload (const char *p_url, const char *p_file, abort_callback &p_abort) override
+            {
+                membuf_ptr data;
+                get_file_contents (p_file, data);
+
+                http_request_post::ptr request;
+                static_api_ptr_t<http_client>()->create_request ("POST")->service_query_t (request);
+
+                request->add_post_data ("file", data.get_ptr (), data.get_size (), pfc::string_filename_ext (p_file), "");
+
+                pfc::string8_fast answer;
+                request->run_ex (p_url, p_abort)->read_string_raw (answer, p_abort);
+
+                //popup_message::g_show (answer, "");
+                return answer;
+            }
         };
         static service_factory_single_t<api_profider_imp> g_api_profider_factory;
     }

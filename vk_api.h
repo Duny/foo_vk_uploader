@@ -11,8 +11,6 @@ namespace vk_uploader
 
         __declspec(selectany) extern const char *app_id = "2632594";
 
-
-
         class NOVTABLE api_callback : public service_base
         {
         public:
@@ -31,6 +29,8 @@ namespace vk_uploader
             // makes synchronous api call
             virtual response_json_ptr call_api (const char *p_api_name, params_cref p_params) = 0;
             inline response_json_ptr call_api (const char *p_api_name) { return call_api (p_api_name, url_params ()); }
+
+            virtual pfc::string8_fast file_upload (const char *p_url, const char *p_file, abort_callback &p_abort) = 0;
 
             // make asynchronous call
             virtual void call_api_async (const char *p_api_name, params_cref p_params, service_ptr_t<api_callback> p_callback) = 0;
@@ -55,8 +55,17 @@ namespace vk_uploader
             api_audio_getAlbums () {
                 response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("audio.getAlbums", url_params ("count", "100"));
                 if (result.is_valid ()) {
-                    for (t_size n = result->size (), i = 1; i < n; ++i)
+                    for (t_size n = result->size (), i = 1; i < n; ++i) {
+                        if (!(result[i].isMember ("title"))) {
+                            m_error = "no 'title' field in response from audio.getAlbums";
+                            break;
+                        }
+                        else if (!result[i].isMember ("album_id")) {
+                            m_error = "no 'album_id' field in response from audio.getAlbums";
+                            break;
+                        }
                         set (result[i]["title"].asCString (), result[i]["album_id"].asUInt ());
+                    }
                 }
                 else
                     m_error = result.get_error_code ();
@@ -72,8 +81,10 @@ namespace vk_uploader
         public:
             api_audio_addAlbum (const pfc::string8 &title) {
                 response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("audio.addAlbum", url_params ("title", title));
-                if (result.is_valid ())
-                    m_id = result["album_id"].asUInt ();
+                if (result.is_valid ()) {
+                    if (!result->isMember ("album_id")) m_error = "no 'album_id' field in response from audio.addAlbum";
+                    else m_id = result["album_id"].asUInt ();
+                }
                 else
                     m_error = result.get_error_code ();
             }
@@ -92,6 +103,47 @@ namespace vk_uploader
             }
         };
 
+        class api_audio_getUploadServer : public api_base
+        {
+            pfc::string8 m_url;
+        public:
+            api_audio_getUploadServer () {
+                response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("audio.getUploadServer");
+                result.assert_valid ();
+                if (!result->isMember ("upload_url")) throw std::exception ("no 'upload_url' field in response from audio.getUploadServer");
+                m_url = result["upload_url"].asCString ();
+            }
+
+            operator const char* () const { return m_url.get_ptr (); }
+        };
+
+        class api_audio_save : public api_base
+        {
+            t_audio_id m_id; // id of newly upload mp3 file
+        public:
+            // answer from vk.com server after file upload (post)
+            api_audio_save (const pfc::string8 &answer) {
+                popup_message::g_show (answer, "");
+                response_json_ptr result (answer);
+                result.assert_valid ();
+                
+                if (!result->isMember ("server")) throw std::exception ("no 'server' field in response from file upload");
+                if (!result->isMember ("audio")) throw std::exception ("no 'audio' field in response from file upload");
+                if (!result->isMember ("hash")) throw std::exception ("no 'hash' field in response from file upload");
+
+                url_params params;
+                params["server"] = result["server"].asCString ();
+                params["audio"] = result["audio"].asCString ();
+                params["hash"] = result["hash"].asCString ();
+
+                result = static_api_ptr_t<vk_api::api_profider>()->call_api ("audio.save", params);
+                result.assert_valid ();
+                if (!result->isMember ("aid")) throw std::exception ("no 'aid' field in response from audio.save");
+                m_id = result["aid"].asUInt ();
+            }
+
+            t_audio_id get_id () const { return m_id; }
+        };
 
         // {1EABF92D-EA43-4DCC-BCD0-B2B4C9BC003C}
         __declspec(selectany) const GUID api_callback::class_guid = 

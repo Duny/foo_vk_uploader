@@ -13,18 +13,15 @@ namespace vk_uploader
     // returns true then file must be skipped
     bool filter_bad_file (metadb_handle_ptr p_item, pfc::string8_fast &p_reason);
 
+    typedef pfc::array_t<t_uint8> membuf_ptr;
+    void get_file_contents (const char *p_path, membuf_ptr &p_out);
+
     pfc::string8 trim (const pfc::string8 &p_str);
 
     inline pfc::string8 get_window_text_trimmed (HWND wnd)
     {
         return trim (string_utf8_from_window (wnd).get_ptr ());
     }
-
-
-    struct debug_log : public pfc::string_formatter
-    {
-        ~debug_log () { if (!is_empty()) console::formatter () << "Debug("COMPONENT_NAME"):" << get_ptr (); }
-    };
 
 
     void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_list ());
@@ -35,17 +32,7 @@ namespace vk_uploader
     template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
     __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
 
-    template<typename t_function> static void main_thread_callback_spawn (const t_function & p_func) {
-        class run_in_main_thread_callback : public main_thread_callback
-        {
-            t_function m_func;
-            void callback_run() override { m_func (); }
-        public:
-            run_in_main_thread_callback (const t_function & p_func) : m_func (p_func) {}
-        };
-
-        main_thread_callback_add (new service_impl_t<run_in_main_thread_callback> (p_func));
-    }
+    
 
     class response_json_ptr : public boost::shared_ptr<Json::Value>
     {
@@ -54,6 +41,7 @@ namespace vk_uploader
             const char *begin = p_data.get_ptr ();
             const char *end = begin + p_data.get_length ();
             Json::Value val;
+            
             if (Json::Reader ().parse (begin, end, val, false)) {
                 Json::Value *out;
                 if (val.isObject () && pfc::stricmp_ascii (val.begin ().memberName (), "response") == 0)
@@ -66,7 +54,7 @@ namespace vk_uploader
 
         inline bool is_valid () const {
             const Json::Value *val = get ();
-            return !(val && val->isObject () && pfc::stricmp_ascii ("error", val->begin ().memberName ()) == 0);
+            return val && !val->empty () && val->isObject () && !val->isMember ("error");
         };
 
         pfc::string8 get_error_code ()
@@ -81,8 +69,10 @@ namespace vk_uploader
                 else
                     return val->toStyledString ().c_str ();
             }
-            return "Unknown error occurred";
+            return "Invalid response";
         }
+
+        void assert_valid () { if (!is_valid ()) throw pfc::exception (get_error_code ()); }
 
         Json::Value &operator[] (Json::UInt index) { return (*get ())[index]; }
         const Json::Value &operator[] (Json::UInt index) const { return (*get ())[index]; }

@@ -28,10 +28,8 @@ namespace vk_uploader
                     static_api_ptr_t<http_client>()->create_request ("GET")->service_query_t (request);
 
                     abort_callback_dummy p_abort;
-                    file_ptr response = request->run_ex (request_url_builder (p_api_name, p_params), p_abort);
-
                     pfc::string8_fast answer;
-                    response->read_string_raw (answer, p_abort);
+                    request->run_ex (request_url_builder (p_api_name, p_params), p_abort)->read_string_raw (answer, p_abort);
 
                     return response_json_ptr (answer);
                 } catch (const std::exception &e) {

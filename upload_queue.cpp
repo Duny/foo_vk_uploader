@@ -52,6 +52,15 @@ namespace vk_uploader
         
         class queue_manager_thread_t : private pfc::thread
         {
+            class my_main_thread_callback : public main_thread_callback
+            {
+                service_ptr_t<upload_thread> m_thread;
+
+                void callback_run() override { m_thread->start (); }
+            public:
+                my_main_thread_callback (service_ptr_t<upload_thread> p_thread) : m_thread (p_thread) {}
+            };
+
             pfc::string8_fast upload_items (upload_job &p_job)
             {
                 pfc::string8_fast errors;
@@ -59,30 +68,27 @@ namespace vk_uploader
                 p_job.m_items.for_each ([&] (metadb_handle_ptr p_item)
                 {
                     pfc::string8_fast reason;
-                    if (filter_bad_file (p_item, reason))
-                        errors << "Skipping file " << p_item->get_location ().get_path ();
-                });
-                /*metadb_handle_ptr item;
-                static_api_ptr_t<metadb>()->handle_create (item, p_task.m_location);
-                if (item.is_valid () && filter_bad_file (item) == false) {
-                    class my_callback : public main_thread_callback
-                    {
-                        pfc::string8 m_path;
-                        const win32_event & m_event;
+                    t_audio_id id = 0;
 
-                        void callback_run() override {
-                            service_ptr_t<upload_thread> thread = new service_impl_t<upload_thread> (m_path, m_event);
-                            thread->start ();
-                        }
-                    public:
-                        my_callback (const char *p_path, const win32_event & p_event) : m_path (p_path), m_event (p_event) {}
-                    };
-                   
-                    m_upload_finished.set_state (false);
-                    main_thread_callback_spawn<my_callback> (p_task.m_location.get_path (), m_upload_finished);
-                    m_upload_finished.wait_for (-1);
-                }*/
-                return "";
+                    if (filter_bad_file (p_item, reason))
+                        errors << "Skipping " << p_item->get_path () << ": " << reason << "\n";
+                    else {
+                        m_item_upload_done.set_state (false);
+
+                        service_ptr_t<upload_thread> thread = new service_impl_t<upload_thread> (p_item, m_item_upload_done);
+                        main_thread_callback_spawn<my_main_thread_callback> (thread);
+
+                        m_item_upload_done.wait_for (-1);
+
+                        if (thread->successed ())
+                            id = thread->get_audio_id ();
+                        else
+                            errors << p_item->get_path () << " failed: " << thread->get_error () << "\n";
+                    }
+
+                    p_job.m_ids.append_single (id);
+                });
+                return errors;
             }
 
             pfc::string8_fast post_process (const upload_job &p_job)
