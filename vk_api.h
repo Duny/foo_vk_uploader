@@ -55,7 +55,7 @@ namespace vk_uploader
             // represents as a map of album_name=>album_id pairs
             api_audio_getAlbums () {
                 response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("audio.getAlbums", url_params ("count", "100"));
-                if (result.is_valid ()) {
+                 if (result.is_valid ()) {
                     for (t_size n = result->size (), i = 1; i < n; ++i) {
                         if (!(result[i].isMember ("title"))) {
                             m_error = "no 'title' field in response from audio.getAlbums";
@@ -101,6 +101,27 @@ namespace vk_uploader
                 response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("audio.deleteAlbum", url_params ("album_id", pfc::string_formatter () << id));
                 if (!result.is_valid () || !result->asBool ())
                     m_error = result.get_error_code ();
+            }
+        };
+
+        class api_audio_moveToAlbum : public api_base
+        {
+        public:
+            api_audio_moveToAlbum (const pfc::list_t<t_audio_id> &audio_ids, t_album_id album_id)
+            {
+                pfc::string8_fast aids;
+                for (t_size i = 0, n = audio_ids.get_size (); i < n; ++i) aids << audio_ids[i] << ",";
+
+                if (audio_ids.get_count ()) {
+                    aids.truncate (aids.length () - 1);
+
+                    url_params params ("aids", aids);
+                    params["album_id"] = pfc::string_formatter () << album_id;
+                    
+                    response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("audio.moveToAlbum", params);
+                    if (!result.is_valid () || !result->asBool ())
+                        m_error = result.get_error_code ();
+                }
             }
         };
 
@@ -169,6 +190,7 @@ namespace vk_uploader
                 }
             }
         };
+
 
         // {1EABF92D-EA43-4DCC-BCD0-B2B4C9BC003C}
         __declspec(selectany) const GUID api_callback::class_guid = 

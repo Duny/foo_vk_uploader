@@ -90,6 +90,12 @@ namespace vk_uploader
             {
                 pfc::string8_fast errors;
 
+                if (p_job.m_preset.m_album_id != 0 && p_job.m_preset.m_album_id != pfc_infinite) {
+                    vk_api::api_audio_moveToAlbum move_to_album (p_job.m_ids, p_job.m_preset.m_album_id);
+                    if (!move_to_album.is_valid ())
+                        errors << "Error while moving track(s) to album: " << move_to_album.get_error ();
+                }
+
                 if (p_job.m_preset.m_post_on_wall) {
                     vk_api::api_wall_post post (p_job.m_preset.m_post_mgs, p_job.m_ids);
                     if (!post.is_valid ())

@@ -44,7 +44,7 @@ namespace vk_uploader
             
             if (Json::Reader ().parse (begin, end, val, false)) {
                 Json::Value *out;
-                if (val.isObject () && pfc::stricmp_ascii (val.begin ().memberName (), "response") == 0)
+                if (val.isObject () && val.isMember ("response"))
                     out = new Json::Value (val["response"]);
                 else
                     out = new Json::Value (val);
@@ -54,7 +54,9 @@ namespace vk_uploader
 
         inline bool is_valid () const {
             const Json::Value *val = get ();
-            return val && !val->empty () && val->isObject () && !val->isMember ("error");
+            if (!val || val->isNull ()) return false;
+            if (val->isObject ()) return !val->isMember ("error");
+            return true;
         };
 
         pfc::string8 get_error_code ()
