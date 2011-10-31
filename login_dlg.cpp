@@ -22,7 +22,7 @@ namespace vk_uploader
 
     login_dlg::login_dlg (t_login_action action) : m_action (action)
     {
-        m_login_url << "http://api.vk.com/oauth/authorize?display=popup&scope=audio,wall&response_type=token&redirect_uri=" << g_blank_html << "&client_id=" << vk_api::app_id;
+        m_login_url << "http://api.vk.com/oauth/authorize?display=popup&scope=audio,wall,offline&response_type=token&redirect_uri=" << g_blank_html << "&client_id=" << vk_api::app_id;
         m_logout_url << "http://api.vk.com/oauth/logout?client_id=" << vk_api::app_id;
 
         DoModal (core_api::get_main_window ());
@@ -42,7 +42,7 @@ namespace vk_uploader
         
         if (m_action == action_login)
             navigate (m_login_url);
-        else if (m_action == action_relogin)
+        else if (m_action == action_logout || m_action == action_relogin)
             navigate (m_logout_url);
        
         return TRUE;
@@ -52,8 +52,10 @@ namespace vk_uploader
     {
         m_current_location = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
 
-        if (is_blank_page (m_current_location))
+        if (is_blank_page (m_current_location) || m_action == action_logout) {
             close ();
+            return;
+        }
             
         if (m_action == action_relogin) {
             m_action = action_login;

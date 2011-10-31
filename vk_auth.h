@@ -13,6 +13,8 @@ namespace vk_uploader
         public:
             virtual const char *get_user_id () = 0;
             virtual const char *get_access_token () = 0;
+
+            virtual void relogin_user () = 0;
         };
 
         // {911ED77D-3820-4B8E-BE4F-6EF30029670B}

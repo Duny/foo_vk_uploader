@@ -73,6 +73,13 @@ namespace vk_uploader
                 check_auth_data ();
                 return cfg::auth_data.m_access_token;
             }
+
+            void relogin_user () override
+            {
+                // THIS NEED TO BE TEST!!!!!! Relogin + upload
+                login_dlg dlg (action_logout);
+                get_auth_data ();
+            }
         };
         static service_factory_single_t<authorization_imp> g_auth_factory;
     }

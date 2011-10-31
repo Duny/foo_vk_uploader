@@ -180,7 +180,7 @@ namespace vk_uploader
                 for (t_size i = 0, n = audio_ids.get_size (); i < n; ++i) attachments << "audio" << user_id << "_" << audio_ids[i] << ",";
                 if (!attachments.is_empty ()) {
                     attachments.truncate (attachments.length () - 1); // remove last ',' symbol
-                    params["attachments"] = attachments;
+                    params["attachment"] = attachments;
                 }
 
                 if (params.get_count ()) {

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "login_dlg.h"
+#include "vk_api.h"
 #include "helpers.h"
 
 namespace vk_uploader
@@ -27,7 +27,7 @@ namespace vk_uploader
 
         //! Executes the command. p_callback parameter is reserved for future use and should be ignored / set to null pointer.
         void execute (t_uint32 p_index, service_ptr_t<service_base>) override
-        { if (p_index == 0) login_dlg dlg (action_relogin); }
+        { if (p_index == 0) static_api_ptr_t<vk_api::authorization>()->relogin_user (); }
     };
 
     static mainmenu_commands_factory_t<menucomman_relogin> g_mainmenu_factiory;
