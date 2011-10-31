@@ -22,7 +22,7 @@ namespace vk_uploader
 
     login_dlg::login_dlg (t_login_action action) : m_action (action)
     {
-        m_login_url << "http://api.vk.com/oauth/authorize?display=popup&scope=audio&response_type=token&redirect_uri=" << g_blank_html << "&client_id=" << vk_api::app_id;
+        m_login_url << "http://api.vk.com/oauth/authorize?display=popup&scope=audio,wall&response_type=token&redirect_uri=" << g_blank_html << "&client_id=" << vk_api::app_id;
         m_logout_url << "http://api.vk.com/oauth/logout?client_id=" << vk_api::app_id;
 
         DoModal (core_api::get_main_window ());

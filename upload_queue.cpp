@@ -12,14 +12,12 @@ namespace vk_uploader
         {
             upload_job () {}
             upload_job (metadb_handle_list_cref p_items, const upload_params &p_preset) : m_preset (p_preset)
-            { /*p_items.enumerate ([&] (metadb_handle_ptr p_item) { m_items.add_item (p_item); });*/ m_items.add_items (p_items); }
-
-            // TESTE ME!!!!!!!! Multiple file upload
+            { m_items.add_items (p_items); }
                 
             metadb_handle_list m_items;
             upload_params m_preset;
 
-            pfc::array_t<t_audio_id> m_ids; // ids of uploaded items
+            pfc::list_t<t_audio_id> m_ids; // ids of uploaded items
 
             bool operator== (const upload_job &other) { return m_preset == other.m_preset; }
             bool operator!= (const upload_job &other) { return !operator== (other); }
@@ -68,7 +66,6 @@ namespace vk_uploader
                 p_job.m_items.for_each ([&] (metadb_handle_ptr p_item)
                 {
                     pfc::string8_fast reason;
-                    t_audio_id id = 0;
 
                     if (filter_bad_file (p_item, reason))
                         errors << "Skipping " << p_item->get_path () << ": " << reason << "\n";
@@ -81,19 +78,25 @@ namespace vk_uploader
                         m_item_upload_done.wait_for (-1);
 
                         if (thread->successed ())
-                            id = thread->get_audio_id ();
+                            p_job.m_ids.add_item (thread->get_audio_id ());
                         else
                             errors << p_item->get_path () << " failed: " << thread->get_error () << "\n";
                     }
-
-                    p_job.m_ids.append_single (id);
                 });
                 return errors;
             }
 
             pfc::string8_fast post_process (const upload_job &p_job)
             {
-                return "";
+                pfc::string8_fast errors;
+
+                if (p_job.m_preset.m_post_on_wall) {
+                    vk_api::api_wall_post post (p_job.m_preset.m_post_mgs, p_job.m_ids);
+                    if (!post.is_valid ())
+                        errors << "Error while posting message on the wall: " << post.get_error ();
+                }
+                
+                return errors;
             }
 
             void threadProc () override

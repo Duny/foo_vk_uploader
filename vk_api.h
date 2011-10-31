@@ -1,6 +1,7 @@
 #ifndef _FOO_VK_UPLOADER_VK_API_H_
 #define _FOO_VK_UPLOADER_VK_API_H_
 
+#include "vk_auth.h"
 #include "helpers.h"
 
 namespace vk_uploader
@@ -103,7 +104,7 @@ namespace vk_uploader
             }
         };
 
-        class api_audio_getUploadServer : public api_base
+        class api_audio_getUploadServer
         {
             pfc::string8 m_url;
         public:
@@ -117,13 +118,12 @@ namespace vk_uploader
             operator const char* () const { return m_url.get_ptr (); }
         };
 
-        class api_audio_save : public api_base
+        class api_audio_save
         {
             t_audio_id m_id; // id of newly upload mp3 file
         public:
-            // answer from vk.com server after file upload (post)
+            // answer from vk.com server after file upload (with post)
             api_audio_save (const pfc::string8 &answer) {
-                popup_message::g_show (answer, "");
                 response_json_ptr result (answer);
                 result.assert_valid ();
                 
@@ -145,6 +145,31 @@ namespace vk_uploader
             t_audio_id get_id () const { return m_id; }
         };
 
+        class api_wall_post : public api_base
+        {
+        public:
+            api_wall_post (const pfc::string8 &msg, const pfc::list_t<t_audio_id> &audio_ids) {
+                url_params params;
+
+                if (!msg.is_empty ())
+                    params["message"] = msg;
+
+                pfc::string8_fast attachments;
+                const char *user_id = static_api_ptr_t<vk_api::authorization>()->get_user_id ();
+                for (t_size i = 0, n = audio_ids.get_size (); i < n; ++i) attachments << "audio" << user_id << "_" << audio_ids[i] << ",";
+                if (!attachments.is_empty ()) {
+                    attachments.truncate (attachments.length () - 1); // remove last ',' symbol
+                    params["attachments"] = attachments;
+                }
+
+                if (params.get_count ()) {
+                    response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("wall.post");
+                    if (!result.is_valid ())
+                        m_error = result.get_error_code ();
+                }
+            }
+        };
+
         // {1EABF92D-EA43-4DCC-BCD0-B2B4C9BC003C}
         __declspec(selectany) const GUID api_callback::class_guid = 
         { 0x1eabf92d, 0xea43, 0x4dcc, { 0xbc, 0xd0, 0xb2, 0xb4, 0xc9, 0xbc, 0x0, 0x3c } };
@@ -158,6 +183,5 @@ namespace vk_uploader
 }
 
 #include "vk_api_invoker.h"
-#include "vk_auth.h"
 
 #endif
