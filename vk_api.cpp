@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "vk_api.h"
+#include "vk_api_invoker.h"
 
 namespace vk_uploader
 {

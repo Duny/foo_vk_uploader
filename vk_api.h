@@ -39,7 +39,7 @@ namespace vk_uploader
         };
 
 
-        class api_base
+        class api_imp_base
         {
         protected:
             pfc::string8 m_error;
@@ -48,7 +48,7 @@ namespace vk_uploader
             const pfc::string8 &get_error () const { return m_error; }
         };
 
-        class api_audio_getAlbums : public api_base, public pfc::map_t<pfc::string8, t_album_id>
+        class api_audio_getAlbums : public api_imp_base, public pfc::map_t<pfc::string8, t_album_id>
         {
         public:
             // reads a list of user albums (from vk.com profile)
@@ -76,7 +76,7 @@ namespace vk_uploader
             t_album_id &operator [] (const char *p_name) { return find_or_add (pfc::string8 (p_name)); }
         };
 
-        class api_audio_addAlbum : public api_base
+        class api_audio_addAlbum : public api_imp_base
         {
             t_album_id m_id;
         public:
@@ -93,7 +93,7 @@ namespace vk_uploader
             t_album_id get_album_id () const { return m_id; }
         };
 
-        class api_audio_deleteAlbum : public api_base
+        class api_audio_deleteAlbum : public api_imp_base
         {
         public:
             api_audio_deleteAlbum (t_album_id id)
@@ -104,7 +104,7 @@ namespace vk_uploader
             }
         };
 
-        class api_audio_moveToAlbum : public api_base
+        class api_audio_moveToAlbum : public api_imp_base
         {
         public:
             api_audio_moveToAlbum (const pfc::list_t<t_audio_id> &audio_ids, t_album_id album_id)
@@ -112,7 +112,7 @@ namespace vk_uploader
                 pfc::string8_fast aids;
                 for (t_size i = 0, n = audio_ids.get_size (); i < n; ++i) aids << audio_ids[i] << ",";
 
-                if (audio_ids.get_count ()) {
+                if (!aids.is_empty ()) {
                     aids.truncate (aids.length () - 1);
 
                     url_params params ("aids", aids);
@@ -166,14 +166,13 @@ namespace vk_uploader
             t_audio_id get_id () const { return m_id; }
         };
 
-        class api_wall_post : public api_base
+        class api_wall_post : public api_imp_base
         {
         public:
             api_wall_post (const pfc::string8 &msg, const pfc::list_t<t_audio_id> &audio_ids) {
                 url_params params;
 
-                if (!msg.is_empty ())
-                    params["message"] = msg;
+                if (!msg.is_empty ()) params["message"] = msg;
 
                 pfc::string8_fast attachments;
                 const char *user_id = static_api_ptr_t<vk_api::authorization>()->get_user_id ();
@@ -203,7 +202,4 @@ namespace vk_uploader
 
     typedef static_api_ptr_t<vk_api::api_profider> get_api_provider;
 }
-
-#include "vk_api_invoker.h"
-
 #endif
