@@ -3,19 +3,15 @@
 
 namespace vk_uploader
 {
-    enum t_login_action {
-        action_login,
-        action_logout,
-        action_relogin
-    };
-
     class login_dlg :
         public CAxDialogImpl<login_dlg>,
         public CDialogResize<login_dlg>,
         public IDispEventImpl<IDC_IE, login_dlg>
     {
     public:
-        login_dlg (t_login_action action = action_login);
+        enum t_login_action { action_do_login, action_do_relogin };
+
+        login_dlg (t_login_action action = action_do_login);
 
         enum { IDD = IDD_LOGIN };
 

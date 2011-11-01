@@ -227,6 +227,8 @@ namespace vk_uploader
     public:
         enum { IDD = IDD_UPLOAD_SETUP };
 
+        static void clear_album_list () { m_albums.remove_all (); }
+
         upload_setup_dlg (metadb_handle_list_cref p_items) : m_items (p_items) {}
     };
 
@@ -246,5 +248,10 @@ namespace vk_uploader
     void show_upload_setup_dialog (metadb_handle_list_cref p_items)
     {
         new CWindowAutoLifetime<ImplementModelessTracking<upload_setup_dlg>>(core_api::get_main_window (), p_items);
+    }
+
+    void clear_album_list ()
+    {
+        upload_setup_dlg::clear_album_list ();
     }
 }

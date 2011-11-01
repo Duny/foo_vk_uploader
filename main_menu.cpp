@@ -27,7 +27,17 @@ namespace vk_uploader
 
         //! Executes the command. p_callback parameter is reserved for future use and should be ignored / set to null pointer.
         void execute (t_uint32 p_index, service_ptr_t<service_base>) override
-        { if (p_index == 0) static_api_ptr_t<vk_api::authorization>()->relogin_user (); }
+        {
+            if (p_index == 0) {
+                try {
+                    static_api_ptr_t<vk_api::authorization>()->relogin_user ();
+                    clear_album_list ();
+                } catch (const std::exception &e) {
+                    popup_message::g_show (e.what (), "Error", popup_message::icon_error);
+                }
+                catch (...) {}
+            }
+        }
     };
 
     static mainmenu_commands_factory_t<menucomman_relogin> g_mainmenu_factiory;

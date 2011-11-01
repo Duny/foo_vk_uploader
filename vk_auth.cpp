@@ -13,7 +13,18 @@ namespace vk_uploader
         {
             struct auth_data_t
             {
-                bool is_empty () const { return m_user_id.is_empty () || m_access_token.is_empty (); }
+                bool is_valid () const { 
+                    if (m_user_id.is_empty () || m_access_token.is_empty ()) return false;
+                    if (m_expires_in > 0 && (time (nullptr) > (m_timestamp + m_expires_in))) return false;
+                    return true;
+                }
+
+                void reset () {
+                    m_user_id.reset ();
+                    m_access_token.reset ();
+                    m_timestamp = 0;
+                    m_expires_in = 0;
+                }
 
                 pfc::string8 m_user_id;
                 pfc::string8 m_access_token;
@@ -23,17 +34,15 @@ namespace vk_uploader
 
             FB2K_STREAM_READER_OVERLOAD(auth_data_t) { return stream >> value.m_user_id >> value.m_access_token >> value.m_timestamp >> value.m_expires_in; }
             FB2K_STREAM_WRITER_OVERLOAD(auth_data_t) { return stream << value.m_user_id << value.m_access_token << value.m_timestamp << value.m_expires_in; }
-
-            cfg_obj<auth_data_t> auth_data (guid_inline<0xa1324e98, 0xc549, 0x4ba8, 0x98, 0xc0, 0x6a, 0x2, 0x46, 0xa9, 0xa, 0x62>::guid);
         }
 
         class NOVTABLE authorization_imp : public authorization
         {
-            void get_auth_data ()
+            void get_auth_data (login_dlg::t_login_action action)
             {
                 pfc::string8 redirect_url;
                 while (true) {
-                    redirect_url = login_dlg ().get_browser_location ();
+                    redirect_url = login_dlg (action).get_browser_location ();
                     if (is_blank_page (redirect_url))
                         break;
                     else {
@@ -47,40 +56,37 @@ namespace vk_uploader
                 if (params.have ("error"))
                     throw exception_auth_failed (params["error"]);
                 else if (params.have ("access_token") && params.have ("user_id") && params.have ("expires_in")) {
-                    cfg::auth_data.m_timestamp = time (nullptr);
-                    cfg::auth_data.m_access_token = params["access_token"];
-                    cfg::auth_data.m_user_id = params["user_id"];
-                    cfg::auth_data.m_expires_in = pfc::atoui_ex (params["expires_in"], pfc_infinite);
+                    m_auth_data.m_timestamp = time (nullptr);
+                    m_auth_data.m_access_token = params["access_token"];
+                    m_auth_data.m_user_id = params["user_id"];
+                    m_auth_data.m_expires_in = pfc::atoui_ex (params["expires_in"], pfc_infinite);
                 }
                 else
                     throw exception_auth_failed ("Unexpected server redirect");
             }
 
-            void check_auth_data ()
-            {
-                if (cfg::auth_data.is_empty () || time (nullptr) > (cfg::auth_data.m_timestamp + cfg::auth_data.m_expires_in))
-                    get_auth_data ();
-            }
-
             const char *get_user_id () override
             {
-                check_auth_data ();
-                return cfg::auth_data.m_user_id;
+                if (!m_auth_data.is_valid ()) get_auth_data (login_dlg::action_do_login);
+                return m_auth_data.m_user_id;
             }
 
             const char *get_access_token () override
             {
-                check_auth_data ();
-                return cfg::auth_data.m_access_token;
+                if (!m_auth_data.is_valid ()) get_auth_data (login_dlg::action_do_login);
+                return m_auth_data.m_access_token;
             }
 
             void relogin_user () override
             {
-                // THIS NEED TO BE TEST!!!!!! Relogin + upload
-                login_dlg dlg (action_logout);
-                get_auth_data ();
+                m_auth_data.reset ();
+                get_auth_data (login_dlg::action_do_relogin);
             }
+
+            static cfg_obj<cfg::auth_data_t> m_auth_data;
         };
+        cfg_obj<cfg::auth_data_t> authorization_imp::m_auth_data (guid_inline<0xa1324e98, 0xc549, 0x4ba8, 0x98, 0xc0, 0x6a, 0x2, 0x46, 0xa9, 0xa, 0x62>::guid);
+
         static service_factory_single_t<authorization_imp> g_auth_factory;
     }
 }

@@ -143,7 +143,7 @@ namespace vk_uploader
         {
             t_audio_id m_id; // id of newly upload mp3 file
         public:
-            // answer from vk.com server after file upload (with post)
+            // answer from vk.com server after file uploading is finished (with post request)
             api_audio_save (const pfc::string8 &answer) {
                 response_json_ptr result (answer);
                 result.assert_valid ();
@@ -184,7 +184,7 @@ namespace vk_uploader
                 }
 
                 if (params.get_count ()) {
-                    response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("wall.post");
+                    response_json_ptr result = static_api_ptr_t<vk_api::api_profider>()->call_api ("wall.post", params);
                     if (!result.is_valid ())
                         m_error = result.get_error_code ();
                 }
