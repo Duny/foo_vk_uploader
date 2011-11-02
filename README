@@ -5,3 +5,4 @@ In order to build, you will need to define some environment variables:
 1. FB2KSDK must point to the folder with foobar2000 SDK
 3. BUILD_BIN_DIR will be used for project's binary files (*.obj, etc)
 4. JSONCPP for the path with jsoncpp library files
+5. BOOST for boost library
