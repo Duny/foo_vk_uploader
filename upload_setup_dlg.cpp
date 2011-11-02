@@ -36,6 +36,25 @@ namespace vk_uploader
             ~combo_state_restorer () { uSetWindowText (m_combo, m_text); }
         };
 
+        template <void (*)>
+        void run_from_new_thread ()
+        {
+            class new_thread_t : pfc::thread
+            {
+                void threadProc () override
+                {
+                   t_func func;
+                   func ();
+                    delete this;
+                }
+                ~new_thread_t () { waitTillDone (); }
+            public:
+                new_thread_t () { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
+            };
+
+            new new_thread_t ();
+        }
+
         BEGIN_MSG_MAP_EX(upload_setup_dlg)
             MSG_WM_INITDIALOG(on_init_dialog)
             COMMAND_ID_HANDLER(IDOK, on_ok)
@@ -117,24 +136,18 @@ namespace vk_uploader
 
         HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
         {
-            class get_album_list_t : pfc::thread
+            HWND hWnd = *this;
+            auto get_album_list = [hWnd, this] () -> void
             {
-                HWND m_dlg;
-                void threadProc () override
-                {
-                    vk_api::api_audio_getAlbums album_list;
-                    m_albums.remove_all ();
-                    album_list.enumerate ([&] (pfc::string8 name, t_album_id id) { m_albums.add_item (album_info (name, id)); });
+                vk_api::api_audio_getAlbums album_list;
+                m_albums.remove_all ();
+                album_list.enumerate ([&] (const pfc::string8 &name, const t_album_id &id) { m_albums.add_item (album_info (name, id)); });
 
-                    if (::IsWindow (m_dlg)) uSendMessage (m_dlg, WM_ALBUM_LIST_REFRESHED, 0, 0);
-                    delete this;
-                }
-                ~get_album_list_t () { waitTillDone (); }
-            public:
-                get_album_list_t (HWND dlg) : m_dlg (dlg) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
-            };
-
-            new get_album_list_t (*this);
+                if (::IsWindow (hWnd)) uSendMessage (hWnd, WM_ALBUM_LIST_REFRESHED, 0, 0);
+                delete this;
+            }
+            
+            run_from_new_thread<get_album_list> ();
 
             return TRUE;
         }
