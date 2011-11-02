@@ -4,14 +4,16 @@
 #include "vk_auth.h"
 #include "helpers.h"
 
+#define VK_UPLOADER_APP_ID "2632594"
+
+#define VK_COM_BLANK_URL "http://api.vk.com/blank.html"
+#define VK_COM_LOGIN_URL "http://api.vk.com/oauth/authorize?display=popup&scope=audio,wall&response_type=token&client_id="VK_UPLOADER_APP_ID"&redirect_uri="VK_COM_BLANK_URL
+#define VK_COM_LOGOUT_URL "http://api.vk.com/oauth/logout?client_id="VK_UPLOADER_APP_ID
+
 namespace vk_uploader
 {
     namespace vk_api
     {   
-        PFC_DECLARE_EXCEPTION (exception_auth_failed, pfc::exception, "Authorization failed");
-
-        __declspec(selectany) extern const char *app_id = "2632594";
-
         class NOVTABLE api_callback : public service_base
         {
         public:
@@ -175,7 +177,7 @@ namespace vk_uploader
                 if (!msg.is_empty ()) params["message"] = msg;
 
                 pfc::string8_fast attachments;
-                const char *user_id = static_api_ptr_t<vk_api::authorization>()->get_user_id ();
+                const char *user_id = static_api_ptr_t<vk_auth::manager>()->get_user_id ();
                 for (t_size i = 0, n = audio_ids.get_size (); i < n; ++i) attachments << "audio" << user_id << "_" << audio_ids[i] << ",";
                 if (!attachments.is_empty ()) {
                     attachments.truncate (attachments.length () - 1); // remove last ',' symbol

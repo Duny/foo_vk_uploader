@@ -3,13 +3,16 @@
 
 namespace vk_uploader
 {
-    namespace vk_api
+    namespace vk_auth
     {
+        PFC_DECLARE_EXCEPTION (exception_vk_authorization, pfc::exception, "Authorization failed");
+        PFC_DECLARE_EXCEPTION (exception_auth_aborted_by_user, exception_vk_authorization, "Authorization canceled by user");
+
         // Authorization process for desktop apps: http://vkontakte.ru/developers.php?oid=-1&p=Авторизация_клиентских_приложений
 
-        class NOVTABLE authorization : public service_base
+        class NOVTABLE manager : public service_base
         {
-            FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(authorization)
+            FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
         public:
             virtual const char *get_user_id () = 0;
             virtual const char *get_access_token () = 0;
@@ -18,7 +21,7 @@ namespace vk_uploader
         };
 
         // {911ED77D-3820-4B8E-BE4F-6EF30029670B}
-        __declspec(selectany) const GUID authorization::class_guid =
+        __declspec(selectany) const GUID manager::class_guid =
         { 0x911ED77D, 0x3820, 0x4B8E, { 0xBE, 0x4F, 0x6E, 0xF3, 0x00, 0x29, 0x67, 0x0B } };
     }
 }

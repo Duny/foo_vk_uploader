@@ -11,7 +11,7 @@ namespace vk_uploader
     public:
         enum t_login_action { action_do_login, action_do_relogin };
 
-        login_dlg (t_login_action action = action_do_login);
+        login_dlg (t_login_action action) : m_action (action) { DoModal (core_api::get_main_window ()); }
 
         enum { IDD = IDD_LOGIN };
 
@@ -47,7 +47,6 @@ namespace vk_uploader
         pfc::string8 m_current_location;
         CComPtr<IWebBrowser2> m_wb2;
         t_login_action m_action;
-        pfc::string_formatter m_login_url, m_logout_url;
 
         static cfgDialogPosition m_pos;
     };

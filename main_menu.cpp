@@ -30,7 +30,7 @@ namespace vk_uploader
         {
             if (p_index == 0) {
                 try {
-                    static_api_ptr_t<vk_api::authorization>()->relogin_user ();
+                    static_api_ptr_t<vk_auth::manager>()->relogin_user ();
                     clear_album_list ();
                 } catch (const std::exception &e) {
                     popup_message::g_show (e.what (), "Error", popup_message::icon_error);

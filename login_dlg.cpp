@@ -20,13 +20,7 @@ namespace vk_uploader
         static initquit_factory_t<myinitquit> g_initquit;
     }
 
-    login_dlg::login_dlg (t_login_action action) : m_action (action)
-    {
-        m_login_url << "http://api.vk.com/oauth/authorize?display=popup&scope=audio,wall&response_type=token&redirect_uri=" << g_blank_html << "&client_id=" << vk_api::app_id;
-        m_logout_url << "http://api.vk.com/oauth/logout?client_id=" << vk_api::app_id;
-
-        DoModal (core_api::get_main_window ());
-    }
+    
 
     LRESULT login_dlg::on_init_dialog (CWindow, LPARAM)
     {
@@ -37,13 +31,11 @@ namespace vk_uploader
         CAxWindow ie = GetDlgItem (IDC_IE);
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             return FALSE;
-
-        pfc::string_formatter login_url, logout_url;
         
         if (m_action == action_do_login)
-            navigate (m_login_url);
+            navigate (VK_COM_LOGIN_URL);
         else if (m_action == action_do_relogin)
-            navigate (m_logout_url);
+            navigate (VK_COM_LOGOUT_URL);
        
         return TRUE;
     }
@@ -52,14 +44,14 @@ namespace vk_uploader
     {
         m_current_location = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
 
-        if (is_blank_page (m_current_location)) {
+        if (m_current_location.find_first (VK_COM_BLANK_URL) == 0) {
             close ();
             return;
         }
             
         if (m_action == action_do_relogin) {
             m_action = action_do_login;
-            navigate (m_login_url);
+            navigate (VK_COM_LOGIN_URL);
         }
     }
 

@@ -7,7 +7,7 @@
 
 namespace vk_uploader
 {
-    namespace vk_api
+    namespace vk_auth
     {
         namespace cfg
         {
@@ -36,25 +36,25 @@ namespace vk_uploader
             FB2K_STREAM_WRITER_OVERLOAD(auth_data_t) { return stream << value.m_user_id << value.m_access_token << value.m_timestamp << value.m_expires_in; }
         }
 
-        class NOVTABLE authorization_imp : public authorization
+        class NOVTABLE manager_imp : public manager
         {
             void get_auth_data (login_dlg::t_login_action action)
             {
                 pfc::string8 redirect_url;
                 while (true) {
                     redirect_url = login_dlg (action).get_browser_location ();
-                    if (is_blank_page (redirect_url))
+                    if (redirect_url.find_first (VK_COM_BLANK_URL) == 0) // if address starts from VK_COM_BLANK_URL, it means that auth was done successfully 
                         break;
                     else {
                         if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
-                            throw exception_auth_failed ();
+                            throw exception_auth_aborted_by_user ();
                     }
                 }
 
                 url_params params (redirect_url);
 
                 if (params.have ("error"))
-                    throw exception_auth_failed (params["error"]);
+                    throw std::exception (params["error"]);
                 else if (params.have ("access_token") && params.have ("user_id") && params.have ("expires_in")) {
                     m_auth_data.m_timestamp = time (nullptr);
                     m_auth_data.m_access_token = params["access_token"];
@@ -62,7 +62,7 @@ namespace vk_uploader
                     m_auth_data.m_expires_in = pfc::atoui_ex (params["expires_in"], pfc_infinite);
                 }
                 else
-                    throw exception_auth_failed ("Unexpected server redirect");
+                    throw std::exception ("Unexpected server redirect");
             }
 
             const char *get_user_id () override
@@ -85,8 +85,8 @@ namespace vk_uploader
 
             static cfg_obj<cfg::auth_data_t> m_auth_data;
         };
-        cfg_obj<cfg::auth_data_t> authorization_imp::m_auth_data (guid_inline<0xa1324e98, 0xc549, 0x4ba8, 0x98, 0xc0, 0x6a, 0x2, 0x46, 0xa9, 0xa, 0x62>::guid);
+        cfg_obj<cfg::auth_data_t> manager_imp::m_auth_data (guid_inline<0xa1324e98, 0xc549, 0x4ba8, 0x98, 0xc0, 0x6a, 0x2, 0x46, 0xa9, 0xa, 0x62>::guid);
 
-        static service_factory_single_t<authorization_imp> g_auth_factory;
+        static service_factory_single_t<manager_imp> g_auth_factory;
     }
 }

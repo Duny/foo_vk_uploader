@@ -84,7 +84,7 @@ namespace vk_uploader
         pfc::string8_fast tmp;
         p_params.enumerate ([&] (const pfc::string8 &p_name, const pfc::string8 &p_value) { pfc::urlEncode (tmp, p_value); m_url << p_name << "=" << tmp << "&"; });
 
-        m_url << "access_token=" << static_api_ptr_t<vk_api::authorization>()->get_access_token ();
+        m_url << "access_token=" << static_api_ptr_t<vk_auth::manager>()->get_access_token ();
 
         //popup_message::g_show (m_url, "");
     }

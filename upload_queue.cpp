@@ -17,8 +17,6 @@ namespace vk_uploader
             metadb_handle_list m_items;
             upload_params m_preset;
 
-            pfc::list_t<t_audio_id> m_ids; // ids of uploaded items
-
             bool operator== (const upload_job &other) { return m_preset == other.m_preset; }
             bool operator!= (const upload_job &other) { return !operator== (other); }
         };
@@ -56,54 +54,8 @@ namespace vk_uploader
 
                 void callback_run() override { m_thread->start (); }
             public:
-                my_main_thread_callback (service_ptr_t<upload_thread> p_thread) : m_thread (p_thread) {}
+                my_main_thread_callback (const service_ptr_t<upload_thread> &p_thread) : m_thread (p_thread) {}
             };
-
-            pfc::string8_fast upload_items (upload_job &p_job)
-            {
-                pfc::string8_fast errors;
-
-                p_job.m_items.for_each ([&] (metadb_handle_ptr p_item)
-                {
-                    pfc::string8_fast reason;
-
-                    if (filter_bad_file (p_item, reason))
-                        errors << "Skipping " << p_item->get_path () << ": " << reason << "\n";
-                    else {
-                        m_item_upload_done.set_state (false);
-
-                        service_ptr_t<upload_thread> thread = new service_impl_t<upload_thread> (p_item, m_item_upload_done);
-                        main_thread_callback_spawn<my_main_thread_callback> (thread);
-
-                        m_item_upload_done.wait_for (-1);
-
-                        if (thread->successed ())
-                            p_job.m_ids.add_item (thread->get_audio_id ());
-                        else
-                            errors << p_item->get_path () << " failed: " << thread->get_error () << "\n";
-                    }
-                });
-                return errors;
-            }
-
-            pfc::string8_fast post_process (const upload_job &p_job)
-            {
-                pfc::string8_fast errors;
-
-                if (p_job.m_preset.m_album_id != 0 && p_job.m_preset.m_album_id != pfc_infinite) {
-                    vk_api::api_audio_moveToAlbum move_to_album (p_job.m_ids, p_job.m_preset.m_album_id);
-                    if (!move_to_album.is_valid ())
-                        errors << "Error while moving track(s) to album: " << move_to_album.get_error ();
-                }
-
-                if (p_job.m_preset.m_post_on_wall) {
-                    vk_api::api_wall_post post (p_job.m_preset.m_post_mgs, p_job.m_ids);
-                    if (!post.is_valid ())
-                        errors << "Error while posting message on the wall: " << post.get_error ();
-                }
-                
-                return errors;
-            }
 
             void threadProc () override
             {
@@ -116,11 +68,10 @@ namespace vk_uploader
                             m_queue.remove (j);
                             
                             if (j.m_items.get_count ()) {
-                                pfc::string8_fast errors = upload_items (j);
-                                errors += post_process (j);
-
-                                if (!errors.is_empty ())
-                                    popup_message::g_show (errors, "Some items failed to upload", popup_message::icon_error);
+                                m_item_upload_done.set_state (false);
+                                service_ptr_t<upload_thread> thread = new service_impl_t<upload_thread> (j.m_items, j.m_preset, m_item_upload_done);
+                                main_thread_callback_spawn<my_main_thread_callback> (thread);
+                                m_item_upload_done.wait_for (-1);
                             }
                         }
                     }
