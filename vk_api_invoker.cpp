@@ -15,8 +15,8 @@ namespace vk_uploader
     {
         class api_invoker_imp : public api_invoker
         {
-            ULONGLONG m_first_call_time; // time then was made first call
-            ULONGLONG m_last_call_time; // time of the most resent call
+            DWORD m_first_call_time; // time then was made first call
+            DWORD m_last_call_time; // time of the most resent call
             t_size m_call_count; // number of calls made since m_first_call_time
             critical_section m_section;
 
@@ -43,7 +43,7 @@ namespace vk_uploader
                 m_invoker_avaliable.wait_for (-1);
 
                 {
-                    auto init_timers = [&] () { m_first_call_time = m_last_call_time = GetTickCount64 (); };
+                    auto init_timers = [&] () { m_first_call_time = m_last_call_time = GetTickCount (); };
 
                     insync (m_section);
 
@@ -57,7 +57,7 @@ namespace vk_uploader
                     if (m_call_count == 0) {
                         if ((m_last_call_time - m_first_call_time) < 1000) {
                             m_invoker_avaliable.set_state (false);
-                            Sleep ((DWORD)(1000 - (m_last_call_time - m_first_call_time)) + 100);
+                            Sleep (1100 - (m_last_call_time - m_first_call_time));
                             m_invoker_avaliable.set_state (true);
                         }
                         init_timers ();
@@ -65,7 +65,7 @@ namespace vk_uploader
                 }
 
                 response_json_ptr result = make_request (p_api_name, p_params);
-                ULONGLONG current_time = GetTickCount64 ();
+                DWORD current_time = GetTickCount ();
                 {
                     insync (m_section);
                     if (m_last_call_time < current_time) m_last_call_time = current_time;
