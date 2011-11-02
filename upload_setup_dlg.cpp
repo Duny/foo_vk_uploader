@@ -4,6 +4,8 @@
 #include "upload_preset.h"
 #include "upload_queue.h"
 
+#define WM_ALBUM_LIST_REFRESHED (WM_USER + 1)
+
 namespace vk_uploader
 {
     using namespace upload_presets;
@@ -44,6 +46,7 @@ namespace vk_uploader
             COMMAND_ID_HANDLER(IDC_BUTTON_REFRESH_ALBUMS, on_refresh_albums)
             COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_NEW, on_album_new)
             COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_DELETE, on_album_delete)
+            MESSAGE_HANDLER(WM_ALBUM_LIST_REFRESHED, on_album_list_refreshed)
             MSG_WM_CLOSE(close)
             MSG_WM_DESTROY(on_destroy)
         END_MSG_MAP()
@@ -114,15 +117,32 @@ namespace vk_uploader
 
         HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
         {
-            vk_api::api_audio_getAlbums album_list;
-            if (album_list.is_valid ()) {
-                combo_state_restorer restorer (m_combo_albums);
-                combo_albums_init ();
-                m_albums.remove_all ();
-                album_list.enumerate ([&] (pfc::string8 name, t_album_id id) { m_albums.add_item (combo_album_add (album_info (name, id))); });
-            }
-            else
-                ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (album_list.get_error ()));
+            class get_album_list_t : pfc::thread
+            {
+                HWND m_dlg;
+                void threadProc () override
+                {
+                    vk_api::api_audio_getAlbums album_list;
+                    m_albums.remove_all ();
+                    album_list.enumerate ([&] (pfc::string8 name, t_album_id id) { m_albums.add_item (album_info (name, id)); });
+
+                    if (::IsWindow (m_dlg)) uSendMessage (m_dlg, WM_ALBUM_LIST_REFRESHED, 0, 0);
+                    delete this;
+                }
+                ~get_album_list_t () { waitTillDone (); }
+            public:
+                get_album_list_t (HWND dlg) : m_dlg (dlg) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
+            };
+
+            new get_album_list_t (*this);
+
+            return TRUE;
+        }
+        HRESULT on_album_list_refreshed (UINT, DWORD, DWORD, BOOL&)
+        {
+            combo_state_restorer restorer (m_combo_albums);
+            combo_albums_init ();
+            m_albums.enumerate ([&] (const album_info &album) { combo_album_add (album); });
 
             return TRUE;
         }

@@ -14,15 +14,6 @@ namespace vk_uploader
 {
     namespace vk_api
     {   
-        class NOVTABLE api_callback : public service_base
-        {
-        public:
-            virtual void on_request_done (const pfc::string8 &p_api_name, const response_json_ptr &p_result) = 0;
-
-            FB2K_MAKE_SERVICE_INTERFACE(api_callback, service_base);
-        };
-
-
         class NOVTABLE api_profider : public service_base
         {
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(api_profider)
@@ -34,11 +25,12 @@ namespace vk_uploader
             inline response_json_ptr call_api (const char *p_api_name) { return call_api (p_api_name, url_params ()); }
 
             virtual pfc::string8_fast file_upload (const char *p_url, const char *p_file, abort_callback &p_abort) = 0;
-
-            // make asynchronous call
-            virtual void call_api_async (const char *p_api_name, params_cref p_params, service_ptr_t<api_callback> p_callback) = 0;
-            inline void call_api_async (const char *p_api_name, service_ptr_t<api_callback> p_callback) { call_api_async (p_api_name, url_params (), p_callback); }
         };
+
+        // {415971BA-5773-4843-9D18-09F28074F5F7}
+        __declspec(selectany) const GUID api_profider::class_guid = 
+        { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
+
 
 
         class api_imp_base
@@ -191,15 +183,6 @@ namespace vk_uploader
                 }
             }
         };
-
-
-        // {1EABF92D-EA43-4DCC-BCD0-B2B4C9BC003C}
-        __declspec(selectany) const GUID api_callback::class_guid = 
-        { 0x1eabf92d, 0xea43, 0x4dcc, { 0xbc, 0xd0, 0xb2, 0xb4, 0xc9, 0xbc, 0x0, 0x3c } };
-
-        // {415971BA-5773-4843-9D18-09F28074F5F7}
-        __declspec(selectany) const GUID api_profider::class_guid = 
-        { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
     }
 
     typedef static_api_ptr_t<vk_api::api_profider> get_api_provider;

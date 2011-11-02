@@ -17,7 +17,7 @@ namespace vk_uploader
             metadb_handle_list m_items;
             upload_params m_preset;
 
-            bool operator== (const upload_job &other) { return m_preset == other.m_preset; }
+            bool operator== (const upload_job &other) { return m_preset == other.m_preset && (m_items == other.m_items); }
             bool operator!= (const upload_job &other) { return !operator== (other); }
         };
 
@@ -46,7 +46,7 @@ namespace vk_uploader
         };
 
         
-        class queue_manager_thread_t : private pfc::thread
+        class queue_manager_thread_t : pfc::thread
         {
             class my_main_thread_callback : public main_thread_callback
             {
