@@ -44,7 +44,8 @@ namespace vk_uploader
     {
         m_current_location = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
 
-        if (m_current_location.find_first (VK_COM_BLANK_URL) == 0) {
+        if (m_current_location.find_first (VK_COM_BLANK_URL) == 0 ||
+            m_current_location.find_first ("cancel=1") != pfc_infinite) {
             close ();
             return;
         }

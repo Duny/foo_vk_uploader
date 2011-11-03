@@ -11,4 +11,6 @@
 
 #include "boost/smart_ptr.hpp"
 
+#include "helpers.h"
+
 #define COMPONENT_NAME "foo_vk_uploader"

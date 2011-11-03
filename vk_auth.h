@@ -5,15 +5,14 @@ namespace vk_uploader
 {
     namespace vk_auth
     {
-        PFC_DECLARE_EXCEPTION (exception_vk_authorization, pfc::exception, "Authorization failed");
-        PFC_DECLARE_EXCEPTION (exception_auth_aborted_by_user, exception_vk_authorization, "Authorization canceled by user");
-
         // Authorization process for desktop apps: http://vkontakte.ru/developers.php?oid=-1&p=Авторизация_клиентских_приложений
 
         class NOVTABLE manager : public service_base
         {
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
         public:
+            // All this functions may throw exception_aborted then user cancels authorization (by pressing "Cancel" button in dialog)
+
             virtual const char *get_user_id () = 0;
             virtual const char *get_access_token () = 0;
 

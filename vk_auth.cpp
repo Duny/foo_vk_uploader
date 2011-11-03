@@ -43,15 +43,20 @@ namespace vk_uploader
                 pfc::string8 redirect_url;
                 while (true) {
                     redirect_url = login_dlg (action).get_browser_location ();
-                    if (redirect_url.find_first (VK_COM_BLANK_URL) == 0) // if address starts from VK_COM_BLANK_URL, it means that auth was done successfully 
+
+                    if (redirect_url.find_first ("cancel=1") != pfc_infinite ||
+                        redirect_url.find_first ("user_denied") != pfc_infinite) // user pressed "Cancel" button
+                        throw exception_aborted ();
+                    else if (redirect_url.find_first (VK_COM_BLANK_URL) == 0) // if address starts from VK_COM_BLANK_URL, it means that auth was done successfully 
                         break;
                     else {
                         if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
-                            throw exception_auth_aborted_by_user ();
+                            throw exception_aborted ();
                     }
                 }
 
                 url_params params (redirect_url);
+                
 
                 if (params.have ("error"))
                     throw std::exception (params["error"]);

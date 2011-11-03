@@ -150,15 +150,18 @@ namespace vk_uploader
         {
             run_in_separate_thread ([this] ()
             {
-                api_audio_getAlbums album_list;
-                if (album_list.is_valid ()) {
+                try {
+                    abort_callback_impl p_abort;
+                    api_audio_getAlbums album_list (p_abort);
                     m_albums.remove_all ();
                     m_combo_albums.init ();
                     for (t_size i = 0, n = album_list.get_count (); i < n; i++)
                         m_albums.add_item (m_combo_albums.add_album (album_list[i]));
                 }
-                else
-                    uMessageBox (core_api::get_main_window (), album_list.get_error (), "Error while reading album list", MB_OK | MB_ICONERROR);
+                catch (exception_aborted) {}
+                catch (const std::exception &e) {
+                    uMessageBox (core_api::get_main_window (), e.what (), "Error while reading album list", MB_OK | MB_ICONERROR);
+                }
             });
 
             return TRUE;
@@ -172,11 +175,15 @@ namespace vk_uploader
             else {
                 run_in_separate_thread ([=, this] ()
                 {
-                    api_audio_addAlbum result (album_title);
-                    if (result.is_valid ())
+                    try {
+                        abort_callback_impl p_abort;
+                        api_audio_addAlbum result (album_title, p_abort);
                         m_albums.add_item (m_combo_albums.add_album (std::make_pair (album_title, result.get_album_id ())));
-                    else
-                        uMessageBox (core_api::get_main_window (), result.get_error (), "Error while creating new album", MB_OK | MB_ICONERROR);
+                    }
+                    catch (exception_aborted) {}
+                    catch (const std::exception &e) {
+                        uMessageBox (core_api::get_main_window (), e.what (), "Error while creating new album", MB_OK | MB_ICONERROR);
+                    }
                 });
             }
             
@@ -196,13 +203,16 @@ namespace vk_uploader
                 if (dlg_result == IDYES) {
                     run_in_separate_thread ([=, this] ()
                     {
-                        api_audio_deleteAlbum result (to_delete.second);
-                        if (result.is_valid ()) {
+                        try {
+                            abort_callback_impl p_abort;
+                            api_audio_deleteAlbum result (to_delete.second, p_abort);
                             m_albums.remove_item (to_delete);
                             m_combo_albums.DeleteString (index);
                         }
-                        else
-                            uMessageBox (core_api::get_main_window (), result.get_error (), "Error while creating new album", MB_OK | MB_ICONERROR);
+                        catch (exception_aborted) {}
+                        catch (const std::exception &e) {
+                            uMessageBox (core_api::get_main_window (), e.what (), "Error while creating new album", MB_OK | MB_ICONERROR);
+                        }
                     });
                 }
             }

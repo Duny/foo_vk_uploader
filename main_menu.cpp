@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "vk_api.h"
-#include "helpers.h"
 
 namespace vk_uploader
 {
@@ -32,10 +31,11 @@ namespace vk_uploader
                 try {
                     get_auth_manager ()->relogin_user ();
                     clear_album_list ();
-                } catch (const std::exception &e) {
-                    popup_message::g_show (e.what (), "Error", popup_message::icon_error);
                 }
-                catch (...) {}
+                catch (exception_aborted) {}
+                catch (const std::exception &e) {
+                    uMessageBox (core_api::get_main_window (), e.what (), "Error during authorization", MB_OK | MB_ICONERROR);
+                }
             }
         }
     };

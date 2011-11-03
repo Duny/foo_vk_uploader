@@ -32,7 +32,9 @@ namespace vk_uploader
                 else {
                     try {
                         aids_list.add_item (upload_item (p_item, p_status, p_abort));
-                    } catch (const std::exception &e) {
+                    }
+                    catch (exception_aborted) { return; }
+                    catch (const std::exception &e) {
                         m_errors << p_item->get_path () << " failed: " << e.what () << "\n";
                     }
                 }
@@ -41,15 +43,23 @@ namespace vk_uploader
             });
 
             if (m_params.m_album_id != 0 && m_params.m_album_id != pfc_infinite) {
-                api_audio_moveToAlbum move_to_album (aids_list, m_params.m_album_id);
-                if (!move_to_album.is_valid ())
-                    m_errors << "Error while moving track(s) to album: " << move_to_album.get_error ();
+                try {
+                    api_audio_moveToAlbum move_to_album (aids_list, m_params.m_album_id, p_abort);
+                }
+                catch (exception_aborted) { return; }
+                catch (const std::exception &e) {
+                    m_errors << "Error while moving track(s) to album: " << e.what ();
+                }
             }
 
             if (m_params.m_post_on_wall) {
-                api_wall_post new_post (m_params.m_post_mgs, aids_list);
-                if (!new_post.is_valid ())
-                    m_errors << "Error while posting message on the wall: " << new_post.get_error ();
+                try {
+                    api_wall_post new_post (m_params.m_post_mgs, aids_list, p_abort);
+                }
+                catch (exception_aborted) { return; }
+                catch (const std::exception &e) {
+                    m_errors << "Error while posting message on the wall: " << e.what ();
+                }
             }
         }
 
@@ -58,13 +68,13 @@ namespace vk_uploader
             if (!m_errors.is_empty () && !p_was_aborted)
                 popup_message::g_show (m_errors, "Some items failed to upload", popup_message::icon_error);
 
-            const_cast<win32_event&>(m_event_upload_finished).set_state (true);
+                const_cast<win32_event&>(m_event_upload_finished).set_state (true);
         }
 
         t_audio_id upload_thread::upload_item (const metadb_handle_ptr &p_item, threaded_process_status &p_status, abort_callback &p_abort)
         {
             // step 1
-            api_audio_getUploadServer url_for_upload;
+            api_audio_getUploadServer url_for_upload (p_abort);
             p_status.set_progress_secondary (1, 3);
 
             // step 2
@@ -72,7 +82,7 @@ namespace vk_uploader
             p_status.set_progress_secondary (2, 3);
 
             // step 3
-            api_audio_save uploaded_audio_file (answer);
+            api_audio_save uploaded_audio_file (answer, p_abort);
             t_audio_id id = uploaded_audio_file.get_id ();
             p_status.set_progress_secondary (3, 3);
 

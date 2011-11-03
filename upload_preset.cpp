@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include "helpers.h"
 #include "upload_preset.h"
 
 namespace vk_uploader

@@ -75,7 +75,7 @@ void get_file_contents (const char *p_path, membuf_ptr &p_out)
         throw exception_io_not_found ();
 }
 
-request_url_builder::request_url_builder (const char *p_method_name, params_cref p_params) 
+request_url_builder::request_url_builder (const char *p_method_name, params_cref p_params, abort_callback &p_abort) 
 {
     m_url << "https://api.vk.com/method/" << p_method_name << "?";
 

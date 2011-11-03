@@ -34,26 +34,9 @@ __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9
 
 class response_json_ptr : public boost::shared_ptr<Json::Value>
 {
-public:
-    response_json_ptr (const pfc::string8 & p_data) {
-        const char *begin = p_data.get_ptr ();
-        const char *end = begin + p_data.get_length ();
-        Json::Value val;
-            
-        if (Json::Reader ().parse (begin, end, val, false)) {
-            Json::Value *out;
-            if (val.isObject () && val.isMember ("response"))
-                out = new Json::Value (val["response"]);
-            else
-                out = new Json::Value (val);
-            reset (out);
-        }
-    }
-
-    inline bool is_valid () const {
-        const Json::Value *val = get ();
-        if (!val || val->isNull ()) return false;
-        if (val->isObject ()) return !val->isMember ("error");
+    inline bool is_valid (const Json::Value *p_val) const {
+        if (!p_val || p_val->isNull ()) return false;
+        if (p_val->isObject ()) return !p_val->isMember ("error");
         return true;
     };
 
@@ -72,7 +55,26 @@ public:
         return "Invalid response";
     }
 
-    void assert_valid () { if (!is_valid ()) throw pfc::exception (get_error_code ()); }
+    inline void assert_valid () { if (!is_valid (get ())) throw pfc::exception (get_error_code ()); }
+
+public:
+    response_json_ptr (const pfc::string8 & p_data) {
+        const char *begin = p_data.get_ptr ();
+        const char *end = begin + p_data.get_length ();
+        Json::Value val;
+            
+        if (Json::Reader ().parse (begin, end, val, false)) {
+            Json::Value *out;
+            if (val.isObject () && val.isMember ("response"))
+                out = new Json::Value (val["response"]);
+            else
+                out = new Json::Value (val);
+
+            reset (out);
+        }
+
+        assert_valid ();
+    }
 
     Json::Value &operator[] (Json::UInt index) { return (*get ())[index]; }
     const Json::Value &operator[] (Json::UInt index) const { return (*get ())[index]; }
@@ -106,7 +108,7 @@ class request_url_builder
 {
     pfc::string8_fast m_url;
 public:
-    request_url_builder (const char *p_method_name, params_cref p_params);
+    request_url_builder (const char *p_method_name, params_cref p_params, abort_callback &p_abort);
 
     operator const char * () const { return m_url.get_ptr (); }
 };
