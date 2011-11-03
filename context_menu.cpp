@@ -25,9 +25,7 @@ namespace vk_uploader
 
         bool is_mappable_shortcut () override { return true; }
 
-    protected:
         pfc::string8 m_preset_name;
-
     public:
         node_root_leaf (const pfc::string8 &p_preset_name) : m_preset_name (p_preset_name) {}
 
@@ -42,10 +40,12 @@ namespace vk_uploader
         GUID get_guid () override { return guid_inline<0x232ddfd8, 0x6655, 0x4eee, 0xa0, 0x2a, 0x41, 0x26, 0xea, 0x8d, 0x7f, 0xe9>::guid; }
 
         void execute (metadb_handle_list_cref p_data, const GUID &p_caller) override
-        { show_upload_setup_dialog (p_data); }
+        {
+            show_upload_setup_dialog (p_data);
+        }
 
     public:
-        node_root_leaf_default () : node_root_leaf ("Upload to vk.com...") { } // hack to set custom text on the menu item)
+        node_root_leaf_default () : node_root_leaf ("...") { }
     };
 
     class node_root_popup : public contextmenu_item_node_root_popup
@@ -54,7 +54,7 @@ namespace vk_uploader
         {
             p_out = "Upload to vk.com";
             return true;
-        }
+        }   
 
         t_size get_children_count () override
         {
@@ -89,10 +89,7 @@ namespace vk_uploader
         //! Instantiates a context menu item (including sub-node tree for items that contain dynamically-generated sub-items).
         contextmenu_item_node_root * instantiate_item (unsigned p_index, metadb_handle_list_cref p_data, const GUID &p_caller) override
         {
-            if (get_preset_manager ()->get_preset_count () > 0)
-                return new node_root_popup ();
-            else
-                return new node_root_leaf_default ();
+            return new node_root_popup ();
         }
 
         //! Retrieves GUID of the context menu item.
@@ -118,8 +115,6 @@ namespace vk_uploader
             else
                 show_upload_setup_dialog (p_data);
         }
-
-        GUID get_parent () override { return contextmenu_groups::fileoperations; }
     };
 
     static contextmenu_item_factory_t<upload_to_vk> g_contextmenu_factory;

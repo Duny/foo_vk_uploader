@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include "boost/function.hpp"
+
 #include "vk_api.h"
 #include "upload_preset.h"
 #include "upload_queue.h"
@@ -30,12 +32,12 @@ namespace vk_uploader
             }
         };
 
-        template <class t_func>
-        void run_from_new_thread (t_func &p_func)
+        typedef boost::function<void ()> new_thread_callback;
+        void run_in_separate_thread (const new_thread_callback &p_func)
         {
             class new_thread_t : pfc::thread
             {
-                t_func m_func;
+                new_thread_callback m_func;
                 void threadProc () override
                 {
                    m_func ();
@@ -43,7 +45,7 @@ namespace vk_uploader
                 }
                 ~new_thread_t () { waitTillDone (); }
             public:
-                new_thread_t (t_func &p_func) : m_func (p_func) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
+                new_thread_t (const new_thread_callback &p_func) : m_func (p_func) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
             };
 
             new new_thread_t (p_func);
@@ -129,7 +131,7 @@ namespace vk_uploader
 
         HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
         {
-            auto get_album_list = [this] ()
+            run_in_separate_thread ([this] ()
             {
                 api_audio_getAlbums album_list;
                 if (album_list.is_valid ()) {
@@ -140,28 +142,24 @@ namespace vk_uploader
                 }
                 else
                     uMessageBox (core_api::get_main_window (), album_list.get_error (), "Error while reading album list", MB_OK | MB_ICONERROR);
-            }; 
-            
-            run_from_new_thread (get_album_list);
+            });
 
             return TRUE;
         }
 
         HRESULT on_album_new (WORD, WORD, HWND, BOOL&)
         {
-            auto create_album = [this] ()
+            run_in_separate_thread ([this] ()
             {
                 pfc::string8_fast album_title = get_window_text_trimmed (m_combo_albums);
                 if (!album_title.is_empty ()) {
-                    vk_api::api_audio_addAlbum result (album_title);
+                    api_audio_addAlbum result (album_title);
                     if (result.is_valid ())
-                        m_albums.add_item (combo_album_add (album_info (album_title, result.get_album_id ())));
+                        m_albums.add_item (m_combo_albums.add_album (std::make_pair (album_title, result.get_album_id ())));
                     else
-                        uMessageBox (core_api::get_main_window (), result.get_error (), "Vk.com uploader error", MB_OK | MB_ICONERROR);
+                        uMessageBox (core_api::get_main_window (), result.get_error (), "Error while creating new album", MB_OK | MB_ICONERROR);
                 }
-            }
-
-            run_from_new_thread (create_album);
+            });
             
             return TRUE;
         }
