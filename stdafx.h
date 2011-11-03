@@ -13,4 +13,9 @@
 
 #include "helpers.h"
 
+#include "vk_auth.h"
+#include "vk_api.h"
+#include "upload_thread.h"
+#include "upload_preset.h"
+
 #define COMPONENT_NAME "foo_vk_uploader"

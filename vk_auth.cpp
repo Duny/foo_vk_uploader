@@ -1,8 +1,6 @@
 #include "stdafx.h"
 
 #include <time.h>
-
-#include "vk_api.h"
 #include "login_dlg.h"
 
 namespace vk_uploader

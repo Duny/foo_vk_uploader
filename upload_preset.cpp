@@ -1,7 +1,5 @@
 #include "stdafx.h"
 
-#include "upload_preset.h"
-
 namespace vk_uploader
 {
     namespace upload_presets

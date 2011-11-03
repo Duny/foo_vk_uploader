@@ -1,10 +1,5 @@
 #include "stdafx.h"
 
-#include "vk_api.h"
-#include "upload_preset.h"
-#include "upload_queue.h"
-#include "upload_thread.h"
-
 namespace vk_uploader
 {
     class node_root_leaf : public contextmenu_item_node_root_leaf
@@ -31,7 +26,7 @@ namespace vk_uploader
 
         void execute (metadb_handle_list_cref p_data, const GUID &p_caller) override
         {
-            upload_queue::push_back (p_data, get_preset_manager ()->get_preset (m_preset_name));
+            start_upload (p_data, get_preset_manager ()->get_preset (m_preset_name));
         }
     };
 
@@ -111,7 +106,7 @@ namespace vk_uploader
             static_api_ptr_t<upload_presets::manager> api;
 
             if (api->has_preset (p_node))
-                upload_queue::push_back (p_data, api->get_preset (p_node));
+                start_upload (p_data, api->get_preset (p_node));
             else
                 show_upload_setup_dialog (p_data);
         }

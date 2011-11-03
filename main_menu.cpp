@@ -1,7 +1,5 @@
 #include "stdafx.h"
 
-#include "vk_api.h"
-
 namespace vk_uploader
 {
     class menucomman_relogin : public mainmenu_commands

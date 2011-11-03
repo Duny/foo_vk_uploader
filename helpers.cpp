@@ -1,7 +1,5 @@
 #include "stdafx.h"
 
-#include "vk_api.h"
-
 pfc::string8 trim (const pfc::string8 &p_str)
 {
     auto is_trim_char = [] (char c) -> bool { return c == ' ' || c == '\n' || c == '\t'; };

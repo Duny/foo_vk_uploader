@@ -1,8 +1,6 @@
 #ifndef _FOO_VK_UPLOADER_UPLOAD_PRESET_H_
 #define _FOO_VK_UPLOADER_UPLOAD_PRESET_H_
 
-#include "upload_queue.h"
-
 namespace vk_uploader
 {
     namespace upload_presets

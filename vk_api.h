@@ -1,8 +1,6 @@
 #ifndef _FOO_VK_UPLOADER_VK_API_H_
 #define _FOO_VK_UPLOADER_VK_API_H_
 
-#include "vk_auth.h"
-
 #define VK_UPLOADER_APP_ID "2632594"
 
 #define VK_COM_BLANK_URL "http://api.vk.com/blank.html"

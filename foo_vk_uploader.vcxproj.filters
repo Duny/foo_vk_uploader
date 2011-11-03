@@ -54,9 +54,6 @@
     <ClCompile Include="upload_preset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="upload_queue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="upload_thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -87,9 +84,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="upload_preset.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="upload_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

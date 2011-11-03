@@ -2,10 +2,6 @@
 
 #include "boost/function.hpp"
 
-#include "vk_api.h"
-#include "upload_preset.h"
-#include "upload_queue.h"
-
 namespace vk_uploader
 {
     using namespace upload_presets;
@@ -82,7 +78,7 @@ namespace vk_uploader
             MSG_WM_DESTROY(on_destroy)
         END_MSG_MAP()
 
-        inline HRESULT on_ok (WORD, WORD, HWND, BOOL&) { upload_queue::push_back (m_items, get_upload_params ()); close (); return TRUE; }
+        inline HRESULT on_ok (WORD, WORD, HWND, BOOL&) { start_upload (m_items, get_upload_params ()); close (); return TRUE; }
 
         inline HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
 

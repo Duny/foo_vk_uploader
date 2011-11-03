@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "login_dlg.h"
-#include "vk_api.h"
 
 namespace vk_uploader
 {
@@ -19,8 +18,6 @@ namespace vk_uploader
         };
         static initquit_factory_t<myinitquit> g_initquit;
     }
-
-    
 
     LRESULT login_dlg::on_init_dialog (CWindow, LPARAM)
     {
