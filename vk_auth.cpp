@@ -67,13 +67,15 @@ namespace vk_uploader
 
             const char *get_user_id () override
             {
-                if (!m_auth_data.is_valid ()) get_auth_data (login_dlg::action_do_login);
+                if (!m_auth_data.is_valid ())
+                    get_auth_data (login_dlg::action_do_login);
                 return m_auth_data.m_user_id;
             }
 
             const char *get_access_token () override
             {
-                if (!m_auth_data.is_valid ()) get_auth_data (login_dlg::action_do_login);
+                if (!m_auth_data.is_valid ())
+                    get_auth_data (login_dlg::action_do_login);
                 return m_auth_data.m_access_token;
             }
 

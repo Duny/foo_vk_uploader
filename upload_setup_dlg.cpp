@@ -4,55 +4,49 @@
 #include "upload_preset.h"
 #include "upload_queue.h"
 
-#define WM_ALBUM_LIST_REFRESHED (WM_USER + 1)
-
 namespace vk_uploader
 {
     using namespace upload_presets;
 
-    struct album_info
-    {
-        album_info (const pfc::string8 &title, t_album_id id) : m_title (title), m_id (id) {}
-        album_info () {}
-
-        bool operator== (const album_info &other) const { return m_id == other.m_id && pfc::stricmp_ascii (m_title, other.m_title) == 0; }
-
-        pfc::string8 m_title;
-        t_album_id m_id;
-    };
-
-    FB2K_STREAM_READER_OVERLOAD(album_info) { return stream >> value.m_title >> value.m_id; }
-    FB2K_STREAM_WRITER_OVERLOAD(album_info) { return stream << value.m_title << value.m_id; }
-
-
     class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>
     {
-        class combo_state_restorer
+        class combobox_album_list : public CComboBox
         {
-            CComboBox &m_combo;
-            pfc::string8 m_text;
         public:
-            combo_state_restorer (CComboBox &combo) : m_combo (combo), m_text (string_utf8_from_window (combo)) {}
-            ~combo_state_restorer () { uSetWindowText (m_combo, m_text); }
+            inline void init ()
+            {
+                ResetContent ();
+                AddString (L"");
+                SetItemData (0, 0);
+            }
+
+            inline const t_audio_album_info& add_album (const t_audio_album_info &p_album)
+            {
+                if (IsWindow ()) {
+                    auto index = AddString (pfc::stringcvt::string_os_from_utf8 (p_album.first));
+                    if (index != CB_ERR) SetItemData (index, static_cast<DWORD_PTR>(p_album.second));
+                }
+                return p_album;
+            }
         };
 
-        template <void (*)>
-        void run_from_new_thread ()
+        template <class t_func>
+        void run_from_new_thread (t_func &p_func)
         {
             class new_thread_t : pfc::thread
             {
+                t_func m_func;
                 void threadProc () override
                 {
-                   t_func func;
-                   func ();
-                    delete this;
+                   m_func ();
+                   delete this;
                 }
                 ~new_thread_t () { waitTillDone (); }
             public:
-                new_thread_t () { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
+                new_thread_t (t_func &p_func) : m_func (p_func) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
             };
 
-            new new_thread_t ();
+            new new_thread_t (p_func);
         }
 
         BEGIN_MSG_MAP_EX(upload_setup_dlg)
@@ -65,7 +59,6 @@ namespace vk_uploader
             COMMAND_ID_HANDLER(IDC_BUTTON_REFRESH_ALBUMS, on_refresh_albums)
             COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_NEW, on_album_new)
             COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_DELETE, on_album_delete)
-            MESSAGE_HANDLER(WM_ALBUM_LIST_REFRESHED, on_album_list_refreshed)
             MSG_WM_CLOSE(close)
             MSG_WM_DESTROY(on_destroy)
         END_MSG_MAP()
@@ -83,8 +76,8 @@ namespace vk_uploader
             m_check_post_on_wall.Attach (GetDlgItem (IDC_CHECK_POST_ON_WALL));
             m_edit_post_msg.Attach (GetDlgItem (IDC_EDIT_POST_MESSAGE));
 
-            combo_albums_init ();
-            m_albums.for_each ([&](const album_info &p_album) { combo_album_add (p_album); });
+            m_combo_albums.init ();
+            m_albums.for_each ([&](const t_audio_album_info &p_album) { m_combo_albums.add_album (p_album); });
 
             get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name) { combo_add_string (m_combo_presets, p_name); });
 
@@ -94,7 +87,7 @@ namespace vk_uploader
 
         HRESULT on_save_preset (WORD, WORD, HWND, BOOL&)
         {
-            pfc::string8 profile_name = get_window_text_trimmed (m_combo_presets);
+            pfc::string8_fast profile_name = get_window_text_trimmed (m_combo_presets);
             if (!profile_name.is_empty ()) {
                 if (get_preset_manager ()->save_preset (profile_name, get_upload_params ())) {
                     pfc::stringcvt::string_os_from_utf8 p_name (profile_name);
@@ -136,43 +129,40 @@ namespace vk_uploader
 
         HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
         {
-            HWND hWnd = *this;
-            auto get_album_list = [hWnd, this] () -> void
+            auto get_album_list = [this] ()
             {
-                vk_api::api_audio_getAlbums album_list;
-                m_albums.remove_all ();
-                album_list.enumerate ([&] (const pfc::string8 &name, const t_album_id &id) { m_albums.add_item (album_info (name, id)); });
-
-                if (::IsWindow (hWnd)) uSendMessage (hWnd, WM_ALBUM_LIST_REFRESHED, 0, 0);
-                delete this;
-            }
+                api_audio_getAlbums album_list;
+                if (album_list.is_valid ()) {
+                    m_albums.remove_all ();
+                    m_combo_albums.init ();
+                    for (t_size i = 0, n = album_list.get_count (); i < n; i++)
+                        m_albums.add_item (m_combo_albums.add_album (album_list[i]));
+                }
+                else
+                    uMessageBox (core_api::get_main_window (), album_list.get_error (), "Error while reading album list", MB_OK | MB_ICONERROR);
+            }; 
             
-            run_from_new_thread<get_album_list> ();
-
-            return TRUE;
-        }
-        HRESULT on_album_list_refreshed (UINT, DWORD, DWORD, BOOL&)
-        {
-            combo_state_restorer restorer (m_combo_albums);
-            combo_albums_init ();
-            m_albums.enumerate ([&] (const album_info &album) { combo_album_add (album); });
+            run_from_new_thread (get_album_list);
 
             return TRUE;
         }
 
         HRESULT on_album_new (WORD, WORD, HWND, BOOL&)
         {
-            pfc::string8 album_title = get_window_text_trimmed (m_combo_albums);
-            if (!album_title.is_empty ()) {
-                vk_api::api_audio_addAlbum result (album_title);
-                if (result.is_valid ())
-                    m_albums.add_item (combo_album_add (album_info (album_title, result.get_album_id ())));
-                else
-                    ShowTip (m_combo_albums, pfc::stringcvt::string_os_from_utf8 (result.get_error ()));
+            auto create_album = [this] ()
+            {
+                pfc::string8_fast album_title = get_window_text_trimmed (m_combo_albums);
+                if (!album_title.is_empty ()) {
+                    vk_api::api_audio_addAlbum result (album_title);
+                    if (result.is_valid ())
+                        m_albums.add_item (combo_album_add (album_info (album_title, result.get_album_id ())));
+                    else
+                        uMessageBox (core_api::get_main_window (), result.get_error (), "Vk.com uploader error", MB_OK | MB_ICONERROR);
+                }
             }
-            else
-                ShowTip (m_combo_albums, L"Please enter album title");
 
+            run_from_new_thread (create_album);
+            
             return TRUE;
         }
 
@@ -182,12 +172,12 @@ namespace vk_uploader
             if (index == CB_ERR)
                 ShowTip (m_combo_albums, L"Please select album to delete");
             else if (index > 0) { // item with index 0 is reserved for empty album
-                album_info to_delete (string_utf8_from_combo (m_combo_albums, index), get_current_album_id ());
+                t_audio_album_info to_delete = std::make_pair (string_utf8_from_combo (m_combo_albums, index), get_current_album_id ());
                 pfc::string8_fast message ("Are you sure what you want to delete album \"");
-                message += to_delete.m_title; message += "\"?";
+                message += to_delete.first; message += "\"?";
                 int dlg_result = uMessageBox (*this, message, COMPONENT_NAME, MB_YESNO | MB_ICONQUESTION);
                 if (dlg_result == IDYES) {
-                    vk_api::api_audio_deleteAlbum result (to_delete.m_id);
+                    api_audio_deleteAlbum result (to_delete.second);
                     if (result.is_valid ()) {
                         m_albums.remove_item (to_delete);
                         m_combo_albums.DeleteString (index);
@@ -224,13 +214,6 @@ namespace vk_uploader
 
         inline int combo_add_string (CComboBox &p_combo, const char *p_str) { return p_combo.AddString (pfc::stringcvt::string_os_from_utf8 (p_str)); }
 
-        inline void combo_albums_init ()
-        {
-            m_combo_albums.ResetContent ();
-            m_combo_albums.AddString (L"");
-            m_combo_albums.SetItemData (0, 0);
-        }
-
         inline void set_current_album_by_id (t_album_id id)
         {
             m_combo_albums.SetCurSel (CB_ERR);
@@ -242,21 +225,15 @@ namespace vk_uploader
             }
         }
 
-        inline const album_info& combo_album_add (const album_info &p_album)
-        {
-            auto index = combo_add_string (m_combo_albums, p_album.m_title);
-            if (index != CB_ERR) m_combo_albums.SetItemData (index, static_cast<DWORD_PTR>(p_album.m_id));
-            return p_album;
-        }
-
-        CComboBox m_combo_albums, m_combo_presets;
+        combobox_album_list m_combo_albums;
+        CComboBox m_combo_presets;
         CCheckBox m_check_post_on_wall;
         CEditNoEnterEscSteal m_edit_post_msg;
 
         metadb_handle_list m_items;
 
         static cfgDialogPosition m_pos;
-        static cfg_objList<album_info> m_albums;
+        static cfg_objList<t_audio_album_info> m_albums;
     public:
         enum { IDD = IDD_UPLOAD_SETUP };
 
@@ -266,7 +243,7 @@ namespace vk_uploader
     };
 
     cfgDialogPosition upload_setup_dlg::m_pos (guid_inline<0x42daae47, 0x20c, 0x4c25, 0xba, 0xa1, 0x27, 0x55, 0x7e, 0x75, 0x3d, 0x42>::guid);
-    cfg_objList<album_info> upload_setup_dlg::m_albums (guid_inline<0x7a5b3e69, 0xe2b0, 0x4bca, 0x96, 0xca, 0x3c, 0x4b, 0x52, 0x21, 0xd1, 0x86>::guid);
+    cfg_objList<t_audio_album_info> upload_setup_dlg::m_albums (guid_inline<0x7a5b3e69, 0xe2b0, 0x4bca, 0x96, 0xca, 0x3c, 0x4b, 0x52, 0x21, 0xd1, 0x86>::guid);
 
     namespace
     {
@@ -277,14 +254,14 @@ namespace vk_uploader
         };
         //static initquit_factory_t<myinitquit> g_initquit;
     }
+}
 
-    void show_upload_setup_dialog (metadb_handle_list_cref p_items)
-    {
-        new CWindowAutoLifetime<ImplementModelessTracking<upload_setup_dlg>>(core_api::get_main_window (), p_items);
-    }
+void show_upload_setup_dialog (metadb_handle_list_cref p_items)
+{
+    new CWindowAutoLifetime<ImplementModelessTracking<vk_uploader::upload_setup_dlg>>(core_api::get_main_window (), p_items);
+}
 
-    void clear_album_list ()
-    {
-        upload_setup_dlg::clear_album_list ();
-    }
+void clear_album_list ()
+{
+    vk_uploader::upload_setup_dlg::clear_album_list ();
 }

@@ -41,13 +41,13 @@ namespace vk_uploader
             });
 
             if (m_params.m_album_id != 0 && m_params.m_album_id != pfc_infinite) {
-                vk_api::api_audio_moveToAlbum move_to_album (aids_list, m_params.m_album_id);
+                api_audio_moveToAlbum move_to_album (aids_list, m_params.m_album_id);
                 if (!move_to_album.is_valid ())
                     m_errors << "Error while moving track(s) to album: " << move_to_album.get_error ();
             }
 
             if (m_params.m_post_on_wall) {
-                vk_api::api_wall_post new_post (m_params.m_post_mgs, aids_list);
+                api_wall_post new_post (m_params.m_post_mgs, aids_list);
                 if (!new_post.is_valid ())
                     m_errors << "Error while posting message on the wall: " << new_post.get_error ();
             }
@@ -64,7 +64,7 @@ namespace vk_uploader
         t_audio_id upload_thread::upload_item (const metadb_handle_ptr &p_item, threaded_process_status &p_status, abort_callback &p_abort)
         {
             // step 1
-            vk_api::api_audio_getUploadServer url_for_upload;
+            api_audio_getUploadServer url_for_upload;
             p_status.set_progress_secondary (1, 3);
 
             // step 2
@@ -72,7 +72,7 @@ namespace vk_uploader
             p_status.set_progress_secondary (2, 3);
 
             // step 3
-            vk_api::api_audio_save uploaded_audio_file (answer);
+            api_audio_save uploaded_audio_file (answer);
             t_audio_id id = uploaded_audio_file.get_id ();
             p_status.set_progress_secondary (3, 3);
 

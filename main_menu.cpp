@@ -18,7 +18,7 @@ namespace vk_uploader
         void get_name (t_uint32 p_index, pfc::string_base &p_out) override
         { if (p_index == 0) p_out = "Change vk.com profile / re login..."; }
 
-        //! Retrieves item's description for statusbar etc.
+        //! Retrieves item's description for status bar etc.
         bool get_description (t_uint32 p_index, pfc::string_base &p_out) override 
         { if (p_index == 0) { p_out = "Activates Vk.com Login window."; return true; } return false; }
 
@@ -30,7 +30,7 @@ namespace vk_uploader
         {
             if (p_index == 0) {
                 try {
-                    static_api_ptr_t<vk_auth::manager>()->relogin_user ();
+                    get_auth_manager ()->relogin_user ();
                     clear_album_list ();
                 } catch (const std::exception &e) {
                     popup_message::g_show (e.what (), "Error", popup_message::icon_error);

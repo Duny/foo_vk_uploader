@@ -45,7 +45,8 @@ namespace vk_uploader
         __declspec(selectany) const GUID manager::class_guid = 
         { 0x92cf789d, 0x2064, 0x428a, { 0x82, 0x7d, 0xb0, 0x4c, 0xd5, 0x32, 0xf, 0x83 } };
     }
-
-    typedef static_api_ptr_t<upload_presets::manager> get_preset_manager;
 }
+
+typedef static_api_ptr_t<vk_uploader::upload_presets::manager> get_preset_manager;
+
 #endif

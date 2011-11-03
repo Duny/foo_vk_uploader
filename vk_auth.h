@@ -25,4 +25,5 @@ namespace vk_uploader
         { 0x911ED77D, 0x3820, 0x4B8E, { 0xBE, 0x4F, 0x6E, 0xF3, 0x00, 0x29, 0x67, 0x0B } };
     }
 }
+typedef static_api_ptr_t<vk_uploader::vk_auth::manager> get_auth_manager;
 #endif
