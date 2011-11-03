@@ -13,7 +13,7 @@ namespace vk_uploader
 
     void upload_thread::run (threaded_process_status &p_status, abort_callback &p_abort)
     {
-        pfc::list_t<t_audio_id> aids_list;
+        pfc::list_t<t_vk_audio_id> aids_list;
 
         t_size item_count = 0, item_max = m_items.get_size ();;
         m_items.for_each ([&] (const metadb_handle_ptr &p_item)
@@ -64,7 +64,7 @@ namespace vk_uploader
             popup_message::g_show (m_errors, "Some items failed to upload", popup_message::icon_error);
     }
 
-    t_audio_id upload_thread::upload_item (const metadb_handle_ptr &p_item, threaded_process_status &p_status, abort_callback &p_abort)
+    t_vk_audio_id upload_thread::upload_item (const metadb_handle_ptr &p_item, threaded_process_status &p_status, abort_callback &p_abort)
     {
         // step 1
         api_audio_getUploadServer url_for_upload (p_abort);
@@ -76,9 +76,47 @@ namespace vk_uploader
 
         // step 3
         api_audio_save uploaded_audio_file (answer, p_abort);
-        t_audio_id id = uploaded_audio_file.get_id ();
+        t_vk_audio_id id = uploaded_audio_file.get_id ();
         p_status.set_progress_secondary (3, 3);
 
         return id;
+    }
+
+    bool upload_thread::filter_bad_file (metadb_handle_ptr p_item, pfc::string8_fast &p_reason)
+    {
+        p_reason.reset ();
+
+        // file type (mp3, lossy)
+        metadb_handle_lock lock (p_item);
+        const file_info *p_info;
+        if (p_item->get_info_locked (p_info)) {
+            const char *codec = p_info->info_get ("codec");
+            if (codec) {
+                if (pfc::stricmp_ascii ("MP3", codec) != 0) {
+                    p_reason << "file is not an mp3.(codec: " << codec << ")";
+                    return true;
+                }   
+            }
+
+            const char *encoding = p_info->info_get ("encoding");
+            if (encoding) {
+                if (pfc::stricmp_ascii ("lossy", encoding) != 0) {
+                    p_reason << "file is not lossy.(encoding: " << encoding << ")";
+                    return true;
+                }
+            }
+        }
+
+        // file size
+        const t_size max_file_size = 20 * (1 << 20); // 20Mb
+
+        t_filesize size = p_item->get_filesize ();
+        //if (size >= max_file_size) {
+        //    p_reason << "file is too big - " << pfc::format_file_size_short (size) << ".(maximum file size is " 
+        //        << pfc::format_file_size_short (max_file_size) << ")";
+        //    return true;
+        //}
+
+        return false;
     }
 }

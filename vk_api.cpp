@@ -14,12 +14,23 @@ namespace vk_uploader
     {
         class api_profider_imp : public api_profider
         {
-            DWORD m_first_call_time; // time then was made first call
-            DWORD m_last_call_time; // time of the most resent call
-            t_size m_call_count; // number of calls made since m_first_call_time
-            critical_section m_section;
+            typedef pfc::array_t<t_uint8> membuf_ptr;
+            void get_file_contents (const char *p_path, membuf_ptr &p_out)
+            {
+                file_ptr p_file;
+                abort_callback_impl p_abort;
 
-            win32_event m_invoker_avaliable;
+                filesystem::g_open_read (p_file, p_path, p_abort);
+                if (p_file.is_valid ()) {
+                    t_size file_size = (t_size)p_file->get_size (p_abort);
+                    p_out.set_size (file_size);
+                    t_size read = p_file->read (p_out.get_ptr (), file_size, p_abort);
+                    if (read != file_size)
+                        throw exception_io ();
+                }
+                else
+                    throw exception_io_not_found ();
+            }
 
             response_json_ptr make_request (const char *p_api_name, params_cref p_params, abort_callback &p_abort)
             {
@@ -83,6 +94,12 @@ namespace vk_uploader
                 return answer;
             }
 
+            DWORD m_first_call_time; // time then was made first call
+            DWORD m_last_call_time; // time of the most resent call
+            t_size m_call_count; // number of calls made since m_first_call_time
+            critical_section m_section;
+
+            win32_event m_invoker_avaliable;
         public:
            api_profider_imp () : m_call_count (pfc_infinite) { m_invoker_avaliable.create (true, true); }
         };

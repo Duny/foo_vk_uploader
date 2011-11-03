@@ -1,17 +1,7 @@
 #ifndef _FOO_VK_UPLOADER_HELPERS_H_
 #define _FOO_VK_UPLOADER_HELPERS_H_
 
-typedef t_uint32 t_album_id;
-typedef t_uint32 t_audio_id;
-typedef std::pair<pfc::string8, t_album_id> t_audio_album_info;
-
-FB2K_STREAM_READER_OVERLOAD(t_audio_album_info) { return stream >> value.first >> value.second; }
-FB2K_STREAM_WRITER_OVERLOAD(t_audio_album_info) { return stream << value.first << value.second; }
-
-typedef boost::tuple<t_album_id, bool, pfc::string8> upload_parameters;
-enum { field_album_id, field_post_on_wall, field_post_message };
-
-
+// helpers for tuple stream i/o
 template<class T1>
 inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, boost::tuples::cons<T1, boost::tuples::null_type> &value) { return stream >> value.head; }
 
@@ -28,32 +18,39 @@ inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &strea
 template<class T1, class T2>
 inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const boost::tuples::cons<T1, T2> &value) { stream << value.head; return write_tuple (stream, value.tail); }
 
-FB2K_STREAM_READER_OVERLOAD(upload_parameters) { return read_tuple (stream, value); }
-FB2K_STREAM_WRITER_OVERLOAD(upload_parameters) { return write_tuple (stream, value); }
 
-// returns true then file must be skipped
-bool filter_bad_file (metadb_handle_ptr p_item, pfc::string8_fast &p_reason);
+typedef t_uint32 t_vk_album_id;
+typedef t_uint32 t_vk_audio_id;
 
-typedef pfc::array_t<t_uint8> membuf_ptr;
-void get_file_contents (const char *p_path, membuf_ptr &p_out);
-
-pfc::string8 trim (const pfc::string8 &p_str);
-
-inline pfc::string8_fast get_window_text_trimmed (HWND wnd)
-{
-    return ::IsWindow (wnd) ? trim (string_utf8_from_window (wnd).get_ptr ()) : "";
-}
-
-void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_list ());
-void clear_album_list ();
+// keeps information about upload actions
+// field_album_id: moves uploaded items to the specified album
+// field_post_on_wall: makes a new post on the users wall containing newly uploaded items
+// field_post_message: adds optional text to the top of the post
+typedef boost::tuple<t_vk_album_id, bool, pfc::string8> upload_parameters;
+enum { field_album_id, field_post_on_wall, field_post_message };
 
 
+// used for storing in config information about users albums
+// first field is the title of album, second is its id
+typedef boost::tuple<pfc::string8, t_vk_album_id> audio_album_info;
+
+
+// helper to get "inlined" GUID definitions
+// some_func (guid_inline<0xbfeaa7ea, 0x6810, 0x41c6, 0x82, 0x6, 0x12, 0x95, 0x5a, 0x89, 0xdf, 0x49>::guid);
 template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
 struct guid_inline { static const GUID guid;};
+
 template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
 __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
 
-    
+
+// helper: remove spaces
+pfc::string8 trim (const pfc::string8 &p_str);
+
+// opens upload setup dialog
+void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_list ());
+void clear_album_list ();
+
 
 class response_json_ptr : public boost::shared_ptr<Json::Value>
 {
@@ -106,18 +103,13 @@ public:
     const Json::Value & operator[]( const char *key ) const { return (*get ())[key]; }
 };
 
-inline response_json_ptr make_error_response (const char *p_msg)
-{
-    return response_json_ptr (pfc::string_formatter () << "{\"error\": {\"error_code\": -1, \"error_msg\": \"" << p_msg << "\"}}");
-};
-
 
 class url_params : public pfc::map_t<pfc::string8, pfc::string8>
 {
 public:
     url_params () {}
-    url_params (const pfc::string8 &p_url);
-    // construct from single p_name=p_value pair
+    url_params (const pfc::string8 &p_url); // parsed string for name=value pairs
+    // constructs from single p_name=p_value pair
     url_params (const char *p_name, const char *p_value) { find_or_add (pfc::string8 (p_name)) = p_value; }
 
     bool have (const char *p_name) const { return have_item (pfc::string8 (p_name)); }
@@ -136,29 +128,5 @@ public:
     operator const char * () const { return m_url.get_ptr (); }
 };
 
-class string_utf8_from_combo
-{
-public:
-    string_utf8_from_combo (const CComboBox &p_combo, int p_index)
-    {
-        int str_len = p_combo.GetLBTextLen (p_index);
-        if (str_len != CB_ERR) {
-            pfc::array_t<TCHAR> buf;
-            buf.set_size (str_len + 1);
-            int actual_len = p_combo.GetLBText (p_index, buf.get_ptr ());
-            if (actual_len == str_len)
-                m_data = pfc::stringcvt::string_utf8_from_os (buf.get_ptr ());
-        }
-    }
-
-    inline operator const char * () const { return m_data.get_ptr (); }
-    inline t_size length () const  {return m_data.length (); }
-    inline bool is_empty () const { return length () == 0; }
-    inline const char * get_ptr () const { return m_data.get_ptr (); }
-    inline operator const pfc::string8& () const { return m_data; }
-
-private:
-    pfc::string8 m_data;
-};
 
 #endif

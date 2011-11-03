@@ -33,7 +33,7 @@ typedef static_api_ptr_t<vk_uploader::vk_api::api_profider> get_api_provider;
 
 namespace vk_uploader
 {
-    class api_audio_getAlbums : public pfc::list_t<t_audio_album_info>
+    class api_audio_getAlbums : public pfc::list_t<audio_album_info>
     {
     public:
         // reads a list of user albums (from vk.com profile)
@@ -51,7 +51,7 @@ namespace vk_uploader
 
     class api_audio_addAlbum
     {
-        t_album_id m_id;
+        t_vk_album_id m_id;
     public:
         api_audio_addAlbum (const pfc::string8 &title, abort_callback &p_abort) {
             response_json_ptr result = get_api_provider ()->call_api ("audio.addAlbum", url_params ("title", title), p_abort);
@@ -61,13 +61,13 @@ namespace vk_uploader
                 m_id = result["album_id"].asUInt ();
         }
 
-        t_album_id get_album_id () const { return m_id; }
+        t_vk_album_id get_album_id () const { return m_id; }
     };
 
     class api_audio_deleteAlbum
     {
     public:
-        api_audio_deleteAlbum (t_album_id id, abort_callback &p_abort) {
+        api_audio_deleteAlbum (t_vk_album_id id, abort_callback &p_abort) {
             response_json_ptr result = get_api_provider ()->call_api ("audio.deleteAlbum", url_params ("album_id", pfc::string_formatter () << id), p_abort);
             ///!!!! TEST ME: test error codes from vk server ("Application is disabled. Enable your application or use test mode.", etc)
             /*if (!result.is_valid () || !result->asBool ())
@@ -79,7 +79,7 @@ namespace vk_uploader
     {
     public:
         api_audio_moveToAlbum (
-            const pfc::list_t<t_audio_id> &audio_ids, t_album_id album_id, abort_callback &p_abort) {
+            const pfc::list_t<t_vk_audio_id> &audio_ids, t_vk_album_id album_id, abort_callback &p_abort) {
             pfc::string_formatter aids;
             for (t_size i = 0, n = audio_ids.get_size (); i < n; ++i) aids << audio_ids[i] << ",";
 
@@ -113,7 +113,7 @@ namespace vk_uploader
 
     class api_audio_save
     {
-        t_audio_id m_id; // id of newly upload mp3 file
+        t_vk_audio_id m_id; // id of newly upload mp3 file
     public:
         // answer from vk.com server after file uploading is finished (with post request)
         api_audio_save (const pfc::string8 &answer, abort_callback &p_abort) {
@@ -132,13 +132,13 @@ namespace vk_uploader
             m_id = result["aid"].asUInt ();
         }
 
-        t_audio_id get_id () const { return m_id; }
+        t_vk_audio_id get_id () const { return m_id; }
     };
 
     class api_wall_post
     {
     public:
-        api_wall_post (const pfc::string8 &msg, const pfc::list_t<t_audio_id> &audio_ids, abort_callback &p_abort) {
+        api_wall_post (const pfc::string8 &msg, const pfc::list_t<t_vk_audio_id> &audio_ids, abort_callback &p_abort) {
             url_params params;
 
             if (!msg.is_empty ()) params["message"] = msg;

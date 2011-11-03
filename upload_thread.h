@@ -16,7 +16,9 @@ namespace vk_uploader
 
         void on_done (HWND p_wnd, bool p_was_aborted) override;
 
-        t_audio_id upload_item (const metadb_handle_ptr &p_item, threaded_process_status &p_status, abort_callback &p_abort);
+        t_vk_audio_id upload_item (const metadb_handle_ptr &p_item, threaded_process_status &p_status, abort_callback &p_abort);
+
+        bool filter_bad_file (metadb_handle_ptr p_item, pfc::string8_fast &p_reason);
 
         metadb_handle_list m_items;
         upload_parameters m_params;

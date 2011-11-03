@@ -1,7 +1,10 @@
 #include "stdafx.h"
 
-// preset name, preset guid (for context menus), preset upload parameters
+// preset name, preset GUID (for context menus), preset upload parameters
 typedef boost::tuple<pfc::string8, GUID, upload_parameters> upload_preset;
+
+FB2K_STREAM_READER_OVERLOAD(upload_parameters) { return read_tuple (stream, value); }
+FB2K_STREAM_WRITER_OVERLOAD(upload_parameters) { return write_tuple (stream, value); }
 
 FB2K_STREAM_READER_OVERLOAD(upload_preset) { return read_tuple (stream, value); }
 FB2K_STREAM_WRITER_OVERLOAD(upload_preset) { return write_tuple (stream, value); }  
