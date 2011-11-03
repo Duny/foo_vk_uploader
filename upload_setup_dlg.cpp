@@ -220,16 +220,16 @@ namespace vk_uploader
 
         inline void on_destroy () { m_pos.RemoveWindow (*this); }
 
-        inline upload_params get_upload_params () const
+        inline upload_parameters get_upload_params () const
         {
-            return upload_params (m_combo_albums.get_selected_album_id (), m_check_post_on_wall.IsChecked (), get_window_text_trimmed (m_edit_post_msg));
+            return boost::make_tuple (m_combo_albums.get_selected_album_id (), m_check_post_on_wall.IsChecked (), get_window_text_trimmed (m_edit_post_msg));
         }
 
-        inline void set_current_preset (const upload_params &p)
+        inline void set_current_preset (const upload_parameters &p)
         {
-            m_combo_albums.select_by_id (p.m_album_id);
-            m_check_post_on_wall.ToggleCheck (p.m_post_on_wall);
-            m_edit_post_msg.SetWindowText (pfc::stringcvt::string_os_from_utf8 (p.m_post_mgs));
+            m_combo_albums.select_by_id (p.get<field_album_id> ());
+            m_check_post_on_wall.ToggleCheck (p.get<field_post_on_wall> ());
+            m_edit_post_msg.SetWindowText (pfc::stringcvt::string_os_from_utf8 (p.get<field_post_message> ()));
         }
 
         combobox_album_list m_combo_albums;

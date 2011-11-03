@@ -21,12 +21,12 @@ namespace vk_uploader
             virtual bool has_preset (const GUID &p_guid) const = 0;
 
             // returns empty upload_params if not found
-            virtual const upload_params & get_preset (const pfc::string8 &p_name) const = 0;
-            virtual const upload_params & get_preset (const GUID &p_guid) const = 0;
+            virtual const upload_parameters & get_preset (const pfc::string8 &p_name) const = 0;
+            virtual const upload_parameters & get_preset (const GUID &p_guid) const = 0;
 
             // will create new preset if given preset does not exists
             // returns false on error
-            virtual bool save_preset (const pfc::string8 &p_name, const upload_params &p_preset) = 0;
+            virtual bool save_preset (const pfc::string8 &p_name, const upload_parameters &p_preset) = 0;
 
             // returns false then given preset does not exists
             virtual bool delete_preset (const pfc::string8 &p_name) = 0;

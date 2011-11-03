@@ -35,9 +35,8 @@ namespace vk_uploader
             {
                 m_invoker_avaliable.wait_for (-1);
 
+                auto init_timers = [&] () { m_first_call_time = m_last_call_time = GetTickCount (); };
                 {
-                    auto init_timers = [&] () { m_first_call_time = m_last_call_time = GetTickCount (); };
-
                     insync (m_section);
 
                     if (m_call_count == pfc_infinite) { // initialize timers on the very first call
@@ -49,6 +48,7 @@ namespace vk_uploader
 
                     if (m_call_count == 0) {
                         if ((m_last_call_time - m_first_call_time) < 1000) {
+                            console::formatter () << "sleeping " << t_uint32(1100 - (m_last_call_time - m_first_call_time)) << "ms";
                             m_invoker_avaliable.set_state (false);
                             Sleep (1100 - (m_last_call_time - m_first_call_time));
                             m_invoker_avaliable.set_state (true);

@@ -8,6 +8,29 @@ typedef std::pair<pfc::string8, t_album_id> t_audio_album_info;
 FB2K_STREAM_READER_OVERLOAD(t_audio_album_info) { return stream >> value.first >> value.second; }
 FB2K_STREAM_WRITER_OVERLOAD(t_audio_album_info) { return stream << value.first << value.second; }
 
+typedef boost::tuple<t_album_id, bool, pfc::string8> upload_parameters;
+enum { field_album_id, field_post_on_wall, field_post_message };
+
+
+template<class T1>
+inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, boost::tuples::cons<T1, boost::tuples::null_type> &value) { return stream >> value.head; }
+
+inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, boost::tuples::null_type &value) { return stream; }
+
+template<class T1, class T2>
+inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, boost::tuples::cons<T1, T2> &value) { stream >> value.head; return read_tuple (stream, value.tail); }
+
+template<class T1>
+inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const boost::tuples::cons<T1, boost::tuples::null_type> &value) { return stream << value.head; }
+
+inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const boost::tuples::null_type &value) { return stream; }
+
+template<class T1, class T2>
+inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const boost::tuples::cons<T1, T2> &value) { stream << value.head; return write_tuple (stream, value.tail); }
+
+FB2K_STREAM_READER_OVERLOAD(upload_parameters) { return read_tuple (stream, value); }
+FB2K_STREAM_WRITER_OVERLOAD(upload_parameters) { return write_tuple (stream, value); }
+
 // returns true then file must be skipped
 bool filter_bad_file (metadb_handle_ptr p_item, pfc::string8_fast &p_reason);
 

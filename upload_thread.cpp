@@ -36,9 +36,10 @@ namespace vk_uploader
             p_status.set_progress (++item_count, item_max);
         });
 
-        if (m_params.m_album_id != 0 && m_params.m_album_id != pfc_infinite) {
+        auto album_id = m_params.get<field_album_id> ();
+        if (album_id != 0 && album_id != pfc_infinite) {
             try {
-                api_audio_moveToAlbum move_to_album (aids_list, m_params.m_album_id, p_abort);
+                api_audio_moveToAlbum move_to_album (aids_list, album_id, p_abort);
             }
             catch (exception_aborted) { return; }
             catch (const std::exception &e) {
@@ -46,9 +47,9 @@ namespace vk_uploader
             }
         }
 
-        if (m_params.m_post_on_wall) {
+        if (m_params.get<field_post_on_wall> ()) {
             try {
-                api_wall_post new_post (m_params.m_post_mgs, aids_list, p_abort);
+                api_wall_post new_post (m_params.get<field_post_message> (), aids_list, p_abort);
             }
             catch (exception_aborted) { return; }
             catch (const std::exception &e) {

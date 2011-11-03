@@ -6,11 +6,18 @@
 
 #include "resource.h"
 
+// jsoncpp includes
 #include "json/reader.h"
 #include "json/value.h"
 
+// boost includes
 #include "boost/smart_ptr.hpp"
 
+#include "boost/tuple/tuple.hpp"
+#include "boost/tuple/tuple_io.hpp"
+#include "boost/tuple/tuple_comparison.hpp"
+
+// plugin includes
 #include "helpers.h"
 
 #include "vk_auth.h"
