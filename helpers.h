@@ -52,6 +52,16 @@ void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_l
 void clear_album_list ();
 
 
+// helper
+#define COMMAND_ID_HANDLER_SIMPLE(id, func) \
+	if(uMsg == WM_COMMAND && id == LOWORD(wParam)) \
+	{ \
+		bHandled = TRUE; \
+		lResult = 0; \
+        func(); \
+	    return TRUE; \
+	}
+
 class response_json_ptr : public boost::shared_ptr<Json::Value>
 {
     inline bool is_valid (const Json::Value *p_val) const {

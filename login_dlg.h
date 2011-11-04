@@ -5,7 +5,6 @@ namespace vk_uploader
 {
     class login_dlg :
         public CAxDialogImpl<login_dlg>,
-        public CMessageFilter,
         public CDialogResize<login_dlg>,
         public IDispEventImpl<IDC_IE, login_dlg>
     {
@@ -18,10 +17,10 @@ namespace vk_uploader
         static pfc::string8 show (t_login_dialog_action action);
         
     private:
-        login_dlg (t_login_dialog_action action) : m_action (action) { DoModal (core_api::get_main_window ()); }
+        login_dlg (t_login_dialog_action action): m_action (action) { DoModal (core_api::get_main_window ()); }
 
         // helpers
-        void navigate (const char *to) { m_current_location.reset (); m_wb2->Navigate (CComBSTR (to), nullptr, nullptr, nullptr, nullptr); }
+        void navigate (const char *to) { m_current_location.reset (); if (m_wb2) { m_wb2->Navigate (CComBSTR (to), nullptr, nullptr, nullptr, nullptr);} }
         const pfc::string8 & get_browser_location () const { return m_current_location; }
 
 
@@ -42,17 +41,13 @@ namespace vk_uploader
         BEGIN_DLGRESIZE_MAP(login_dlg)
             DLGRESIZE_CONTROL(IDC_IE, DLSZ_SIZE_X | DLSZ_SIZE_Y)
         END_DLGRESIZE_MAP()
-
-        
-        // Message filter
-        BOOL PreTranslateMessage (MSG* pMsg);
         
 
         // message handlers
         // dialog
         LRESULT on_init_dialog (CWindow, LPARAM);
-        void login_dlg::on_destroy () { m_pos.RemoveWindow (*this); }
-        void on_close () { EndDialog (IDOK); }
+        void login_dlg::on_destroy () { m_pos.RemoveWindow (*this); if (m_wb2) m_wb2.Release (); }
+        void on_close () { EndDialog (IDOK);}
         // web browser control
         void __stdcall on_navigate_complete2 (IDispatch*, VARIANT *p_url);
 

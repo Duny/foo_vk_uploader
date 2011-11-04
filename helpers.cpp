@@ -19,7 +19,6 @@ pfc::string8 trim (const pfc::string8 &p_str)
 }
 
 
-
 request_url_builder::request_url_builder (const char *p_method_name, params_cref p_params, abort_callback &p_abort) 
 {
     m_url << "https://api.vk.com/method/" << p_method_name << "?";
@@ -28,9 +27,8 @@ request_url_builder::request_url_builder (const char *p_method_name, params_cref
     p_params.enumerate ([&] (const pfc::string8 &p_name, const pfc::string8 &p_value) { pfc::urlEncode (tmp, p_value); m_url << p_name << "=" << tmp << "&"; });
 
     m_url << "access_token=" << get_auth_manager ()->get_access_token ();
-
-    //popup_message::g_show (m_url, "");
 }
+
 
 url_params::url_params (const pfc::string8 &p_url)
 {

@@ -4,8 +4,6 @@ namespace vk_uploader
 {
     void upload_thread::start ()
     {
-        m_errors.reset ();
-
         threaded_process::g_run_modeless (this, 
             threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_no_focus | threaded_process::flag_show_progress_dual,
             core_api::get_main_window (), "vk.com audio uploading in progress...");
@@ -14,6 +12,8 @@ namespace vk_uploader
     void upload_thread::run (threaded_process_status &p_status, abort_callback &p_abort)
     {
         pfc::list_t<t_vk_audio_id> aids_list;
+
+        m_errors.reset ();
 
         t_size item_count = 0, item_max = m_items.get_size ();;
         m_items.for_each ([&] (const metadb_handle_ptr &p_item)

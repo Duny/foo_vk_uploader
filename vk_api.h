@@ -109,7 +109,7 @@ namespace vk_uploader
 
     class api_audio_save
     {
-        t_vk_audio_id m_id; // id of newly upload mp3 file
+        t_vk_audio_id m_id; // id of newly uploaded mp3 file
     public:
         // answer from vk.com server after file uploading is finished (with post request)
         api_audio_save (const pfc::string8 &answer, abort_callback &p_abort) {

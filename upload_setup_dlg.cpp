@@ -99,21 +99,21 @@ namespace vk_uploader
 
         BEGIN_MSG_MAP_EX(upload_setup_dlg)
             MSG_WM_INITDIALOG(on_init_dialog)
-            COMMAND_ID_HANDLER(IDOK, on_ok)
-            COMMAND_ID_HANDLER(IDCANCEL, on_cancel)
+            COMMAND_ID_HANDLER_SIMPLE(IDOK, on_ok)
+            COMMAND_ID_HANDLER_SIMPLE(IDCANCEL, on_cancel)
             COMMAND_ID_HANDLER(IDC_BUTTON_SAVE_PRESET, on_save_preset)
             COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PRESET, on_load_preset)
             COMMAND_ID_HANDLER(IDC_BUTTON_DELETE_PRESET, on_delete_preset)
             COMMAND_ID_HANDLER(IDC_BUTTON_REFRESH_ALBUMS, on_refresh_albums)
             COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_NEW, on_album_new)
             COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_DELETE, on_album_delete)
-            MSG_WM_CLOSE(close)
+            MSG_WM_CLOSE(on_close)
             MSG_WM_DESTROY(on_destroy)
         END_MSG_MAP()
 
-        inline HRESULT on_ok (WORD, WORD, HWND, BOOL&) { start_upload (m_items, get_upload_params ()); close (); return TRUE; }
+        inline void on_ok () { start_upload (m_items, get_upload_params ()); on_close (); }
 
-        inline HRESULT on_cancel (WORD, WORD, HWND, BOOL&) { close (); return TRUE; }
+        inline void on_cancel () { on_close (); }
 
         LRESULT on_init_dialog (CWindow wndFocus, LPARAM lInitParam)
         {
@@ -249,7 +249,7 @@ namespace vk_uploader
             return TRUE;
         }
 
-        inline void close () { DestroyWindow (); }
+        inline void on_close () { DestroyWindow (); }
 
         inline void on_destroy () { m_pos.RemoveWindow (*this); }
 
