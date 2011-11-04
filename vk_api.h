@@ -8,38 +8,34 @@
 #define VK_COM_LOGOUT_URL "http://api.vk.com/oauth/logout?client_id="VK_UPLOADER_APP_ID
 
 namespace vk_uploader
-{
-    namespace vk_api
-    {   
-        class NOVTABLE api_profider : public service_base
-        {
-            FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(api_profider)
-        public:
-            enum { max_api_calls_per_second = 3 };
+{  
+    class NOVTABLE vk_api_profider : public service_base
+    {
+        FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(vk_api_profider)
+    public:
+        enum { max_api_calls_per_second = 3 };
 
-            virtual response_json_ptr call_api (const char *p_api_name, params_cref p_params, abort_callback &p_abort) = 0;
-            inline response_json_ptr call_api (const char *p_api_name, abort_callback &p_abort) { return call_api (p_api_name, url_params (), p_abort); }
+        virtual response_json_ptr invoke (const char *p_api_name, params_cref p_params, abort_callback &p_abort) = 0;
+        inline response_json_ptr invoke (const char *p_api_name, abort_callback &p_abort) { return invoke (p_api_name, url_params (), p_abort); }
 
-            virtual pfc::string8_fast file_upload (const char *p_url, const char *p_file, abort_callback &p_abort) = 0;
-        };
+        virtual pfc::string8_fast file_upload (const char *p_url, const char *p_file, abort_callback &p_abort) = 0;
+    };
 
-        // {415971BA-5773-4843-9D18-09F28074F5F7}
-        __declspec(selectany) const GUID api_profider::class_guid = 
-        { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
-    }
-}
+    // {415971BA-5773-4843-9D18-09F28074F5F7}
+    __declspec(selectany) const GUID vk_api_profider::class_guid = 
+    { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
 
-typedef static_api_ptr_t<vk_uploader::vk_api::api_profider> get_api_provider;
+    typedef static_api_ptr_t<vk_api_profider> get_api_provider;
 
-namespace vk_uploader
-{
+
+    // helper implementations of some apis
     class api_audio_getAlbums : public pfc::list_t<audio_album_info>
     {
     public:
         // reads a list of user albums (from vk.com profile)
         // represents as a list of album_name=>album_id pairs
         api_audio_getAlbums (abort_callback &p_abort) {
-            response_json_ptr result = get_api_provider ()->call_api ("audio.getAlbums", url_params ("count", "100"), p_abort);
+            response_json_ptr result = get_api_provider ()->invoke ("audio.getAlbums", url_params ("count", "100"), p_abort);
             for (t_size n = result->size (), i = 1; i < n; ++i) {
                 if (!result[i].isMember ("title") || !result[i].isMember ("album_id"))
                     throw pfc::exception ("not enough fields in response from audio.getAlbums");
@@ -54,7 +50,7 @@ namespace vk_uploader
         t_vk_album_id m_id;
     public:
         api_audio_addAlbum (const pfc::string8 &title, abort_callback &p_abort) {
-            response_json_ptr result = get_api_provider ()->call_api ("audio.addAlbum", url_params ("title", title), p_abort);
+            response_json_ptr result = get_api_provider ()->invoke ("audio.addAlbum", url_params ("title", title), p_abort);
             if (!result->isMember ("album_id"))
                 throw pfc::exception ("no 'album_id' field in response from audio.addAlbum");
             else
@@ -68,7 +64,7 @@ namespace vk_uploader
     {
     public:
         api_audio_deleteAlbum (t_vk_album_id id, abort_callback &p_abort) {
-            response_json_ptr result = get_api_provider ()->call_api ("audio.deleteAlbum", url_params ("album_id", pfc::string_formatter () << id), p_abort);
+            response_json_ptr result = get_api_provider ()->invoke ("audio.deleteAlbum", url_params ("album_id", pfc::string_formatter () << id), p_abort);
             ///!!!! TEST ME: test error codes from vk server ("Application is disabled. Enable your application or use test mode.", etc)
             /*if (!result.is_valid () || !result->asBool ())
                 m_error = result.get_error_code ();*/
@@ -89,7 +85,7 @@ namespace vk_uploader
                 url_params params ("aids", aids);
                 params["album_id"] = pfc::string_formatter () << album_id;
                     
-                response_json_ptr result = get_api_provider ()->call_api ("audio.moveToAlbum", params, p_abort);
+                response_json_ptr result = get_api_provider ()->invoke ("audio.moveToAlbum", params, p_abort);
                 ///!!!! TEST ME: test error codes from vk server ("Application is disabled. Enable your application or use test mode.", etc)
                 /*if (!result.is_valid () || !result->asBool ())
                     m_error = result.get_error_code ();*/
@@ -102,7 +98,7 @@ namespace vk_uploader
         pfc::string8 m_url;
     public:
         api_audio_getUploadServer (abort_callback &p_abort) {
-            response_json_ptr result = get_api_provider ()->call_api ("audio.getUploadServer", p_abort);
+            response_json_ptr result = get_api_provider ()->invoke ("audio.getUploadServer", p_abort);
             if (!result->isMember ("upload_url"))
                 throw pfc::exception ("no 'upload_url' field in response from audio.getUploadServer");
             m_url = result["upload_url"].asCString ();
@@ -126,7 +122,7 @@ namespace vk_uploader
             params["audio"] = result["audio"].asCString ();
             params["hash"] = result["hash"].asCString ();
 
-            result = get_api_provider ()->call_api ("audio.save", params, p_abort);
+            result = get_api_provider ()->invoke ("audio.save", params, p_abort);
             if (!result->isMember ("aid"))
                 throw std::exception ("no 'aid' field in response from audio.save");
             m_id = result["aid"].asUInt ();
@@ -152,7 +148,7 @@ namespace vk_uploader
             }
 
             if (params.get_count ())
-                get_api_provider ()->call_api ("wall.post", params, p_abort);
+                get_api_provider ()->invoke ("wall.post", params, p_abort);
         }
     };
 }
