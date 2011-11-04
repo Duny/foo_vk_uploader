@@ -53,6 +53,15 @@ void clear_album_list ();
 
 
 // helper
+#define COMMAND_HANDLER_SIMPLE(id, code, func) \
+    if(uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam)) \
+    { \
+        bHandled = TRUE; \
+        lResult = 0; \
+        func (); \
+        return TRUE; \
+    }
+
 #define COMMAND_ID_HANDLER_SIMPLE(id, func) \
 	if(uMsg == WM_COMMAND && id == LOWORD(wParam)) \
 	{ \

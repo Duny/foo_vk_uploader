@@ -12,6 +12,7 @@
 #define IDC_BUTTON_ALBUM_DELETE         1043
 #define IDC_COMBO_PRESETS               1044
 #define IDC_BUTTON_LOAD_PRESET          1045
+#define IDC_COMBO_ALBUMS2               1045
 #define IDC_BUTTON_SAVE_PRESET          1046
 #define IDC_BUTTON_DELETE_PRESET        1047
 #define IDC_EDIT1                       1048

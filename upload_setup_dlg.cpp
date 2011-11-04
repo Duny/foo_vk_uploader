@@ -48,31 +48,6 @@ namespace vk_uploader
             }
         };
 
-        class string_utf8_from_combo
-        {
-        public:
-            string_utf8_from_combo (const CComboBox &p_combo, int p_index)
-            {
-                int str_len = p_combo.GetLBTextLen (p_index);
-                if (str_len != CB_ERR) {
-                    pfc::array_t<TCHAR> buf;
-                    buf.set_size (str_len + 1);
-                    int actual_len = p_combo.GetLBText (p_index, buf.get_ptr ());
-                    if (actual_len == str_len)
-                        m_data = pfc::stringcvt::string_utf8_from_os (buf.get_ptr ());
-                }
-            }
-
-            inline operator const char * () const { return m_data.get_ptr (); }
-            inline t_size length () const  {return m_data.length (); }
-            inline bool is_empty () const { return length () == 0; }
-            inline const char * get_ptr () const { return m_data.get_ptr (); }
-            inline operator const pfc::string8& () const { return m_data; }
-
-        private:
-            pfc::string8 m_data;
-        };
-
         typedef boost::function<void ()> new_thread_callback;
         void run_in_separate_thread (const new_thread_callback &p_func)
         {
@@ -92,30 +67,22 @@ namespace vk_uploader
             new new_thread_t (p_func);
         }
 
-        inline pfc::string8_fast get_window_text_trimmed (HWND wnd) const
-        {
-            return ::IsWindow (wnd) ? trim (string_utf8_from_window (wnd).get_ptr ()) : "";
-        }
-
         BEGIN_MSG_MAP_EX(upload_setup_dlg)
-            MSG_WM_INITDIALOG(on_init_dialog)
+            MESSAGE_HANDLER_SIMPLE (WM_INITDIALOG, on_init_dialog)
+            COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_SAVE_PRESET, on_save_preset)
+            COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_DELETE_PRESET, on_delete_preset)
+            COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_REFRESH_ALBUMS, on_refresh_albums)
+            COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_ALBUM_NEW, on_album_new)
+            COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_ALBUM_DELETE, on_album_delete)
+            COMMAND_HANDLER_SIMPLE(IDC_COMBO_PRESETS, CBN_SELCHANGE, on_preset_changed)
+            COMMAND_ID_HANDLER_SIMPLE(IDC_CHECK_POST_ON_WALL, on_post_on_wall_toggle)
             COMMAND_ID_HANDLER_SIMPLE(IDOK, on_ok)
             COMMAND_ID_HANDLER_SIMPLE(IDCANCEL, on_cancel)
-            COMMAND_ID_HANDLER(IDC_BUTTON_SAVE_PRESET, on_save_preset)
-            COMMAND_ID_HANDLER(IDC_BUTTON_LOAD_PRESET, on_load_preset)
-            COMMAND_ID_HANDLER(IDC_BUTTON_DELETE_PRESET, on_delete_preset)
-            COMMAND_ID_HANDLER(IDC_BUTTON_REFRESH_ALBUMS, on_refresh_albums)
-            COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_NEW, on_album_new)
-            COMMAND_ID_HANDLER(IDC_BUTTON_ALBUM_DELETE, on_album_delete)
             MSG_WM_CLOSE(on_close)
             MSG_WM_DESTROY(on_destroy)
         END_MSG_MAP()
-
-        inline void on_ok () { start_upload (m_items, get_upload_params ()); on_close (); }
-
-        inline void on_cancel () { on_close (); }
-
-        LRESULT on_init_dialog (CWindow wndFocus, LPARAM lInitParam)
+        
+        void on_init_dialog ()
         {
             m_pos.AddWindow (*this);
 
@@ -124,16 +91,17 @@ namespace vk_uploader
             m_check_post_on_wall.Attach (GetDlgItem (IDC_CHECK_POST_ON_WALL));
             m_edit_post_msg.Attach (GetDlgItem (IDC_EDIT_POST_MESSAGE));
 
+            get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name) { m_combo_presets.AddString (pfc::stringcvt::string_os_from_utf8 (p_name)); });
+
             m_combo_albums.init ();
             m_albums.for_each ([&](const audio_album_info &p_album) { m_combo_albums.add_album (p_album); });
 
-            get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name) { m_combo_presets.AddString (pfc::stringcvt::string_os_from_utf8 (p_name)); });
+            m_edit_post_msg.EnableWindow (FALSE);
 
             ShowWindow (SW_SHOWNORMAL);
-            return 0;
         }
 
-        HRESULT on_save_preset (WORD, WORD, HWND, BOOL&)
+        void on_save_preset ()
         {
             pfc::string8_fast profile_name = get_window_text_trimmed (m_combo_presets);
             if (!profile_name.is_empty ()) {
@@ -147,22 +115,9 @@ namespace vk_uploader
             }
             else
                 ShowTip (m_combo_presets, L"Please enter preset name");
-
-            return TRUE;
         } 
-
-        HRESULT on_load_preset (WORD, WORD, HWND, BOOL&)
-        {
-            auto index = m_combo_presets.GetCurSel ();
-            if (index != CB_ERR)
-                set_current_preset (get_preset_manager ()->get_preset (string_utf8_from_combo (m_combo_presets, index)));
-            else
-                ShowTip (m_combo_presets, L"Please select preset to load");
-
-            return TRUE;
-        }
-
-        HRESULT on_delete_preset (WORD, WORD, HWND, BOOL&)
+        
+        void on_delete_preset ()
         {
             auto index = m_combo_presets.GetCurSel ();
             if (index != CB_ERR) {
@@ -171,11 +126,9 @@ namespace vk_uploader
             }
             else
                 ShowTip (m_combo_presets, L"Please select preset to delete");
-
-            return TRUE;
         }
 
-        HRESULT on_refresh_albums (WORD, WORD, HWND, BOOL&)
+        void on_refresh_albums ()
         {
             run_in_separate_thread ([this] ()
             {
@@ -192,11 +145,9 @@ namespace vk_uploader
                     uMessageBox (core_api::get_main_window (), e.what (), "Error while reading album list", MB_OK | MB_ICONERROR);
                 }
             });
-
-            return TRUE;
         }
 
-        HRESULT on_album_new (WORD, WORD, HWND, BOOL&)
+        void on_album_new ()
         {
             pfc::string8_fast album_title = get_window_text_trimmed (m_combo_albums);
             if (album_title.is_empty ())
@@ -215,11 +166,9 @@ namespace vk_uploader
                     }
                 });
             }
-            
-            return TRUE;
         }
 
-        HRESULT on_album_delete (WORD, WORD, HWND, BOOL&)
+        void on_album_delete ()
         {
             auto index = m_combo_albums.GetCurSel ();
             if (index == CB_ERR)
@@ -245,14 +194,26 @@ namespace vk_uploader
                     });
                 }
             }
-
-            return TRUE;
         }
 
-        inline void on_close () { DestroyWindow (); }
+        inline void on_preset_changed ()
+        {
+            auto index = m_combo_presets.GetCurSel ();
+            if (index != CB_ERR)
+                set_current_preset (get_preset_manager ()->get_preset (string_utf8_from_combo (m_combo_presets, index)));
+        }
 
+        inline void on_post_on_wall_toggle ()
+        {
+            m_edit_post_msg.EnableWindow (m_check_post_on_wall.IsChecked ());
+        }
+        
+        inline void on_ok () { start_upload (m_items, get_upload_params ()); on_close (); }
+        inline void on_cancel () { on_close (); }
+        inline void on_close () { DestroyWindow (); }
         inline void on_destroy () { m_pos.RemoveWindow (*this); }
 
+        // helpers
         inline upload_parameters get_upload_params () const
         {
             return boost::make_tuple (m_combo_albums.get_selected_album_id (), m_check_post_on_wall.IsChecked (), get_window_text_trimmed (m_edit_post_msg));
@@ -263,8 +224,35 @@ namespace vk_uploader
             m_combo_albums.select_by_id (p.get<field_album_id> ());
             m_check_post_on_wall.ToggleCheck (p.get<field_post_on_wall> ());
             m_edit_post_msg.SetWindowText (pfc::stringcvt::string_os_from_utf8 (p.get<field_post_message> ()));
+            m_edit_post_msg.EnableWindow (p.get<field_post_on_wall> ());
         }
 
+        inline pfc::string8_fast get_window_text_trimmed (HWND wnd) const
+        {
+            return ::IsWindow (wnd) ? trim (string_utf8_from_window (wnd).get_ptr ()) : "";
+        }
+
+        class string_utf8_from_combo
+        {
+            pfc::string8 m_data;
+        public:
+            string_utf8_from_combo (const CComboBox &p_combo, int p_index)
+            {
+                int str_len = p_combo.GetLBTextLen (p_index);
+                if (str_len != CB_ERR) {
+                    pfc::array_t<TCHAR> buf;
+                    buf.set_size (str_len + 1);
+                    int actual_len = p_combo.GetLBText (p_index, buf.get_ptr ());
+                    if (actual_len == str_len)
+                        m_data = pfc::stringcvt::string_utf8_from_os (buf.get_ptr ());
+                }
+            }
+
+            inline operator const char * () const { return m_data.get_ptr (); }
+            inline operator const pfc::string8& () const { return m_data; }
+        };
+
+        // member variables
         combobox_album_list m_combo_albums;
         CComboBox m_combo_presets;
         CCheckBox m_check_post_on_wall;
@@ -284,16 +272,6 @@ namespace vk_uploader
 
     cfgDialogPosition upload_setup_dlg::m_pos (guid_inline<0x42daae47, 0x20c, 0x4c25, 0xba, 0xa1, 0x27, 0x55, 0x7e, 0x75, 0x3d, 0x42>::guid);
     cfg_objList<audio_album_info> upload_setup_dlg::m_albums (guid_inline<0x7a5b3e69, 0xe2b0, 0x4bca, 0x96, 0xca, 0x3c, 0x4b, 0x52, 0x21, 0xd1, 0x86>::guid);
-
-    namespace
-    {
-        class myinitquit : public initquit
-        {
-            void on_init () override { show_upload_setup_dialog (); }
-            void on_quit () override {}
-        };
-        //static initquit_factory_t<myinitquit> g_initquit;
-    }
 }
 
 void show_upload_setup_dialog (metadb_handle_list_cref p_items)
