@@ -33,7 +33,7 @@ namespace vk_uploader
                 }
             }
 
-            p_status.set_progress (++item_count, item_max);
+            p_status.set_progress_secondary (++item_count, item_max);
         });
 
         auto album_id = m_params.get<field_album_id> ();
@@ -68,16 +68,16 @@ namespace vk_uploader
     {
         // step 1
         api_audio_getUploadServer url_for_upload (p_abort);
-        p_status.set_progress_secondary (1, 3);
+        p_status.set_progress (1, 3);
 
         // step 2
         pfc::string8_fast answer = get_api_provider ()->file_upload (url_for_upload, p_item->get_path (), p_abort);
-        p_status.set_progress_secondary (2, 3);
+        p_status.set_progress (2, 3);
 
         // step 3
         api_audio_save uploaded_audio_file (answer, p_abort);
         t_vk_audio_id id = uploaded_audio_file.get_id ();
-        p_status.set_progress_secondary (3, 3);
+        p_status.set_progress (3, 3);
 
         return id;
     }
@@ -110,7 +110,7 @@ namespace vk_uploader
         // file size
         const t_size max_file_size = 20 * (1 << 20); // 20Mb
 
-        t_filesize size = p_item->get_filesize ();
+        //t_filesize size = p_item->get_filesize ();
         //if (size >= max_file_size) {
         //    p_reason << "file is too big - " << pfc::format_file_size_short (size) << ".(maximum file size is " 
         //        << pfc::format_file_size_short (max_file_size) << ")";

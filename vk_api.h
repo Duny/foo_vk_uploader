@@ -21,10 +21,6 @@ namespace vk_uploader
         virtual pfc::string8_fast file_upload (const char *p_url, const char *p_file, abort_callback &p_abort) = 0;
     };
 
-    // {415971BA-5773-4843-9D18-09F28074F5F7}
-    __declspec(selectany) const GUID vk_api_profider::class_guid = 
-    { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
-
     typedef static_api_ptr_t<vk_api_profider> get_api_provider;
 
 
@@ -137,11 +133,13 @@ namespace vk_uploader
         api_wall_post (const pfc::string8 &msg, const pfc::list_t<t_vk_audio_id> &audio_ids, abort_callback &p_abort) {
             url_params params;
 
-            if (!msg.is_empty ()) params["message"] = msg;
+            if (!msg.is_empty ())
+                params["message"] = msg;
 
             pfc::string8_fast attachments;
-            const char *user_id = get_auth_manager ()->get_user_id ();
-            for (t_size i = 0, n = audio_ids.get_size (); i < n; ++i) attachments << "audio" << user_id << "_" << audio_ids[i] << ",";
+            pfc::string8_fast user_id = get_auth_manager ()->get_user_id ();
+            for (t_size i = 0, n = audio_ids.get_size (); i < n; ++i)
+                attachments << "audio" << user_id << "_" << audio_ids[i] << ",";
             if (!attachments.is_empty ()) {
                 attachments.truncate (attachments.length () - 1); // remove last ',' symbol
                 params["attachment"] = attachments;

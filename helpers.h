@@ -99,10 +99,8 @@ public:
                 out = new Json::Value (val["response"]);
             else
                 out = new Json::Value (val);
-
             reset (out);
         }
-
         assert_valid ();
     }
 

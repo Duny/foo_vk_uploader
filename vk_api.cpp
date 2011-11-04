@@ -10,6 +10,11 @@
 
 namespace vk_uploader
 {
+    // {415971BA-5773-4843-9D18-09F28074F5F7}
+    __declspec(selectany) const GUID vk_api_profider::class_guid = 
+    { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
+
+
     class api_profider_imp : public vk_api_profider
     {
         typedef pfc::array_t<t_uint8> membuf_ptr;
