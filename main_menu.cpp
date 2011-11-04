@@ -13,11 +13,11 @@ namespace vk_uploader
 
         //! Retrieves name of item, for list of commands to assign keyboard shortcuts to etc.
         void get_name (t_uint32 p_index, pfc::string_base &p_out) override
-        { if (p_index == 0) p_out = "Change vk.com profile / re login..."; }
+        { if (p_index == 0) p_out = "Relogin to vk.com..."; }
 
         //! Retrieves item's description for status bar etc.
         bool get_description (t_uint32 p_index, pfc::string_base &p_out) override 
-        { if (p_index == 0) { p_out = "Activates Vk.com Login window."; return true; } return false; }
+        { if (p_index == 0) { p_out = "Activates vk.com Login Window."; return true; } return false; }
 
         //! Retrieves GUID of owning menu group.
         GUID get_parent () override { return mainmenu_groups::view; }

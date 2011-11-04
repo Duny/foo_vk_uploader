@@ -32,16 +32,15 @@ namespace vk_uploader
                 get_auth_data (login_dlg::action_do_login);
         }
 
-        void get_auth_data (login_dlg::t_login_action action)
+        void get_auth_data (login_dlg::t_login_dialog_action action)
         {
-            pfc::string8 redirect_url;
+            pfc::string8 location;
             while (true) {
-                redirect_url = login_dlg (action).get_browser_location ();
-
-                if (redirect_url.find_first ("cancel=1") != pfc_infinite ||
-                    redirect_url.find_first ("user_denied") != pfc_infinite) // user pressed "Cancel" button
+                location = login_dlg::show (action);
+                if (location.find_first ("cancel=1") != pfc_infinite ||
+                    location.find_first ("user_denied") != pfc_infinite) // user pressed "Cancel" button
                     throw exception_aborted ();
-                else if (redirect_url.find_first (VK_COM_BLANK_URL) == 0) // if address starts from VK_COM_BLANK_URL, it means that auth was done successfully 
+                else if (location.find_first (VK_COM_BLANK_URL) == 0) // if address starts from VK_COM_BLANK_URL, it means that auth was done successfully 
                     break;
                 else {
                     if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
@@ -49,8 +48,7 @@ namespace vk_uploader
                 }
             }
 
-            url_params params (redirect_url);
-
+            url_params params (location);
             if (params.have ("error"))
                 throw std::exception (params["error"]);
             else if (params.have ("access_token") && params.have ("user_id") && params.have ("expires_in")) {
