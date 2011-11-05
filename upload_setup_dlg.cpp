@@ -24,7 +24,7 @@ namespace vk_uploader
             inline const audio_album_info& add_album (const audio_album_info &p_album)
             {
                 if (IsWindow ()) {
-                    auto index = AddString (pfc::stringcvt::string_os_from_utf8 (p_album.get<0> ()));
+                    auto index = uSendMessageText (*this, CB_ADDSTRING, 0, p_album.get<0> ());
                     if (index != CB_ERR) SetItemData (index, static_cast<DWORD_PTR>(p_album.get<1> ()));
                 }
                 return p_album;
@@ -91,7 +91,10 @@ namespace vk_uploader
             m_check_post_on_wall.Attach (GetDlgItem (IDC_CHECK_POST_ON_WALL));
             m_edit_post_msg.Attach (GetDlgItem (IDC_EDIT_POST_MESSAGE));
 
-            get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name) { m_combo_presets.AddString (pfc::stringcvt::string_os_from_utf8 (p_name)); });
+            get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name)
+            {
+                uSendMessageText (m_combo_presets, CB_ADDSTRING, 0, p_name);
+            });
 
             m_combo_albums.init ();
             m_albums.for_each ([&](const audio_album_info &p_album) { m_combo_albums.add_album (p_album); });
@@ -106,9 +109,8 @@ namespace vk_uploader
             pfc::string8_fast profile_name = get_window_text_trimmed (m_combo_presets);
             if (!profile_name.is_empty ()) {
                 if (get_preset_manager ()->save_preset (profile_name, get_upload_params ())) {
-                    pfc::stringcvt::string_os_from_utf8 p_name (profile_name);
-                    if (m_combo_presets.FindStringExact (0, p_name) == CB_ERR)
-                        m_combo_presets.AddString (p_name);
+                    if (uSendMessageText (m_combo_presets, CB_FINDSTRINGEXACT, 0, profile_name) == CB_ERR)
+                        uSendMessageText (m_combo_presets, CB_ADDSTRING, 0, profile_name);
                 }
                 else
                     ShowTip (m_combo_presets, L"An error occurred while saving preset");
