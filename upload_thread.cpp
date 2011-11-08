@@ -86,7 +86,7 @@ namespace vk_uploader
     {
         p_reason.reset ();
 
-        // file type (mp3, lossy)
+        // file type must be mp3 (lossy)
         metadb_handle_lock lock (p_item);
         const file_info *p_info;
         if (p_item->get_info_locked (p_info)) {
@@ -106,16 +106,6 @@ namespace vk_uploader
                 }
             }
         }
-
-        // file size
-        const t_size max_file_size = 20 * (1 << 20); // 20Mb
-
-        //t_filesize size = p_item->get_filesize ();
-        //if (size >= max_file_size) {
-        //    p_reason << "file is too big - " << pfc::format_file_size_short (size) << ".(maximum file size is " 
-        //        << pfc::format_file_size_short (max_file_size) << ")";
-        //    return true;
-        //}
 
         return false;
     }
