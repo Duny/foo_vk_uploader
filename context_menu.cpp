@@ -40,7 +40,7 @@ namespace vk_uploader
         }
 
     public:
-        node_root_leaf_default () : node_root_leaf ("...") { }
+        node_root_leaf_default (const char *p_item_text = "...") : node_root_leaf (p_item_text) { }
     };
 
     class node_root_popup : public contextmenu_item_node_root_popup
@@ -84,14 +84,18 @@ namespace vk_uploader
         //! Instantiates a context menu item (including sub-node tree for items that contain dynamically-generated sub-items).
         contextmenu_item_node_root * instantiate_item (unsigned p_index, metadb_handle_list_cref p_data, const GUID &p_caller) override
         {
-            return new node_root_popup ();
+            if (get_preset_manager ()->get_preset_count () > 0)
+                return new node_root_popup ();
+            else
+                return new node_root_leaf_default ("Upload to vk.com...");
         }
 
         //! Retrieves GUID of the context menu item.
-        GUID get_item_guid (unsigned p_index) override { return pfc::guid_null; }
+        GUID get_item_guid (unsigned p_index) override { return guid_inline<0x2d8b88ab, 0x6199, 0x4742, 0x96, 0xe1, 0xa4, 0x3, 0xfb, 0xfb, 0xfa, 0x15>::guid; }
 
         //! Retrieves human-readable name of the context menu item.
-        void get_item_name (unsigned p_index, pfc::string_base &p_out) override { }
+        void get_item_name (unsigned p_index, pfc::string_base &p_out) override
+        { p_out = (get_preset_manager ()->get_preset_count () == 0 ? "Upload to vk.com..." : ""); }
 
         //! Retrieves item's description to show in the status bar. Set p_out to the string to be displayed and return true if you provide a description, return false otherwise.
         bool get_item_description (unsigned p_index, pfc::string_base &p_out) override { return false; }
@@ -110,6 +114,8 @@ namespace vk_uploader
             else
                 show_upload_setup_dialog (p_data);
         }
+
+        GUID get_parent () override { return contextmenu_groups::fileoperations; }
     };
 
     static contextmenu_item_factory_t<upload_to_vk> g_contextmenu_factory;
