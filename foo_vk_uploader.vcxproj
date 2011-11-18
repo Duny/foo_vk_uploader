@@ -95,7 +95,6 @@
       </DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalOptions>/LTCG /NODEFAULTLIB:LIBCMT.lib %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>$(FB2KSDK)\foobar2000\shared\shared.lib;shlwapi.lib;user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
