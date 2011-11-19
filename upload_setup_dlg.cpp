@@ -91,10 +91,7 @@ namespace vk_uploader
             m_check_post_on_wall.Attach (GetDlgItem (IDC_CHECK_POST_ON_WALL));
             m_edit_post_msg.Attach (GetDlgItem (IDC_EDIT_POST_MESSAGE));
 
-            get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name)
-            {
-                uSendMessageText (m_combo_presets, CB_ADDSTRING, 0, p_name);
-            });
+            get_preset_manager ()->for_each_preset ([&](const pfc::string8 &p_name) { uSendMessageText (m_combo_presets, CB_ADDSTRING, 0, p_name); });
 
             m_combo_albums.init ();
             m_albums.for_each ([&](const audio_album_info &p_album) { m_combo_albums.add_album (p_album); });
@@ -205,11 +202,7 @@ namespace vk_uploader
                 set_current_preset (get_preset_manager ()->get_preset (string_utf8_from_combo (m_combo_presets, index)));
         }
 
-        inline void on_post_on_wall_toggle ()
-        {
-            m_edit_post_msg.EnableWindow (m_check_post_on_wall.IsChecked ());
-        }
-        
+        inline void on_post_on_wall_toggle () { m_edit_post_msg.EnableWindow (m_check_post_on_wall.IsChecked ()); }
         inline void on_ok () { start_upload (m_items, get_upload_params ()); on_close (); }
         inline void on_cancel () { on_close (); }
         inline void on_close () { DestroyWindow (); }

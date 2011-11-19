@@ -5,7 +5,7 @@ namespace vk_uploader
     void upload_thread::start ()
     {
         threaded_process::g_run_modeless (this, 
-            threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_no_focus | threaded_process::flag_show_progress_dual,
+            threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_no_focus,
             core_api::get_main_window (), "vk.com audio uploading in progress...");
     }
 
@@ -18,7 +18,7 @@ namespace vk_uploader
         t_size item_count = 0, item_max = m_items.get_size ();;
         m_items.for_each ([&] (const metadb_handle_ptr &p_item)
         {
-            p_status.set_item_path (p_item->get_path ());
+            p_status.set_title (pfc::string_formatter () << "Uploading " << pfc::string_filename_ext (p_item->get_path ()));
 
             pfc::string8_fast reason;
             if (filter_bad_file (p_item, reason))
@@ -39,6 +39,7 @@ namespace vk_uploader
         auto album_id = m_params.get<field_album_id> ();
         if (album_id != 0 && album_id != pfc_infinite) {
             try {
+                p_status.set_item ("moving song(s) to album");
                 api_audio_moveToAlbum move_to_album (aids_list, album_id, p_abort);
             }
             catch (exception_aborted) { return; }
@@ -49,6 +50,7 @@ namespace vk_uploader
 
         if (m_params.get<field_post_on_wall> ()) {
             try {
+                p_status.set_item ("making post on wall");
                 api_wall_post new_post (m_params.get<field_post_message> (), aids_list, p_abort);
             }
             catch (exception_aborted) { return; }
@@ -67,17 +69,17 @@ namespace vk_uploader
     t_vk_audio_id upload_thread::upload_item (const metadb_handle_ptr &p_item, threaded_process_status &p_status, abort_callback &p_abort)
     {
         // step 1
+        p_status.set_item ("requesting upload server");
         api_audio_getUploadServer url_for_upload (p_abort);
-        p_status.set_progress (1, 3);
 
         // step 2
+        p_status.set_item ("sending file to server");
         pfc::string8_fast answer = get_api_provider ()->file_upload (url_for_upload, p_item->get_path (), p_abort);
-        p_status.set_progress (2, 3);
 
         // step 3
+        p_status.set_item ("saving audio in profile");
         api_audio_save uploaded_audio_file (answer, p_abort);
         t_vk_audio_id id = uploaded_audio_file.get_id ();
-        p_status.set_progress (3, 3);
 
         return id;
     }
