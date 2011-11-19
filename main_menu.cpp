@@ -25,24 +25,8 @@ namespace vk_uploader
         //! Executes the command. p_callback parameter is reserved for future use and should be ignored / set to null pointer.
         void execute (t_uint32 p_index, service_ptr_t<service_base>) override
         {
-            if (p_index == 0) {
-                open_browser_dialog (VK_COM_LOGOUT_URL, 
-                [](browser_dialog *p_dlg) { p_dlg->close (); },
-                []() 
-                {
-                    run_in_separate_thread ([] ()
-                    {
-                        try {
-                            get_auth_manager ()->get_user_id ();
-                        }
-                        catch (exception_aborted) {}
-                        catch (const std::exception &e) {
-                            uMessageBox (core_api::get_main_window (), e.what (), "Error during authorization", MB_OK | MB_ICONERROR);
-                        }
-                        clear_album_list ();
-                    });
-                });
-            }
+            if (p_index == 0)
+                get_auth_manager()->relogin ();
         }
     };
 

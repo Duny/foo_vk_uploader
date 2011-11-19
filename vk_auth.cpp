@@ -32,8 +32,6 @@ namespace vk_uploader
         {
             pfc::string8_fast location;
             bool success;
-            win32_event dialog_ended;
-            dialog_ended.create (true, false);
 
             auto navigate_callback = [&] (browser_dialog *p_dlg)
             {
@@ -45,25 +43,15 @@ namespace vk_uploader
                     success = false;
                     p_dlg->close ();
                 }
-                else if (location.find_first ("blank.html#") != pfc_infinite) { // if address starts from VK_COM_BLANK_URL, it means that auth was done successfully 
+                else if (location.find_first ("blank.html#") != pfc_infinite) { // if address contains "blank.html#" (part of VK_COM_BLANK_URL), it means that auth was done successfully 
                     success = true;
                     p_dlg->close ();
                 }
-                /*else if (location.find_first (VK_COM_LOGIN_URL) == pfc_infinite) {
-                    if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDYES)
-                        p_dlg->navigate (VK_COM_LOGIN_URL);
-                    else {
-                        aborted = true;
-                        p_dlg->close ();
-                    }
-                }*/
             };
-            auto destroy_callback = [&] () { dialog_ended.set_state (true); };
 
             do {
                 success = false;
-                run_from_main_thread ([=] () { open_browser_dialog (VK_COM_LOGIN_URL, navigate_callback, destroy_callback); });
-                dialog_ended.wait_for (-1);
+                open_browser_dialog (VK_COM_LOGIN_URL, navigate_callback);
                 if (!success && uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
                     throw exception_aborted ();
             } while (!success);
@@ -92,6 +80,21 @@ namespace vk_uploader
         {
             check_auth_data ();
             return m_auth_data.get<field_access_token>();
+        }
+
+        void relogin () override
+        {
+            open_browser_dialog (VK_COM_LOGOUT_URL,  [](browser_dialog *p_dlg) { p_dlg->close (); });
+
+            try {
+                m_auth_data.val () = auth_data ();
+                get_auth_data ();
+            }
+            catch (exception_aborted) {}
+            catch (const std::exception &e) {
+                uMessageBox (core_api::get_main_window (), e.what (), "Error during authorization", MB_OK | MB_ICONERROR);
+            }
+            clear_album_list ();
         }
 
         static cfg_obj<auth_data> m_auth_data;

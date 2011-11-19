@@ -13,6 +13,8 @@ namespace vk_uploader
 
         virtual pfc::string8_fast get_user_id () = 0;
         virtual pfc::string8_fast get_access_token () = 0;
+
+        virtual void relogin () = 0;
     };
 
     // {911ED77D-3820-4B8E-BE4F-6EF30029670B}
