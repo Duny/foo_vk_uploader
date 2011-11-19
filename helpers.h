@@ -43,6 +43,41 @@ struct guid_inline { static const GUID guid; };
 template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
 __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
 
+// helper: wraps main_thread_callback
+template <typename Func>
+void run_from_main_thread (Func f)
+{
+    struct from_main_thread : main_thread_callback
+    {
+        void callback_run () override { f (); }
+        from_main_thread (Func f) : f (f) {}
+        Func f;
+    };
+
+    static_api_ptr_t<main_thread_callback_manager>()->add_callback (new service_impl_t<from_main_thread> (f));
+}
+
+// helper: wraps pfc::thread
+
+typedef boost::function<void ()> new_thread_callback;
+inline void run_in_separate_thread (const new_thread_callback &p_func)
+{
+    class new_thread_t : pfc::thread
+    {
+        new_thread_callback m_func;
+        void threadProc () override
+        {
+            m_func ();
+            delete this;
+        }
+        ~new_thread_t () { waitTillDone (); }
+    public:
+        new_thread_t (const new_thread_callback &p_func) : m_func (p_func) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
+    };
+
+    new new_thread_t (p_func);
+}
+
 
 // helper: remove spaces
 pfc::string8 trim (const pfc::string8 &p_str);

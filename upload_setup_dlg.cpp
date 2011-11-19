@@ -48,25 +48,6 @@ namespace vk_uploader
             }
         };
 
-        typedef boost::function<void ()> new_thread_callback;
-        void run_in_separate_thread (const new_thread_callback &p_func)
-        {
-            class new_thread_t : pfc::thread
-            {
-                new_thread_callback m_func;
-                void threadProc () override
-                {
-                   m_func ();
-                   delete this;
-                }
-                ~new_thread_t () { waitTillDone (); }
-            public:
-                new_thread_t (const new_thread_callback &p_func) : m_func (p_func) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
-            };
-
-            new new_thread_t (p_func);
-        }
-
         BEGIN_MSG_MAP_EX(upload_setup_dlg)
             MESSAGE_HANDLER_SIMPLE (WM_INITDIALOG, on_init_dialog)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_SAVE_PRESET, on_save_preset)

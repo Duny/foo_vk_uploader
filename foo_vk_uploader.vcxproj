@@ -118,7 +118,7 @@
     <ClCompile Include="upload_preset.cpp" />
     <ClCompile Include="context_menu.cpp" />
     <ClCompile Include="foo_vk_uploader.cpp" />
-    <ClCompile Include="login_dlg.cpp" />
+    <ClCompile Include="browser.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -143,7 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="upload_preset.h" />
-    <ClInclude Include="login_dlg.h" />
+    <ClInclude Include="browser.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="upload_thread.h" />

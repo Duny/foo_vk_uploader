@@ -1,9 +1,6 @@
 #include "stdafx.h"
 
-#include <time.h>
-#include "login_dlg.h"
-
-// user_id, access_token, timestamp (time of authentification), expires_in (how long access_token is available)
+// user_id, access_token, timestamp of authentication, expires_in (how long access_token live)
 typedef boost::tuple<pfc::string8_fast, pfc::string8_fast, time_t, t_uint32> auth_data;
 enum { field_user_id, field_access_token, field_timestamp, field_expires_in };
 
@@ -28,25 +25,49 @@ namespace vk_uploader
 
         inline void check_auth_data ()
         {
-            if (!auth_data_is_valid ())
-                get_auth_data (login_dlg::action_do_login);
+            if (!auth_data_is_valid ()) get_auth_data ();
         }
 
-        void get_auth_data (login_dlg::t_login_dialog_action action)
+        void get_auth_data ()
         {
-            pfc::string8 location;
-            while (true) {
-                location = login_dlg::show (action);
+            pfc::string8_fast location;
+            bool success;
+            win32_event dialog_ended;
+            dialog_ended.create (true, false);
+
+            auto navigate_callback = [&] (browser_dialog *p_dlg)
+            {
+                location = p_dlg->get_browser_location ();
+                console::formatter () << location;
+
                 if (location.find_first ("cancel=1") != pfc_infinite ||
-                    location.find_first ("user_denied") != pfc_infinite) // user pressed "Cancel" button
-                    throw exception_aborted ();
-                else if (location.find_first (VK_COM_BLANK_URL) == 0) // if address starts from VK_COM_BLANK_URL, it means that auth was done successfully 
-                    break;
-                else {
-                    if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
-                        throw exception_aborted ();
+                    location.find_first ("user_denied") != pfc_infinite) { // user pressed "Cancel" button
+                    success = false;
+                    p_dlg->close ();
                 }
-            }
+                else if (location.find_first ("blank.html#") != pfc_infinite) { // if address starts from VK_COM_BLANK_URL, it means that auth was done successfully 
+                    success = true;
+                    p_dlg->close ();
+                }
+                /*else if (location.find_first (VK_COM_LOGIN_URL) == pfc_infinite) {
+                    if (uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDYES)
+                        p_dlg->navigate (VK_COM_LOGIN_URL);
+                    else {
+                        aborted = true;
+                        p_dlg->close ();
+                    }
+                }*/
+            };
+            auto destroy_callback = [&] () { dialog_ended.set_state (true); };
+
+            do {
+                success = false;
+                run_from_main_thread ([=] () { open_browser_dialog (VK_COM_LOGIN_URL, navigate_callback, destroy_callback); });
+                dialog_ended.wait_for (-1);
+                if (!success && uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
+                    throw exception_aborted ();
+            } while (!success);
+            
 
             url_params params (location);
             if (params.have ("error"))
@@ -71,12 +92,6 @@ namespace vk_uploader
         {
             check_auth_data ();
             return m_auth_data.get<field_access_token>();
-        }
-
-        void relogin_user () override
-        {
-            m_auth_data.val () = auth_data ();
-            get_auth_data (login_dlg::action_do_relogin);
         }
 
         static cfg_obj<auth_data> m_auth_data;
