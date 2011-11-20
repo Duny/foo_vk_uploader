@@ -13,8 +13,7 @@ namespace vk_uploader
     {
         inline bool auth_data_is_valid () const
         { 
-            if (m_auth_data.get<field_user_id>().is_empty () ||
-                m_auth_data.get<field_access_token>().is_empty ())
+            if (m_auth_data.get<field_user_id>().is_empty () || m_auth_data.get<field_access_token>().is_empty ())
                 return false;
 
             if (m_auth_data.get<field_expires_in>() > 0 &&
@@ -36,7 +35,6 @@ namespace vk_uploader
             auto navigate_callback = [&] (browser_dialog *p_dlg)
             {
                 location = p_dlg->get_browser_location ();
-                console::formatter () << location;
 
                 if (location.find_first ("cancel=1") != pfc_infinite ||
                     location.find_first ("user_denied") != pfc_infinite) { // user pressed "Cancel" button
