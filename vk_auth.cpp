@@ -51,7 +51,7 @@ namespace vk_uploader
 
             do {
                 success = false;
-                open_browser_dialog (VK_COM_LOGIN_URL, navigate_callback);
+                open_browser_dialog ("vk.com logging", VK_COM_LOGIN_URL, navigate_callback);
                 if (!success && uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
                     throw exception_aborted ();
             } while (!success);
@@ -84,7 +84,7 @@ namespace vk_uploader
 
         void relogin () override
         {
-            open_browser_dialog (VK_COM_LOGOUT_URL,  [](browser_dialog *p_dlg) { p_dlg->close (); });
+            open_browser_dialog ("vk.com logging out", VK_COM_LOGOUT_URL,  [](browser_dialog *p_dlg) { p_dlg->close (); });
 
             try {
                 m_auth_data.val () = auth_data ();

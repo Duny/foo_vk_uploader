@@ -28,6 +28,7 @@ namespace vk_uploader
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             close ();
         else {
+            SetWindowText (pfc::stringcvt::string_os_from_utf8 (m_title));
             navigate (m_inital_location);
             ShowWindow (SW_SHOWNORMAL);
         }
@@ -36,7 +37,7 @@ namespace vk_uploader
     void __stdcall browser_dialog::on_navigate_complete2 (IDispatch*, VARIANT *p_url)
     {
         m_current_location = pfc::stringcvt::string_utf8_from_os (p_url->bstrVal);
-        m_timer_id = SetTimer (1, 20, nullptr);
+        m_callback (this);
     }
 
     cfgDialogPosition browser_dialog::m_pos (guid_inline<0xcc80a64a, 0x45de, 0x4735, 0x93, 0xdf, 0xc7, 0x92, 0x63, 0xbb, 0x3a, 0x23>::guid);

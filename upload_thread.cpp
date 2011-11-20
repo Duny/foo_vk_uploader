@@ -6,7 +6,7 @@ namespace vk_uploader
     {
         threaded_process::g_run_modeless (this, 
             threaded_process::flag_show_abort | threaded_process::flag_show_item | threaded_process::flag_no_focus,
-            core_api::get_main_window (), "vk.com audio uploading in progress...");
+            core_api::get_main_window (), "vk.com audio upload...");
     }
 
     void upload_thread::run (threaded_process_status &p_status, abort_callback &p_abort)
@@ -29,11 +29,9 @@ namespace vk_uploader
                 }
                 catch (exception_aborted) { return; }
                 catch (const std::exception &e) {
-                    m_errors << p_item->get_path () << " failed: " << e.what () << "\n";
+                    m_errors << "Failed " << p_item->get_path () << ": " << e.what () << "\n";
                 }
             }
-
-            p_status.set_progress_secondary (++item_count, item_max);
         });
 
         auto album_id = m_params.get<field_album_id> ();

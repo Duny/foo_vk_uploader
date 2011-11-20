@@ -14,8 +14,8 @@ namespace vk_uploader
     public:
         enum { IDD = IDD_LOGIN };
 
-        browser_dialog (const char *url, const on_navigate_complete_callback_t &p_callback)
-            : m_inital_location (url), m_callback (p_callback) {}
+        browser_dialog (const char *p_title, const char *p_url, const on_navigate_complete_callback_t &p_callback)
+            : m_title (p_title), m_inital_location (p_url), m_callback (p_callback) {}
 
         void show () { DoModal (core_api::get_main_window ()); } 
         void close () { EndDialog (IDOK); }
@@ -29,7 +29,6 @@ namespace vk_uploader
             CHAIN_MSG_MAP(CAxDialogImpl<browser_dialog>)
             CHAIN_MSG_MAP(CDialogResize<browser_dialog>)
             MESSAGE_HANDLER_SIMPLE(WM_INITDIALOG, on_init_dialog)
-            MSG_WM_TIMER(on_timer)
             MSG_WM_CLOSE(close)
             MSG_WM_DESTROY(on_destroy)
         END_MSG_MAP()
@@ -48,24 +47,22 @@ namespace vk_uploader
         // dialog
         void on_init_dialog ();
         void on_destroy () { m_pos.RemoveWindow (*this); if (m_wb2) m_wb2.Release (); }
-        void on_timer (UINT_PTR) { KillTimer (m_timer_id); m_callback (this); }
 
         // web browser control
         void __stdcall on_navigate_complete2 (IDispatch*, VARIANT *p_url);
 
         // member variables
-        pfc::string8 m_inital_location, m_current_location;
+        pfc::string8 m_title, m_inital_location, m_current_location;
         CComPtr<IWebBrowser2>           m_wb2;
         on_navigate_complete_callback_t m_callback;
-        UINT_PTR                        m_timer_id;
 
         static cfgDialogPosition m_pos;
     };
 
     // must be called from main thread
-    inline void open_browser_dialog (const char *url, const on_navigate_complete_callback_t &p_nav_callback)
+    inline void open_browser_dialog (const char *p_title, const char *p_url, const on_navigate_complete_callback_t &p_nav_callback)
     {
-        browser_dialog dialog (url, p_nav_callback);
+        browser_dialog dialog (p_title, p_url, p_nav_callback);
         dialog.show ();
     }
 }
