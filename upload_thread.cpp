@@ -34,6 +34,8 @@ namespace vk_uploader
             }
         });
 
+        if (!aids_list.get_size ()) return; // Uploading failed, nothing to do
+
         auto album_id = m_params.get<field_album_id> ();
         if (album_id != 0 && album_id != pfc_infinite) {
             try {
