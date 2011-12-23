@@ -30,5 +30,5 @@ namespace vk_uploader
         }
     };
 
-    static mainmenu_commands_factory_t<menucomman_relogin> g_mainmenu_factiory;
+    namespace { mainmenu_commands_factory_t<menucomman_relogin> g_mainmenu_factiory; }
 }

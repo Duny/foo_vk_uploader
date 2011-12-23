@@ -114,6 +114,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="album_list_dlg.cpp" />
     <ClCompile Include="main_menu.cpp" />
     <ClCompile Include="upload_preset.cpp" />
     <ClCompile Include="context_menu.cpp" />
@@ -142,6 +143,7 @@
     <ClCompile Include="vk_auth.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="album_list_dlg.h" />
     <ClInclude Include="upload_preset.h" />
     <ClInclude Include="browser.h" />
     <ClInclude Include="resource.h" />

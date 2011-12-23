@@ -18,13 +18,11 @@ namespace vk_uploader
             : m_title (p_title), m_inital_location (p_url), m_callback (p_callback) {}
 
         void show () { DoModal (core_api::get_main_window ()); } 
-        void close () { EndDialog (IDOK); }
 
         void navigate (const char *url) { m_current_location.reset (); if (m_wb2) { m_wb2->Navigate (CComBSTR (url), nullptr, nullptr, nullptr, nullptr); } }
         const pfc::string_base &get_browser_location () const { return m_current_location; }
 
     private:
-        // message maps
         BEGIN_MSG_MAP_EX(browser_dialog)
             CHAIN_MSG_MAP(CAxDialogImpl<browser_dialog>)
             CHAIN_MSG_MAP(CDialogResize<browser_dialog>)
@@ -37,21 +35,22 @@ namespace vk_uploader
             SINK_ENTRY(IDC_IE, DISPID_NAVIGATECOMPLETE2, on_navigate_complete2)
         END_SINK_MAP()
 
-        // dialog resize
         BEGIN_DLGRESIZE_MAP(browser_dialog)
             DLGRESIZE_CONTROL(IDC_IE, DLSZ_SIZE_X | DLSZ_SIZE_Y)
         END_DLGRESIZE_MAP()
         
 
-        // message handlers
-        // dialog
+        // Message handlers
+
+        // Dialog
         void on_init_dialog ();
+        void close () { EndDialog (IDOK); }
         void on_destroy () { m_pos.RemoveWindow (*this); if (m_wb2) m_wb2.Release (); }
 
-        // web browser control
+        // Web browser control
         void __stdcall on_navigate_complete2 (IDispatch*, VARIANT *p_url);
 
-        // member variables
+        // Member variables
         pfc::string8 m_title, m_inital_location, m_current_location;
         CComPtr<IWebBrowser2>           m_wb2;
         on_navigate_complete_callback_t m_callback;

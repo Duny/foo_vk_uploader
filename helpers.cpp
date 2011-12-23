@@ -1,6 +1,42 @@
 #include "stdafx.h"
 
-pfc::string8 trim (const pfc::string8 &p_str)
+cfg_objList<audio_album_info> user_album_list::m_cfg_album_list (guid_inline<0x7a5b3e69, 0xe2b0, 0x4bca, 0x96, 0xca, 0x3c, 0x4b, 0x52, 0x21, 0xd1, 0x86>::guid);
+
+void user_album_list::reload_items ()
+{
+    m_cfg_album_list = vk_uploader::api_audio_getAlbums (abort_callback_impl ());
+}
+
+void user_album_list::add_item (const pfc::string_base & p_title)
+{
+    m_cfg_album_list.add_item (vk_uploader::api_audio_addAlbum (p_title, abort_callback_impl ()));
+}
+
+void user_album_list::remove_item (t_vk_album_id album_id)
+{
+    // Delete from profile
+    vk_uploader::api_audio_deleteAlbum (album_id, abort_callback_impl ());
+
+    // Delete from the list
+    auto n = m_cfg_album_list.get_size ();
+    while (n --> 0) {
+        if (m_cfg_album_list[n].get<1> () == album_id) {
+            m_cfg_album_list.remove_by_idx (n);
+            return;
+        }
+    }
+}
+
+void user_album_list::rename_item (const pfc::string_base & p_current_name, const pfc::string_base & p_new_name)
+{
+    int item_index = find_item (p_current_name);
+    if (item_index > -1) {
+        vk_uploader::api_audio_editAlbum (m_cfg_album_list[item_index].get<1> (), p_new_name, abort_callback_impl ());
+        m_cfg_album_list[item_index].get<0> () = p_new_name;
+    }
+}
+
+pfc::string8 trim (const pfc::string8 & p_str)
 {
     auto is_trim_char = [] (char c) -> bool { return c == ' ' || c == '\n' || c == '\t'; };
 
@@ -30,7 +66,7 @@ request_url_builder::request_url_builder (const char *p_method_name, params_cref
 }
 
 
-url_params::url_params (const pfc::string8 &p_url)
+url_params::url_params (const pfc::string_base & p_url)
 {
     t_size pos;
 

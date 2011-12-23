@@ -11,11 +11,11 @@ namespace vk_uploader
 
     void upload_thread::run (threaded_process_status &p_status, abort_callback &p_abort)
     {
-        pfc::list_t<t_vk_audio_id> aids_list;
-
         m_errors.reset ();
 
-        t_size item_count = 0, item_max = m_items.get_size ();;
+        auto album_name_script = m_params.get<field_album_name> ();
+        pfc::list_t<t_vk_audio_id> aids_list;
+        bool album_list_reloaded = false;
         m_items.for_each ([&] (const metadb_handle_ptr &p_item)
         {
             p_status.set_title (pfc::string_formatter () << "Uploading " << pfc::string_filename_ext (p_item->get_path ()));
@@ -24,29 +24,55 @@ namespace vk_uploader
             if (filter_bad_file (p_item, reason))
                 m_errors << "Skipping " << p_item->get_path () << ": " << reason << "\n";
             else {
+                // Upload item
+                t_vk_audio_id audio_id = pfc_infinite;
                 try {
-                    aids_list.add_item (upload_item (p_item, p_status, p_abort));
+                    audio_id = upload_item (p_item, p_status, p_abort);
+                    aids_list.add_item (audio_id);
                 }
                 catch (exception_aborted) { return; }
                 catch (const std::exception &e) {
                     m_errors << "Failed " << p_item->get_path () << ": " << e.what () << "\n";
                 }
+
+                // Move track to album
+                if (!album_name_script.is_empty () && audio_id != pfc_infinite) {
+                    static_api_ptr_t<titleformat_compiler> p_compiler;
+                    service_ptr_t<titleformat_object> p_obj;
+                    pfc::string8 album_name;
+
+                    p_compiler->compile (p_obj, album_name_script);
+                    p_item->format_title (nullptr, album_name, p_obj, &titleformat_text_filter_nontext_chars ());
+                    
+                    if (!album_name.is_empty ()) {
+                        user_album_list albums;
+                        auto album_id = albums.get_album_id_by_name (album_name);
+
+                        if (!album_id && !album_list_reloaded) { // Try to refresh album list
+                            album_list_reloaded = true;
+                            try { albums.reload_items (); album_id = albums.get_album_id_by_name (album_name); }
+                            catch (exception_aborted) { return; }
+                            catch (const std::exception &e) {
+                                m_errors << "Error while reading album list:" << e.what () << "\n";
+                            }
+                        }
+
+                        try {
+                            if (!album_id)
+                                throw pfc::exception (pfc::string_formatter () << "album \"" << album_name << "\" doesn't exists\n");
+                            p_status.set_item (pfc::string_formatter () << "moving track to album " << album_name);
+                            api_audio_moveToAlbum move_to_album (audio_id, album_id, p_abort);
+                        }
+                        catch (exception_aborted) { return; }
+                        catch (const std::exception &e) {
+                            m_errors << "Error while moving " << pfc::string_filename_ext (p_item->get_path ()) << " to album: " << e.what () << "\n";
+                        }
+                    }
+                }
             }
         });
 
-        if (!aids_list.get_size ()) return; // Uploading failed, nothing to do
-
-        auto album_id = m_params.get<field_album_id> ();
-        if (album_id != 0 && album_id != pfc_infinite) {
-            try {
-                p_status.set_item ("moving song(s) to album");
-                api_audio_moveToAlbum move_to_album (aids_list, album_id, p_abort);
-            }
-            catch (exception_aborted) { return; }
-            catch (const std::exception &e) {
-                m_errors << "Error while moving track(s) to album: " << e.what ();
-            }
-        }
+        if (!aids_list.get_size ()) return; // Nothing to do
 
         if (m_params.get<field_post_on_wall> ()) {
             try {

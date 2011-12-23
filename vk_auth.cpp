@@ -35,6 +35,7 @@ namespace vk_uploader
             auto navigate_callback = [&] (browser_dialog *p_dlg)
             {
                 location = p_dlg->get_browser_location ();
+                auto l = location;
 
                 if (location.find_first ("cancel=1") != pfc_infinite ||
                     location.find_first ("user_denied") != pfc_infinite) { // user pressed "Cancel" button
@@ -43,7 +44,7 @@ namespace vk_uploader
                 }
                 else if (location.find_first ("blank.html#") != pfc_infinite) { // if address contains "blank.html#" (part of VK_COM_BLANK_URL), it means that auth was done successfully 
                     success = true;
-                    p_dlg->close ();
+                    //p_dlg->close ();
                 }
             };
 
@@ -85,19 +86,19 @@ namespace vk_uploader
             open_browser_dialog ("vk.com logging out", VK_COM_LOGOUT_URL,  [](browser_dialog *p_dlg) { p_dlg->close (); });
 
             try {
-                m_auth_data.val () = auth_data ();
-                get_auth_data ();
+                m_auth_data.val () = auth_data (); // Clear current data
+                get_auth_data (); // Get new
+                user_album_list ().clear (); // If successes, clear old user album info
             }
             catch (exception_aborted) {}
             catch (const std::exception &e) {
                 uMessageBox (core_api::get_main_window (), e.what (), "Error during authorization", MB_OK | MB_ICONERROR);
             }
-            clear_album_list ();
         }
 
         static cfg_obj<auth_data> m_auth_data;
     };
     cfg_obj<auth_data> auth_manager_imp::m_auth_data (guid_inline<0xa1324e98, 0xc549, 0x4ba8, 0x98, 0xc0, 0x6a, 0x2, 0x46, 0xa9, 0xa, 0x62>::guid);
 
-    static service_factory_single_t<auth_manager_imp> g_auth_factory;
+    namespace { service_factory_single_t<auth_manager_imp> g_auth_factory; }
 }
