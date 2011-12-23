@@ -90,9 +90,10 @@ namespace vk_uploader
         auto selected_item = ListView_GetSingleSelection (p_listview);
         if (selected_item > -1) {
             pfc::string8 album_title;
-            listview_get_sel_item_text (p_listview, album_title);
+            listview_helper::get_item_text (p_listview, selected_item, 0, album_title);
             m_str->set_string (album_title);
-            InPlaceEdit::Start_FromListView (p_listview, selected_item, 0, 1, m_str, new service_impl_t<completion_notify_rename_album> (p_listview, selected_item, album_title, m_str));
+            InPlaceEdit::Start_FromListView (p_listview, selected_item, 0, 1, m_str, 
+                new service_impl_t<completion_notify_rename_album> (p_listview, selected_item, album_title, m_str));
         }
     }
 

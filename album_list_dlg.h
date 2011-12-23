@@ -12,7 +12,9 @@ namespace vk_uploader
 
     inline void listview_get_sel_item_text (HWND p_listview, pfc::string_base & p_out)
     {
-        listview_helper::get_item_text (p_listview, ListView_GetSingleSelection (p_listview), 0, p_out);
+        p_out.reset ();
+        int sel_item = ListView_GetSingleSelection (p_listview);
+        if (sel_item > -1) listview_helper::get_item_text (p_listview, sel_item, 0, p_out);
     }
 
     class album_list_dlg : public CAxDialogImpl<album_list_dlg>
@@ -83,7 +85,7 @@ namespace vk_uploader
             void on_completion (unsigned p_code) override;
 
         public:
-            completion_notify_new_album (HWND p_listview, pfc::rcptr_t<pfc::string_base> p_str) : m_listview (p_listview), m_str (p_str) { }
+            completion_notify_new_album (HWND p_listview, pfc::rcptr_t<pfc::string_base> p_str) : m_listview (p_listview), m_str (p_str) {}
         };
 
         class completion_notify_rename_album : public completion_notify
@@ -97,7 +99,7 @@ namespace vk_uploader
 
         public:
             completion_notify_rename_album (HWND p_listview, unsigned p_item_index, const pfc::string_base & p_prev_title, pfc::rcptr_t<pfc::string_base> p_new_title) 
-                : m_listview (p_listview), m_item_index (p_item_index), m_prev_title (p_prev_title), m_new_title (p_new_title) { }
+                : m_listview (p_listview), m_item_index (p_item_index), m_prev_title (p_prev_title), m_new_title (p_new_title) {}
         };
 
         // Member variables
