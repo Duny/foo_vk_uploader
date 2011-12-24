@@ -44,7 +44,7 @@ namespace vk_uploader
                 }
                 else if (location.find_first ("blank.html#") != pfc_infinite) { // if address contains "blank.html#" (part of VK_COM_BLANK_URL), it means that auth was done successfully 
                     success = true;
-                    //p_dlg->close ();
+                    p_dlg->close ();
                 }
             };
 
@@ -83,6 +83,7 @@ namespace vk_uploader
 
         void relogin () override
         {
+            // FIX ME: Logout not working
             open_browser_dialog ("vk.com logging out", VK_COM_LOGOUT_URL,  [](browser_dialog *p_dlg) { p_dlg->close (); });
 
             try {
