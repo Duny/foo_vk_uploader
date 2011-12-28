@@ -58,8 +58,7 @@ namespace vk_uploader
                         }
 
                         try {
-                            if (!album_id)
-                                throw pfc::exception (pfc::string_formatter () << "album \"" << album_name << "\" doesn't exists\n");
+                            if (!album_id) throw pfc::exception (pfc::string_formatter () << "album \"" << album_name << "\" doesn't exists\n");
                             p_status.set_item (pfc::string_formatter () << "moving track to album " << album_name);
                             api_audio_moveToAlbum move_to_album (audio_id, album_id, p_abort);
                         }

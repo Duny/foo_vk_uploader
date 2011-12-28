@@ -11,7 +11,8 @@ namespace vk_uploader
 {
     class NOVTABLE auth_manager_imp : public vk_auth_manager
     {
-        inline bool auth_data_is_valid () const
+        // vk_auth_manager overrides
+        bool is_valid () const override
         { 
             if (m_auth_data.get<field_user_id>().is_empty () || m_auth_data.get<field_access_token>().is_empty ())
                 return false;
@@ -22,9 +23,37 @@ namespace vk_uploader
             return true;
         }
 
+        pfc::string8_fast get_user_id () override
+        {
+            check_auth_data ();
+            return m_auth_data.get<field_user_id>();
+        }
+
+        pfc::string8_fast get_access_token () override
+        {
+            check_auth_data ();
+            return m_auth_data.get<field_access_token>();
+        }
+
+        void relogin () override
+        {
+            open_browser_dialog ("Logging out from vk.com", VK_COM_LOGOUT_URL,  [](browser_dialog *p_dlg) { p_dlg->close (); });
+
+            try {
+                m_auth_data.val () = auth_data (); // Clear current data
+                get_auth_data (); // Get new
+                user_album_list ().clear (); // If successes, clear old user album info
+            }
+            catch (exception_aborted) {}
+            catch (const std::exception &e) {
+                uMessageBox (core_api::get_main_window (), e.what (), "Error during authorization", MB_OK | MB_ICONERROR);
+            }
+        }
+
+        // Helpers
         inline void check_auth_data ()
         {
-            if (!auth_data_is_valid ()) get_auth_data ();
+            if (!is_valid ()) get_auth_data ();
         }
 
         void get_auth_data ()
@@ -35,7 +64,6 @@ namespace vk_uploader
             auto navigate_callback = [&] (browser_dialog *p_dlg)
             {
                 location = p_dlg->get_browser_location ();
-                auto l = location;
 
                 if (location.find_first ("cancel=1") != pfc_infinite ||
                     location.find_first ("user_denied") != pfc_infinite) { // user pressed "Cancel" button
@@ -50,7 +78,7 @@ namespace vk_uploader
 
             do {
                 success = false;
-                open_browser_dialog ("vk.com logging", VK_COM_LOGIN_URL, navigate_callback);
+                open_browser_dialog ("Logging to vk.com", VK_COM_LOGIN_URL, navigate_callback);
                 if (!success && uMessageBox (core_api::get_main_window (), "Try again?", "vk.com authorization", MB_YESNO | MB_ICONQUESTION) == IDNO)
                     throw exception_aborted ();
             } while (!success);
@@ -69,34 +97,7 @@ namespace vk_uploader
                 throw std::exception ("Unexpected server redirect");
         }
 
-        pfc::string8_fast get_user_id () override
-        {
-            check_auth_data ();
-            return m_auth_data.get<field_user_id>();
-        }
-
-        pfc::string8_fast get_access_token () override
-        {
-            check_auth_data ();
-            return m_auth_data.get<field_access_token>();
-        }
-
-        void relogin () override
-        {
-            // FIX ME: Logout not working
-            open_browser_dialog ("vk.com logging out", VK_COM_LOGOUT_URL,  [](browser_dialog *p_dlg) { p_dlg->close (); });
-
-            try {
-                m_auth_data.val () = auth_data (); // Clear current data
-                get_auth_data (); // Get new
-                user_album_list ().clear (); // If successes, clear old user album info
-            }
-            catch (exception_aborted) {}
-            catch (const std::exception &e) {
-                uMessageBox (core_api::get_main_window (), e.what (), "Error during authorization", MB_OK | MB_ICONERROR);
-            }
-        }
-
+        // Member variables
         static cfg_obj<auth_data> m_auth_data;
     };
     cfg_obj<auth_data> auth_manager_imp::m_auth_data (guid_inline<0xa1324e98, 0xc549, 0x4ba8, 0x98, 0xc0, 0x6a, 0x2, 0x46, 0xa9, 0xa, 0x62>::guid);

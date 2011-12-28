@@ -10,9 +10,9 @@ namespace vk_uploader
     {
         pfc::string8 album_title = trim (*m_str);
         if ((p_code & InPlaceEdit::KEditMaskReason) != InPlaceEdit::KEditEnter || album_title.is_empty ())
-            uSendMessage (m_listview, LVM_DELETEITEM, 0, 0);
+            uSendMessage (m_listview, LVM_DELETEITEM, 0, 0); // New item was inserted in the top of the list
         else {
-            auto p_listview = m_listview; // Need to declare a copy of m_listview to work correctly, but why?
+            auto p_listview = m_listview; // Need to declare a copy of m_listview to work correctly
             run_in_separate_thread ([=] ()
             {
                 bool success = false;
@@ -37,7 +37,7 @@ namespace vk_uploader
         auto album_id = albums.get_album_id_by_name (m_prev_title);
         pfc::string8 new_title = trim (*m_new_title);
         if ((p_code & InPlaceEdit::KEditMaskReason) == InPlaceEdit::KEditEnter && album_id) {
-            auto p_listview = m_listview; // Need to declare a copy of m_listview to work correctly, but why?
+            auto p_listview = m_listview;
             auto p_item_index = m_item_index;
             auto p_prev_title = m_prev_title;
             run_in_separate_thread ([=] ()

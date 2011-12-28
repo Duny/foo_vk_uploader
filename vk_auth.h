@@ -9,8 +9,10 @@ namespace vk_uploader
     {
         FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(vk_auth_manager)
     public:
-        // All this functions may throw exception_aborted then user cancels authorization (by pressing "Cancel" button in dialog)
+        // True if use had logged in and session does not expired
+        virtual bool is_valid () const = 0;
 
+        // All this functions may throw exception_aborted then user cancels authorization (by pressing "Cancel" button in dialog)
         virtual pfc::string8_fast get_user_id () = 0;
         virtual pfc::string8_fast get_access_token () = 0;
 

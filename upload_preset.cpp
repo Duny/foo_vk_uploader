@@ -99,6 +99,6 @@ namespace vk_uploader
         upload_parameters manager_imp::m_dummy;
         cfg_objList<upload_preset> manager_imp::m_preset_list (guid_inline<0xbfeaa7ea, 0x6810, 0x41c6, 0x82, 0x6, 0x12, 0x95, 0x5a, 0x89, 0xdf, 0x49>::guid);
 
-        static service_factory_single_t<manager_imp> g_presets_manager_factory;
+        namespace { service_factory_single_t<manager_imp> g_presets_manager_factory; }
     }
 }

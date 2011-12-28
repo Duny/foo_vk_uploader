@@ -13,7 +13,12 @@ namespace vk_uploader
 
         //! Retrieves name of item, for list of commands to assign keyboard shortcuts to etc.
         void get_name (t_uint32 p_index, pfc::string_base &p_out) override
-        { if (p_index == 0) p_out = "Relogin to vk.com..."; }
+        {
+            if (p_index == 0) {
+                p_out = static_api_ptr_t<vk_auth_manager>()->is_valid () ? "Relogin" : "Login";
+                p_out += " to vk.com...";
+            }
+        }
 
         //! Retrieves item's description for status bar etc.
         bool get_description (t_uint32 p_index, pfc::string_base &p_out) override 

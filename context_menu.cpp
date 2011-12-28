@@ -118,5 +118,5 @@ namespace vk_uploader
         GUID get_parent () override { return contextmenu_groups::fileoperations; }
     };
 
-    static contextmenu_item_factory_t<upload_to_vk> g_contextmenu_factory;
+    namespace { contextmenu_item_factory_t<upload_to_vk> g_contextmenu_factory; }
 }

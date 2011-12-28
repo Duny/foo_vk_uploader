@@ -24,21 +24,20 @@ namespace vk_uploader
 
         album_list_dlg () { m_str.new_t (); }
 
-
+        // Shows dialog. Returns user selected string with album name
         const pfc::string_base & get_album_name () { return DoModal (core_api::get_main_window ()), m_album_name; }
 
     private:
-        // message maps
         BEGIN_MSG_MAP_EX(album_list_dlg)
             MESSAGE_HANDLER_SIMPLE(WM_INITDIALOG, on_init_dialog)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_REFRESH, on_refresh_albums)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_ALBUM_NEW, on_album_new)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_ALBUM_RENAME, on_album_rename)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_ALBUM_DELETE, on_album_delete)
-            NOTIFY_HANDLER_EX_SIMPLE(IDC_LISTVIEW_ALBUMS, NM_DBLCLK, close_and_save_album_name)
-            COMMAND_ID_HANDLER_SIMPLE(IDOK, close_and_save_album_name)
-            COMMAND_ID_HANDLER_SIMPLE(IDCANCEL, close)
-            MSG_WM_CLOSE(close)
+            NOTIFY_HANDLER_EX_SIMPLE(IDC_LISTVIEW_ALBUMS, NM_DBLCLK, close<TRUE>)
+            COMMAND_ID_HANDLER_SIMPLE(IDOK, close<TRUE>)
+            COMMAND_ID_HANDLER_SIMPLE(IDCANCEL, close<FALSE>)
+            MSG_WM_CLOSE(close<FALSE>)
             MSG_WM_DESTROY(on_destroy)
         END_MSG_MAP()
 
@@ -62,12 +61,15 @@ namespace vk_uploader
 
             listview_fill (p_listview, user_album_list ().get_albums ());
         }
-        void close_and_save_album_name ()
+
+        template <BOOL save_album_name>
+        void close ()
         {
-            listview_get_sel_item_text (GetDlgItem (IDC_LISTVIEW_ALBUMS), m_album_name);
+            if (save_album_name == TRUE)
+                listview_get_sel_item_text (GetDlgItem (IDC_LISTVIEW_ALBUMS), m_album_name);
             EndDialog (IDOK);
         }
-        void close () { EndDialog (IDOK); }
+
         void on_destroy () { m_pos.RemoveWindow (*this); }
 
         void on_refresh_albums ();
@@ -104,8 +106,8 @@ namespace vk_uploader
 
         // Member variables
 
-        pfc::string8 m_album_name;
-        pfc::rcptr_t<pfc::string8> m_str;
+        pfc::string8 m_album_name; // Name of selected album if list
+        pfc::rcptr_t<pfc::string8> m_str; // For inplace editing
 
         static cfgDialogPosition m_pos;
     };

@@ -87,7 +87,6 @@ namespace vk_uploader
             pfc::string8_fast answer;
             request->run_ex (p_url, p_abort)->read_string_raw (answer, p_abort);
 
-            //popup_message::g_show (answer, "");
             return answer;
         }
 
@@ -100,5 +99,6 @@ namespace vk_uploader
     public:
         api_profider_imp () : m_call_count (pfc_infinite) { m_invoker_avaliable.create (true, true); }
     };
-    static service_factory_single_t<api_profider_imp> g_api_profider_factory;
+
+    namespace { service_factory_single_t<api_profider_imp> g_factory; }
 }

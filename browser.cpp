@@ -23,7 +23,7 @@ namespace vk_uploader
         DlgResize_Init ();
         m_pos.AddWindow (*this);
 
-        // query IWebBrowser2 interface
+        // Query IWebBrowser2 interface
         CAxWindow ie = GetDlgItem (IDC_IE);
         if (ie.IsWindow () != TRUE || ie.QueryControl (&m_wb2) != S_OK)
             close ();
