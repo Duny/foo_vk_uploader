@@ -1,34 +1,37 @@
 #include "stdafx.h"
 
+#include "vk_api.h"
 #include "album_list_dlg.h"
+
+
+namespace { cfgDialogPosition g_dlg_pos (create_guid (0xe48d7bd1, 0x109b, 0x495c, 0xb2, 0xe0, 0x3c, 0x4c,0x8e, 0xb9, 0x4a, 0x4b)); }
+
+inline void uErrorBox (const char *p_title, const char *p_message)
+{
+    uMessageBox (core_api::get_main_window (), p_message, p_title, MB_OK | MB_ICONERROR);
+}
 
 namespace vk_uploader
 {
-    cfgDialogPosition album_list_dlg::m_pos (guid_inline<0xe48d7bd1, 0x109b, 0x495c, 0xb2, 0xe0,0x3c, 0x4c,0x8e, 0xb9, 0x4a, 0x4b>::guid);
-
     void album_list_dlg::completion_notify_new_album::on_completion (unsigned p_code)
     {
         pfc::string8 album_title = trim (*m_str);
-        if ((p_code & InPlaceEdit::KEditMaskReason) != InPlaceEdit::KEditEnter || album_title.is_empty ())
-            uSendMessage (m_listview, LVM_DELETEITEM, 0, 0); // New item was inserted in the top of the list
-        else {
+        if ((p_code & InPlaceEdit::KEditMaskReason) == InPlaceEdit::KEditEnter && !album_title.is_empty ()) {
             auto p_listview = m_listview; // Need to declare a copy of m_listview to work correctly
-            run_in_separate_thread ([=] ()
+            run_in_separate_thread ([=] () // Need to use separate thread because of UI freezes during http-requests
             {
-                bool success = false;
-                try {
-                    listview_helper::set_item_text (p_listview, 0, 0, album_title.get_ptr ());
-                    user_album_list ().add_item (album_title);
-                    success = true;
-                }
-                catch (exception_aborted) {}
-                catch (const std::exception &e) {
-                    uMessageBox (core_api::get_main_window (), e.what (), "Error while creating new album", MB_OK | MB_ICONERROR);
-                }
+                listview_helper::set_item_text (p_listview, 0, 0, album_title.get_ptr ());
 
-                if (!success) uSendMessage (p_listview, LVM_DELETEITEM, 0, 0);
+                user_album_list user_albums;
+                if (!user_albums.add_item (album_title)) {
+                    uSendMessage (p_listview, LVM_DELETEITEM, 0, 0);
+                    if (!user_albums.aborted ())
+                        uErrorBox ("Error while creating new album", user_albums.get_error ());
+                }
             });
         }
+        else
+            uSendMessage (m_listview, LVM_DELETEITEM, 0, 0);
     }
 
     void album_list_dlg::completion_notify_rename_album::on_completion (unsigned p_code)
@@ -42,20 +45,41 @@ namespace vk_uploader
             auto p_prev_title = m_prev_title;
             run_in_separate_thread ([=] ()
             {
-                bool success = false;
-                try {
-                    listview_helper::set_item_text (p_listview, p_item_index, 0, new_title.get_ptr ());
-                    user_album_list ().rename_item (p_prev_title, new_title);
-                    success = true;
-                }
-                catch (exception_aborted) {}
-                catch (const std::exception &e) {
-                    uMessageBox (core_api::get_main_window (), e.what (), "Error while creating new album", MB_OK | MB_ICONERROR);
-                }
+                listview_helper::set_item_text (p_listview, p_item_index, 0, new_title.get_ptr ());
 
-                if (!success) listview_helper::set_item_text (p_listview, p_item_index, 0, p_prev_title.get_ptr ());
+                user_album_list user_albums;
+                if (!user_albums.rename_item (p_prev_title, new_title)) {
+                   listview_helper::set_item_text (p_listview, p_item_index, 0, p_prev_title.get_ptr ());
+                   if (!user_albums.aborted ())
+                       uErrorBox ("Error while creating new album", user_albums.get_error ());
+                }
             });
         }
+    }
+
+    void album_list_dlg::on_init_dialog ()
+    {
+        g_dlg_pos.AddWindow (*this);
+
+        HWND p_listview = GetDlgItem (IDC_LISTVIEW_ALBUMS);
+            
+        // Add one column
+        LVCOLUMN data = {};
+		data.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+		data.fmt = LVCFMT_LEFT;
+        data.cx = 160;
+        data.pszText = L"Album title";
+        uSendMessage (p_listview, LVM_INSERTCOLUMN, 0, (LPARAM)&data);
+
+        // Window must have WS_CLIPCHILDREN for inline editing
+        ::SetWindowLong (p_listview, GWL_STYLE, ::GetWindowLong (p_listview, GWL_STYLE) | WS_CLIPCHILDREN);
+
+        listview_fill (p_listview, user_album_list ().get_albums ());
+    }
+
+    void album_list_dlg::on_destroy ()
+    {
+        g_dlg_pos.RemoveWindow (*this);
     }
 
     void album_list_dlg::on_refresh_albums ()
@@ -63,15 +87,11 @@ namespace vk_uploader
         HWND p_listview = GetDlgItem (IDC_LISTVIEW_ALBUMS);
         run_in_separate_thread ([p_listview] ()
         {
-            try {
-                user_album_list p_list;
-                p_list.reload_items ();
-                listview_fill (p_listview, p_list);
-            }
-            catch (exception_aborted) {}
-            catch (const std::exception &e) {
-                uMessageBox (core_api::get_main_window (), e.what (), "Error while reading album list", MB_OK | MB_ICONERROR);
-            }
+            user_album_list user_albums;
+            if (user_albums.reload ())
+                listview_fill (p_listview, user_albums.get_albums ());
+            else if (!user_albums.aborted ())
+                uErrorBox ("Error while reading album list", user_albums.get_error ());
         });
     }
 
@@ -110,15 +130,11 @@ namespace vk_uploader
             if (dlg_result == IDYES) {
                 run_in_separate_thread ([p_listview, album_name] ()
                 {
-                    try {
-                        user_album_list albums;
-                        albums.remove_item (albums.get_album_id_by_name (album_name));
-                        listview_fill (p_listview, albums);
-                    }
-                    catch (exception_aborted) {}
-                    catch (const std::exception &e) {
-                        uMessageBox (core_api::get_main_window (), e.what (), "Error while creating new album", MB_OK | MB_ICONERROR);
-                    }
+                    user_album_list user_albums;
+                    if (user_albums.remove_item (user_albums.get_album_id_by_name (album_name)))
+                        listview_fill (p_listview, user_albums.get_albums ()); // Reload items (change to deleting single item instead)
+                    else if (!user_albums.aborted ())
+                        uErrorBox ("Error while creating new album", user_albums.get_error ());
                 });
             }
         }

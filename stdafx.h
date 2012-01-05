@@ -18,19 +18,21 @@
 #include "json/value.h"
 
 // boost includes
+#include "boost/assign.hpp"
+#include "boost/foreach.hpp"
 #include "boost/function.hpp"
-#include "boost/smart_ptr.hpp"
 #include "boost/tuple/tuple.hpp"
 #include "boost/tuple/tuple_io.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
 
-// plugin includes
+using namespace boost::assign;
+using namespace boost::foreach;
+using boost::function;
+using namespace boost::tuples;
+using std::make_pair;
+
+// plugin specific includes
 #include "resource.h"
 #include "helpers.h"
-#include "vk_auth.h"
-#include "vk_api.h"
-#include "upload_thread.h"
-#include "upload_preset.h"
-#include "browser.h"
 
 #endif

@@ -1,5 +1,8 @@
 #include "stdafx.h"
 
+#include "vk_auth.h"
+
+
 namespace vk_uploader
 {
     class menucomman_relogin : public mainmenu_commands
@@ -9,7 +12,7 @@ namespace vk_uploader
 
         //! Retrieves GUID of specified command.
         GUID get_command (t_uint32 p_index) override
-        { return p_index == 0 ? guid_inline<0xa639a062, 0xcb28, 0x4a7b, 0x83, 0x89, 0x11, 0xcf, 0xd4, 0x5b, 0x8c, 0xdc>::guid : pfc::guid_null; }
+        { return p_index == 0 ? create_guid (0xa639a062, 0xcb28, 0x4a7b, 0x83, 0x89, 0x11, 0xcf, 0xd4, 0x5b, 0x8c, 0xdc) : pfc::guid_null; }
 
         //! Retrieves name of item, for list of commands to assign keyboard shortcuts to etc.
         void get_name (t_uint32 p_index, pfc::string_base &p_out) override

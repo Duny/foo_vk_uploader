@@ -3,83 +3,59 @@
 
 // helpers for tuple stream i/o
 template<class T1>
-inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, boost::tuples::cons<T1, boost::tuples::null_type> &value) { return stream >> value.head; }
+inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, cons<T1, null_type> &value) { return stream >> value.head; }
 
-inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, boost::tuples::null_type &value) { return stream; }
+inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, null_type &value) { return stream; }
 
 template<class T1, class T2>
-inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, boost::tuples::cons<T1, T2> &value) { stream >> value.head; return read_tuple (stream, value.tail); }
+inline stream_reader_formatter<> & read_tuple (stream_reader_formatter<> &stream, cons<T1, T2> &value) { stream >> value.head; return read_tuple (stream, value.tail); }
 
 template<class T1>
-inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const boost::tuples::cons<T1, boost::tuples::null_type> &value) { return stream << value.head; }
+inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const cons<T1, null_type> &value) { return stream << value.head; }
 
-inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const boost::tuples::null_type &value) { return stream; }
+inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const null_type &value) { return stream; }
 
 template<class T1, class T2>
-inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const boost::tuples::cons<T1, T2> &value) { stream << value.head; return write_tuple (stream, value.tail); }
+inline stream_writer_formatter<> & write_tuple (stream_writer_formatter<> &stream, const cons<T1, T2> &value) { stream << value.head; return write_tuple (stream, value.tail); }
 
 
 typedef t_uint32 t_vk_album_id;
 typedef t_uint32 t_vk_audio_id;
 
+
 // keeps information about upload actions
 // field_album_name: titleformat script for item album
 // field_post_on_wall: makes a new post on the users wall containing newly uploaded items
 // field_post_message: adds optional text to the top of the post
-typedef boost::tuple<pfc::string8, bool, pfc::string8> upload_parameters;
+typedef tuple<pfc::string8, bool, pfc::string8> upload_parameters;
 enum { field_album_name, field_post_on_wall, field_post_message };
 
 
 // used for storing in config information about users albums
-// first field is the title of album, second is its id
-typedef boost::tuple<pfc::string8, t_vk_album_id> audio_album_info;
+// first field is the title of album, second is id
+typedef tuple<pfc::string8, t_vk_album_id> audio_album_info;
 FB2K_STREAM_READER_OVERLOAD(audio_album_info) { return read_tuple (stream, value); }
 FB2K_STREAM_WRITER_OVERLOAD(audio_album_info) { return write_tuple (stream, value); }
 
 
-// helper to get "inline" GUID definitions
-// some_func (guid_inline<0xbfeaa7ea, 0x6810, 0x41c6, 0x82, 0x6, 0x12, 0x95, 0x5a, 0x89, 0xdf, 0x49>::guid);
-template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
-struct guid_inline { static const GUID guid; };
-
-template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
-__declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
-
-
-class user_album_list
+// For inplace GUID declaration
+struct create_guid : public GUID
 {
-    static cfg_objList<audio_album_info> m_cfg_album_list;
-
-    inline int find_item (const pfc::string_base & p_name) const
-    {
-        auto n = m_cfg_album_list.get_size ();
-        while (n --> 0) {
-            if (pfc::stringCompareCaseInsensitive (m_cfg_album_list[n].get<0> ().get_ptr (), p_name.get_ptr ()) == 0)
-                return n;
-        }
-        return -1;
-    }
-
-public:
-    inline const pfc::list_base_const_t<audio_album_info> & get_albums () const { return m_cfg_album_list; }
-    inline operator const pfc::list_base_const_t<audio_album_info> & () const { return m_cfg_album_list; }
-
-    // All this functions may throw exceptions
-    void reload_items (); // Loads albums list from user vk profile (may throw exceptions)
-    void add_item (const pfc::string_base & p_title); // Adds new album to user profile
-    void remove_item (t_vk_album_id album_id); // Deletes album from user profile
-    void rename_item (const pfc::string_base & p_current_name, const pfc::string_base & p_new_name);
-
-    inline t_vk_album_id get_album_id_by_name (const pfc::string_base & p_album_name) const
-    {
-        int item_index = find_item (p_album_name);
-        return item_index > -1 ? m_cfg_album_list[item_index].get<1> () : 0;
-    }
-
-    // Does nothing with user profile
-    inline void clear () { m_cfg_album_list.remove_all (); }
+	create_guid (t_uint32 p_data1, t_uint16 p_data2, t_uint16 p_data3, t_uint8 p_data41, t_uint8 p_data42, t_uint8 p_data43, t_uint8 p_data44, t_uint8 p_data45, t_uint8 p_data46, t_uint8 p_data47, t_uint8 p_data48) 
+	{
+		Data1 = p_data1;
+		Data2 = p_data2;
+		Data3 = p_data3;
+		Data4[0] = p_data41;
+		Data4[1] = p_data42;
+		Data4[2] = p_data43;
+		Data4[3] = p_data44;
+		Data4[4] = p_data45;
+		Data4[5] = p_data46;
+		Data4[6] = p_data47;
+		Data4[7] = p_data48;
+	}
 };
-
 
 class string_utf8_from_combobox
 {
@@ -97,8 +73,8 @@ public:
         }
     }
 
-    inline operator const char * () const { return m_data.get_ptr (); }
-    inline operator const pfc::string8& () const { return m_data; }
+    operator const char * () const { return m_data.get_ptr (); }
+    operator pfc::string8 const & () const { return m_data; }
 };
 
 class string_utf8_from_listbox
@@ -117,56 +93,86 @@ public:
         }
     }
 
-    inline operator const char * () const { return m_data.get_ptr (); }
-    inline operator const pfc::string8& () const { return m_data; }
+    operator const char * () const { return m_data.get_ptr (); }
+    operator const pfc::string8 & () const { return m_data; }
 };
 
-// helper: wraps main_thread_callback
-template <typename Func>
-void run_from_main_thread (Func f)
+class string_url_encoded
 {
-    struct from_main_thread : main_thread_callback
+    pfc::string8 m_data;
+public:
+    string_url_encoded (const char * p_str)
     {
-        void callback_run () override { f (); }
-        from_main_thread (Func f) : f (f) {}
-        Func f;
-    };
+        pfc::urlEncode (m_data, p_str); 
+    }
 
-    static_api_ptr_t<main_thread_callback_manager>()->add_callback (new service_impl_t<from_main_thread> (f));
-}
+    operator const char * () const { return m_data.get_ptr (); }
+    operator const pfc::string8 & () const { return m_data; }
+};
 
-// helper: wraps pfc::thread
 
-typedef boost::function<void ()> new_thread_callback;
+typedef function<void ()> new_thread_callback;
 inline void run_in_separate_thread (const new_thread_callback &p_func)
 {
-    class new_thread_t : pfc::thread
-    {
-        new_thread_callback m_func;
-        void threadProc () override
-        {
-            m_func ();
-            delete this;
-        }
-        ~new_thread_t () { waitTillDone (); }
-    public:
-        new_thread_t (const new_thread_callback &p_func) : m_func (p_func) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
-    };
+    class thread_dynamic {
+	public:
+        PFC_DECLARE_EXCEPTION (exception_creation, pfc::exception, "Could not create thread");
 
-    new new_thread_t (p_func);
+		thread_dynamic (const new_thread_callback &p_func, int priority) : m_func (p_func), m_thread (INVALID_HANDLE_VALUE)
+        {
+			m_thread = CreateThread (NULL, 0, g_entry, reinterpret_cast<void*>(this), CREATE_SUSPENDED, NULL);
+			if (m_thread == NULL) throw exception_creation ();
+			SetThreadPriority (m_thread, priority);
+			ResumeThread (m_thread);
+        }
+		
+	private:
+        // Must be instantiated with operator new
+        ~thread_dynamic () { CloseHandle (m_thread); }
+
+		void threadProc () { m_func (); delete this; }
+
+		static DWORD CALLBACK g_entry (void* p_instance) { return reinterpret_cast<thread_dynamic*>(p_instance)->entry (); }
+		unsigned entry () {
+			try { threadProc (); } catch (...) {}
+			return 0;
+		}
+
+        new_thread_callback m_func;
+		HANDLE m_thread;
+
+		PFC_CLASS_NOT_COPYABLE_EX (thread_dynamic)
+	};
+
+    new thread_dynamic (p_func, THREAD_PRIORITY_BELOW_NORMAL);
 }
 
 
 // helper: remove spaces
-pfc::string8 trim (const pfc::string8 &p_str);
+inline pfc::string8 trim (const pfc::string8 & p_str)
+{
+    auto is_trim_char = [] (char c) -> bool { return c == ' ' || c == '\n' || c == '\t'; };
+
+    t_size str_len = p_str.get_length ();
+
+    t_size left = 0;
+    while (left < str_len && is_trim_char (p_str[left])) left++;
+
+    t_size right = str_len - 1;
+    while (right > left && is_trim_char (p_str[right])) right--;
+
+    return pfc::string_part (p_str.get_ptr () + left, right - left + 1);
+}
 
 // opens upload setup dialog
 void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_list ());
+// starts upload process
+void start_upload (metadb_handle_list_cref p_items, const upload_parameters & p_params);
 
 
-// helper
+// Helper macros. The main goal is that it accept function without arguments
 #define COMMAND_HANDLER_SIMPLE(id, code, func) \
-    if(uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam)) \
+    if (uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam)) \
     { \
         bHandled = TRUE; \
         lResult = 0; \
@@ -175,7 +181,7 @@ void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_l
     }
 
 #define COMMAND_ID_HANDLER_SIMPLE(id, func) \
-	if(uMsg == WM_COMMAND && id == LOWORD(wParam)) \
+	if (uMsg == WM_COMMAND && id == LOWORD(wParam)) \
 	{ \
 		bHandled = TRUE; \
 		lResult = 0; \
@@ -192,79 +198,107 @@ void show_upload_setup_dialog (metadb_handle_list_cref p_items = metadb_handle_l
 	    return TRUE; \
 	}
 
-class response_json_ptr : public boost::shared_ptr<Json::Value>
+class response_json_ptr
 {
-    inline bool is_valid (const Json::Value *p_val) const {
-        if (!p_val || p_val->isNull ()) return false;
-        if (p_val->isObject ()) return !p_val->isMember ("error");
+    bool is_valid () const {
+        if (!m_val.is_valid ()) return false;
+        const Json::Value & p_val = *m_val;
+        if (p_val.isNull ()) return false;
+        if (p_val.isObject ()) return !p_val.isMember ("error");
         return true;
     };
 
-    pfc::string8 get_error_code ()
+    void assert_valid ()
     {
-        const Json::Value *val = get ();
-        if (val) {
-            if (val->isObject () && val->isMember ("error")) {
-                const Json::Value &error = val->get ("error", Json::nullValue);
-                if (error.isObject () && error.isMember ("error_msg"))
-                    return error["error_msg"].asCString ();
+        if (!is_valid ()) {
+            if (!m_val.is_valid ())
+                m_response_text.insert_chars (0, "Invalid response: ");
+            else {
+                const Json::Value & val = *m_val;
+                if (val.isObject () && val.isMember ("error")) {
+                    const Json::Value &error = val.get ("error", Json::nullValue);
+                    if (error.isObject () && error.isMember ("error_msg"))
+                        m_response_text.set_string_ (error["error_msg"].asCString ());
+                }
+                else
+                    m_response_text.set_string_ (val.toStyledString ().c_str ());
             }
-            else
-                return val->toStyledString ().c_str ();
+            throw pfc::exception (m_response_text.get_ptr ());
         }
-        return "Invalid response";
     }
 
-    inline void assert_valid () { if (!is_valid (get ())) throw pfc::exception (get_error_code ()); }
+    pfc::rcptr_t<Json::Value> m_val;
+    mutable pfc::string8 m_response_text;
 
 public:
-    response_json_ptr (const pfc::string_base & p_data) {
+    response_json_ptr (const pfc::string_base & p_data) : m_response_text (p_data) {
         const char *begin = p_data.get_ptr ();
         const char *end = begin + p_data.get_length ();
         Json::Value val;
             
         if (Json::Reader ().parse (begin, end, val, false)) {
-            Json::Value *out;
-            if (val.isObject () && val.isMember ("response"))
-                out = new Json::Value (val["response"]);
-            else
-                out = new Json::Value (val);
-            reset (out);
+            bool has_response_field = val.isObject () && val.isMember ("response");
+            m_val.new_t (has_response_field ? val["response"] : val);
         }
-        assert_valid ();
+
+        assert_valid (); // Throw exception if we have bad response
     }
 
-    Json::Value &operator[] (Json::UInt index) { return (*get ())[index]; }
-    const Json::Value &operator[] (Json::UInt index) const { return (*get ())[index]; }
+    Json::Value & operator[] (Json::UInt index) { return (*m_val)[index]; }
+    const Json::Value & operator[] (Json::UInt index) const { return (*m_val)[index]; }
 
-    Json::Value & operator[] (const char *key) { return (*get ())[key]; }
-    const Json::Value & operator[]( const char *key ) const { return (*get ())[key]; }
+    Json::Value & operator[] (const char *key) { assert_valid (); return (*m_val)[key]; }
+    const Json::Value & operator[] (const char *key) const { return (*m_val)[key]; }
+
+    Json::Value* operator-> () { assert_valid (); return &(*m_val); }
+    const Json::Value* operator-> () const { return &(*m_val); }
 };
 
+// Represents a list of name=>value string pairs of URL parameters
+// (http://wwww.vk.com/?name1=value1&name2=value2&..)
+typedef std::pair<pfc::string8, pfc::string8> name_value_pair;
+typedef std::vector<name_value_pair> url_parameters;
 
-class url_params : public pfc::map_t<pfc::string8, pfc::string8>
+inline url_parameters construct_from_url (const pfc::string_base & p_url)
 {
-public:
-    url_params () {}
-    url_params (const pfc::string_base &p_url); // parsed string for name=value pairs
-    // constructs from single p_name=p_value pair
-    url_params (const char *p_name, const char *p_value) { find_or_add (pfc::string8 (p_name)) = p_value; }
+    url_parameters params;
+    t_size pos;
+    if ((pos = p_url.find_first ('#')) != pfc_infinite || (pos = p_url.find_first ('?')) != pfc_infinite) {
+        t_size len = p_url.length (), pos2, pos3;
+        for (pos = pos + 1; pos < len; pos = pos3 + 1) {
+            if ((pos2 = p_url.find_first ('=', pos)) == pfc_infinite)
+                break;
 
-    bool have (const char *p_name) const { return have_item (pfc::string8 (p_name)); }
+            if ((pos3 = p_url.find_first ('&', ++pos2)) == pfc_infinite)
+                pos3 = len;
 
-    pfc::string8 &operator [] (const char *p_name) { return find_or_add (pfc::string8 (p_name)); }
-};
-typedef url_params const& params_cref;
-        
+            params.push_back (make_pair (
+                /*name*/pfc::string_part (p_url.get_ptr () + pos, pos2 - pos - 1), 
+                /*value*/pfc::string_part (p_url.get_ptr () + pos2, pos3 - pos2)));
+        }
+    }
+    return params;
+}
 
-class request_url_builder
+inline bool have (const url_parameters & p_params, const std::vector<const char*> & p_names)
+{ 
+    auto par_begin = p_params.begin (), par_end = p_params.end ();
+    BOOST_FOREACH (const char * const name, p_names) {
+        auto it = std::find_if (par_begin, par_end, [&] (const name_value_pair & p) { return pfc::stringCompareCaseInsensitive (p.first, name) == 0; });
+        if (it == par_end) return false;
+    }
+    return true;
+}
+
+// Use carefully, it does not check whatever was p_name found or not. So p_name should exist
+inline const pfc::string8 & get (const url_parameters & p_params, const char * p_name)
 {
-    pfc::string8 m_url;
-public:
-    request_url_builder (const char *p_method_name, params_cref p_params, abort_callback &p_abort);
+    return (*std::find_if (p_params.begin (), p_params.end (), [&] (const name_value_pair & p)
+        { return pfc::stringCompareCaseInsensitive (p.first, p_name) == 0; })).second;
+}
 
-    operator const char * () const { return m_url.get_ptr (); }
-};
-
-
+inline unsigned get_uint (const url_parameters & p_params, const char * p_name)
+{
+    return pfc::atoui_ex (get (p_params, p_name), pfc_infinite);
+}
 #endif

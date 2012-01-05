@@ -45,12 +45,6 @@
     <ClCompile Include="vk_auth.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="upload_preset.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="upload_thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -63,12 +57,15 @@
     <ClCompile Include="album_list_dlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="api_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="upload_presets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="upload_thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vk_api.h">
@@ -80,9 +77,6 @@
     <ClInclude Include="helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="upload_preset.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="browser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -91,6 +85,12 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="api_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="upload_presets.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

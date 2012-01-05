@@ -42,25 +42,8 @@ namespace vk_uploader
         END_MSG_MAP()
 
         // Message handlers
-        void on_init_dialog ()
-        {
-            m_pos.AddWindow (*this);
-
-            HWND p_listview = GetDlgItem (IDC_LISTVIEW_ALBUMS);
-            
-            // Add one column
-            LVCOLUMN data = {};
-		    data.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
-		    data.fmt = LVCFMT_LEFT;
-            data.cx = 160;
-            data.pszText = L"Album title";
-            uSendMessage (p_listview, LVM_INSERTCOLUMN, 0, (LPARAM)&data);
-
-            // Window must have WS_CLIPCHILDREN for inline editing
-            ::SetWindowLong (p_listview, GWL_STYLE, ::GetWindowLong (p_listview, GWL_STYLE) | WS_CLIPCHILDREN);
-
-            listview_fill (p_listview, user_album_list ().get_albums ());
-        }
+        void on_init_dialog ();
+        void on_destroy ();
 
         template <BOOL save_album_name>
         void close ()
@@ -69,8 +52,6 @@ namespace vk_uploader
                 listview_get_sel_item_text (GetDlgItem (IDC_LISTVIEW_ALBUMS), m_album_name);
             EndDialog (IDOK);
         }
-
-        void on_destroy () { m_pos.RemoveWindow (*this); }
 
         void on_refresh_albums ();
         void on_album_new ();
@@ -108,8 +89,6 @@ namespace vk_uploader
 
         pfc::string8 m_album_name; // Name of selected album if list
         pfc::rcptr_t<pfc::string8> m_str; // For inplace editing
-
-        static cfgDialogPosition m_pos;
     };
 }
 #endif

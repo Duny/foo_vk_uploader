@@ -1,25 +1,41 @@
 #include "stdafx.h"
 
 #include "boost/scope_exit.hpp"
+#include "vk_auth.h"
+#include "vk_api.h"
+
 
 namespace vk_uploader
 {
-    // {415971BA-5773-4843-9D18-09F28074F5F7}
-    __declspec(selectany) const GUID vk_api_profider::class_guid = 
-    { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
+    class api_url_builder
+    {
+        pfc::string8 m_url;
+    public:
+        api_url_builder (const char *p_method_name, const url_parameters & p_params)
+        {
+            m_url << "https://api.vk.com/method/" << p_method_name << "?";
+
+            BOOST_FOREACH (const name_value_pair & p, p_params)
+                m_url << p.first << "=" << string_url_encoded (p.second) << "&";
+
+            m_url << "access_token=" << get_auth_manager ()->get_access_token ();
+        }
+
+        operator const char * () const { return m_url.get_ptr (); }
+    };
 
 
     class api_profider_imp : public vk_api_profider
     {
-        typedef pfc::array_t<t_uint8> membuf_ptr;
-        void get_file_contents (const char *p_path, membuf_ptr &p_out)
+        // Helpers
+        void get_file_contents (const char *p_path, pfc::array_t<t_uint8> & p_out)
         {
             file_ptr p_file;
             abort_callback_impl p_abort;
 
             filesystem::g_open_read (p_file, p_path, p_abort);
             if (p_file.is_valid ()) {
-                t_size file_size = (t_size)p_file->get_size (p_abort);
+                auto file_size = static_cast<t_size>(p_file->get_size (p_abort)); // TODO: Potential x64 error
                 p_out.set_size (file_size);
                 t_size read = p_file->read (p_out.get_ptr (), file_size, p_abort);
                 if (read != file_size)
@@ -29,17 +45,14 @@ namespace vk_uploader
                 throw exception_io_not_found ();
         }
 
-        response_json_ptr make_request (const char *p_api_name, params_cref p_params, abort_callback &p_abort)
+        response_json_ptr make_request (const char *p_api_name, const url_parameters & p_params, abort_callback & p_abort)
         {
-            http_request::ptr request;
-            static_api_ptr_t<http_client>()->create_request ("GET")->service_query_t (request);
-
             pfc::string8_fast answer;
-            request->run_ex (request_url_builder (p_api_name, p_params, p_abort), p_abort)->read_string_raw (answer, p_abort);
+            static_api_ptr_t<http_client>()->create_request ("GET")->run_ex (api_url_builder (p_api_name, p_params), p_abort)->read_string_raw (answer, p_abort);
             return response_json_ptr (answer);
         }
 
-        response_json_ptr invoke (const char *p_api_name, params_cref p_params, abort_callback &p_abort) override
+        response_json_ptr invoke (const char *p_api_name, const url_parameters & p_params, abort_callback &p_abort) override
         {
             m_invoker_avaliable.wait_for (-1);
 
@@ -54,6 +67,7 @@ namespace vk_uploader
 
                 m_call_count = (m_call_count + 1) % vk_api_profider::max_api_calls_per_second;
 
+                // Not more than max_api_calls_per_second per one second (1000 ms)
                 if (m_call_count == 0) {
                     if ((m_last_call_time - m_first_call_time) < 1000) {
                         console::formatter () << "sleeping " << t_uint32(1100 - (m_last_call_time - m_first_call_time)) << " ms";
@@ -74,20 +88,24 @@ namespace vk_uploader
             return make_request (p_api_name, p_params, p_abort);
         }
 
-        pfc::string8_fast file_upload (const char *p_url, const char *p_file, abort_callback &p_abort) override
+        membuf_ptr upload_audio_file (const char *p_url, const char *p_file_path, abort_callback &p_abort) override
         {
-            membuf_ptr data;
-            get_file_contents (p_file, data);
+            membuf_ptr data; data.new_t ();
+            pfc::array_t<t_uint8> & byte_array = *data;
+
+            // Read whole file into memory
+            get_file_contents (p_file_path, byte_array);
 
             http_request_post::ptr request;
             static_api_ptr_t<http_client>()->create_request ("POST")->service_query_t (request);
 
-            request->add_post_data ("file", data.get_ptr (), data.get_size (), pfc::string_filename_ext (p_file), "");
-
-            pfc::string8_fast answer;
-            request->run_ex (p_url, p_abort)->read_string_raw (answer, p_abort);
-
-            return answer;
+            request->add_post_data ("file", byte_array.get_ptr (), byte_array.get_size (), pfc::string_filename_ext (p_file_path), "");
+            //request->run_ex (p_url, p_abort)->read_string_raw (m_answer, p_abort);
+            file_ptr answer = request->run_ex (p_url, p_abort);
+            t_size answer_size = static_cast<t_size>(answer->get_size (p_abort));
+            byte_array.set_size (answer_size);
+            answer->read (byte_array.get_ptr (), answer_size, p_abort);
+            return data;
         }
 
         DWORD m_first_call_time; // time then was made first call
