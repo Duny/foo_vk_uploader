@@ -100,5 +100,5 @@ namespace vk_uploader
     upload_parameters presets_manager_impl::m_preset_dummy;
     cfg_objList<upload_preset> presets_manager_impl::m_preset_list (create_guid (0xbfeaa7ea, 0x6810, 0x41c6, 0x82, 0x6, 0x12, 0x95, 0x5a, 0x89, 0xdf, 0x49));
 
-    namespace { service_factory_single_t<presets_manager_impl> g_presets_manager_factory; }
+    namespace { service_factory_single_t<presets_manager_impl> g_factory; }
 }

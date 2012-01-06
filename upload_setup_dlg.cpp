@@ -97,9 +97,9 @@ namespace vk_uploader
             m_edit_post_msg.EnableWindow (p.get<field_post_on_wall> ());
         }
 
-        pfc::string8_fast get_window_text_trimmed (HWND wnd) const
+        pfc::string8 get_window_text_trimmed (HWND wnd) const
         {
-            return ::IsWindow (wnd) ? trim (string_utf8_from_window (wnd).get_ptr ()) : "";
+            return trim (string_utf8_from_window (wnd).get_ptr ());
         }
 
         // member variables

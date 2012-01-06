@@ -31,7 +31,7 @@ typedef tuple<pfc::string8, bool, pfc::string8> upload_parameters;
 enum { field_album_name, field_post_on_wall, field_post_message };
 
 
-// used for storing in config information about users albums
+// used for storing information about user albums
 // first field is the title of album, second is id
 typedef tuple<pfc::string8, t_vk_album_id> audio_album_info;
 FB2K_STREAM_READER_OVERLOAD(audio_album_info) { return read_tuple (stream, value); }
@@ -46,14 +46,10 @@ struct create_guid : public GUID
 		Data1 = p_data1;
 		Data2 = p_data2;
 		Data3 = p_data3;
-		Data4[0] = p_data41;
-		Data4[1] = p_data42;
-		Data4[2] = p_data43;
-		Data4[3] = p_data44;
-		Data4[4] = p_data45;
-		Data4[5] = p_data46;
-		Data4[6] = p_data47;
-		Data4[7] = p_data48;
+		Data4[0] = p_data41; Data4[1] = p_data42;
+		Data4[2] = p_data43; Data4[3] = p_data44;
+		Data4[4] = p_data45; Data4[5] = p_data46;
+		Data4[6] = p_data47; Data4[7] = p_data48;
 	}
 };
 
@@ -263,6 +259,7 @@ inline url_parameters construct_from_url (const pfc::string_base & p_url)
 {
     url_parameters params;
     t_size pos;
+    // Find beginning of parameters in URL
     if ((pos = p_url.find_first ('#')) != pfc_infinite || (pos = p_url.find_first ('?')) != pfc_infinite) {
         t_size len = p_url.length (), pos2, pos3;
         for (pos = pos + 1; pos < len; pos = pos3 + 1) {

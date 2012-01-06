@@ -1,5 +1,4 @@
 #include "stdafx.h"
-
 #include "browser.h"
 
 
@@ -14,15 +13,14 @@ namespace
     };
     initquit_factory_t<myinitquit> g_initquit;
 
-    cfgDialogPosition g_dlg_pos (create_guid (0xd3c77d31, 0xdde8, 0x41f0, 0x96, 0x47, 0x63, 0xb1, 0xad, 0x13, 0x29,0x48));
+    cfgDialogPosition g_dlg_pos (create_guid (0xf7d4e54a, 0x5d5d, 0x482e, 0x89, 0x4a, 0x4f, 0x10, 0x3c, 0x02, 0x50, 0x6a));
 }
 
 using namespace vk_uploader;
 
 void browser_dialog::on_init_dialog ()
 {
-    // Init resizing
-    DlgResize_Init ();
+    DlgResize_Init (true, false);
     g_dlg_pos.AddWindow (*this);
 
     // Query IWebBrowser2 interface

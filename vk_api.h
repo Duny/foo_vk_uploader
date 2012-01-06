@@ -25,9 +25,9 @@ namespace vk_uploader
 {
     typedef pfc::rcptr_t<pfc::array_t<t_uint8>> membuf_ptr;
     
-    class NOVTABLE vk_api_profider : public service_base
+    class NOVTABLE vk_api_provider : public service_base
     {
-        FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(vk_api_profider)
+        FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(vk_api_provider)
     public:
         enum { max_api_calls_per_second = 10 }; // Not sure if this is right for desktop apps
 
@@ -38,11 +38,11 @@ namespace vk_uploader
         virtual membuf_ptr upload_audio_file (const char *p_url, const char *p_file_path, abort_callback &p_abort) = 0;
     };
 
-    typedef static_api_ptr_t<vk_api_profider> get_api_provider;
+    typedef static_api_ptr_t<vk_api_provider> get_api_provider;
 
 
     // {415971BA-5773-4843-9D18-09F28074F5F7}
-    __declspec(selectany) const GUID vk_api_profider::class_guid = 
+    __declspec(selectany) const GUID vk_api_provider::class_guid = 
     { 0x415971ba, 0x5773, 0x4843, { 0x9d, 0x18, 0x9, 0xf2, 0x80, 0x74, 0xf5, 0xf7 } };
 }
 

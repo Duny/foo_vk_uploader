@@ -25,7 +25,7 @@ namespace vk_uploader
     };
 
 
-    class api_profider_imp : public vk_api_profider
+    class api_provider_impl : public vk_api_provider
     {
         // Helpers
         void get_file_contents (const char *p_path, pfc::array_t<t_uint8> & p_out)
@@ -65,7 +65,7 @@ namespace vk_uploader
                     m_call_count = 0;
                 }
 
-                m_call_count = (m_call_count + 1) % vk_api_profider::max_api_calls_per_second;
+                m_call_count = (m_call_count + 1) % vk_api_provider::max_api_calls_per_second;
 
                 // Not more than max_api_calls_per_second per one second (1000 ms)
                 if (m_call_count == 0) {
@@ -115,8 +115,8 @@ namespace vk_uploader
 
         win32_event m_invoker_avaliable;
     public:
-        api_profider_imp () : m_call_count (pfc_infinite) { m_invoker_avaliable.create (true, true); }
+        api_provider_impl () : m_call_count (pfc_infinite) { m_invoker_avaliable.create (true, true); }
     };
 
-    namespace { service_factory_single_t<api_profider_imp> g_factory; }
+    namespace { service_factory_single_t<api_provider_impl> g_factory; }
 }
