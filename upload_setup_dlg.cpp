@@ -10,8 +10,8 @@ namespace vk_uploader
 {
     class upload_setup_dlg : public CDialogWithTooltip<upload_setup_dlg>
     {
-        BEGIN_MSG_MAP_EX(upload_setup_dlg)
-            MESSAGE_HANDLER_SIMPLE (WM_INITDIALOG, on_init_dialog)
+        BEGIN_MSG_MAP(upload_setup_dlg)
+            MESSAGE_HANDLER_SIMPLE(WM_INITDIALOG, on_init_dialog)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_PICK_ALBUM, on_pick_album)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_SAVE_PRESET, on_save_preset)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_DELETE_PRESET, on_delete_preset)

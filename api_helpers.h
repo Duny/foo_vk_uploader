@@ -53,9 +53,9 @@ namespace vk_uploader
                     void run (abort_callback & p_abort) override;
                     audio_album_info m_new_album;
                 public:
-                    add (const pfc::string_base & title) : m_new_album (make_tuple (title.get_ptr (), 0)) {}
+                    explicit add (const pfc::string_base & title) : m_new_album (make_tuple (title.get_ptr (), 0)) {}
 
-                    audio_album_info const & get_album_info () const  { return m_new_album; }
+                    operator audio_album_info const & () const  { return m_new_album; }
                 };
 
 
@@ -171,6 +171,16 @@ namespace vk_uploader
         {
             m_aborted = p_method.aborted ();
             m_error = p_method.get_error ();
+        }
+
+        template <class t_api_method, typename t_on_ok_callback>
+        bool call_api (t_api_method & p_method, const t_on_ok_callback & on_ok)
+        {
+            reset_error ();
+            bool is_ok = p_method.call ();
+            if (is_ok) on_ok (p_method);
+            else get_method_error_code (p_method);
+            return is_ok;
         }
 
         bool m_aborted;

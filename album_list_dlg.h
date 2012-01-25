@@ -17,7 +17,7 @@ namespace vk_uploader
         if (sel_item > -1) listview_helper::get_item_text (p_listview, sel_item, 0, p_out);
     }
 
-    class album_list_dlg : public CAxDialogImpl<album_list_dlg>
+    class album_list_dlg : public CDialogImpl<album_list_dlg>
     {
     public:
         enum { IDD = IDD_ALBUM_LIST };
@@ -28,7 +28,7 @@ namespace vk_uploader
         const pfc::string_base & get_album_name () { return DoModal (core_api::get_main_window ()), m_album_name; }
 
     private:
-        BEGIN_MSG_MAP_EX(album_list_dlg)
+        BEGIN_MSG_MAP(album_list_dlg)
             MESSAGE_HANDLER_SIMPLE(WM_INITDIALOG, on_init_dialog)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_REFRESH, on_refresh_albums)
             COMMAND_ID_HANDLER_SIMPLE(IDC_BUTTON_ALBUM_NEW, on_album_new)

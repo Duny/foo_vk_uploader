@@ -37,12 +37,20 @@ namespace vk_uploader
 
     void vk_api::audio::albums::ren::run (abort_callback & p_abort)
     {
-        get_api_provider ()->invoke ("audio.editAlbum", list_of<name_value_pair> ("title", m_new_title)("album_id", pfc::string_formatter () << m_album_id), p_abort);
+        get_api_provider ()->invoke ("audio.editAlbum", 
+            list_of<name_value_pair>
+                ("title", m_new_title)
+                ("album_id", pfc::string_formatter () << m_album_id),
+            p_abort);
     }
 
     void vk_api::audio::move_to_album::run (abort_callback & p_abort)
     {
-        get_api_provider ()->invoke ("audio.moveToAlbum", list_of<name_value_pair> ("aids", pfc::string_formatter () << m_audio_id)("album_id", pfc::string_formatter () << m_album_id), p_abort);
+        get_api_provider ()->invoke ("audio.moveToAlbum", 
+            list_of<name_value_pair>
+                ("aids",     pfc::string_formatter () << m_audio_id)
+                ("album_id", pfc::string_formatter () << m_album_id),
+            p_abort);
     }
 
     void vk_api::audio::get_upload_server::run (abort_callback & p_abort)
@@ -55,17 +63,24 @@ namespace vk_uploader
     }
 
     void vk_api::audio::save::run (abort_callback & p_abort)
-    {
-        if (m_result->isMember ("server") && m_result->isMember ("audio") && m_result->isMember ("hash")) {
+    {    
+        if (m_result.has_members (list_of ("server")("audio")("hash")("audio_hash"))) {
+
             m_result = get_api_provider ()->invoke ("audio.save", 
-                list_of<name_value_pair> ("server", m_result["server"].asCString ())("audio", m_result["audio"].asCString ()) ("hash", m_result["hash"].asCString ()), p_abort);
+                list_of<name_value_pair>
+                    ("server", m_result["server"].asCString ())
+                    ("audio", m_result["audio"].asCString ())
+                    ("hash", m_result["hash"].asCString ())
+                    ("audio_hash", m_result["audio_hash"].asCString ()),
+                p_abort);
+
             if (m_result->isMember ("aid"))
                 m_id = m_result["aid"].asUInt ();
             else
                 throw pfc::exception ("no 'aid' field in response from audio.save");
         }
         else
-            throw pfc::exception (pfc::string_formatter () << "invalid response from file upload:\n" << m_result->toStyledString ().c_str ());
+            throw pfc::exception (pfc::string_formatter () << "Not enough parameters in response from file upload:\n" << m_result->toStyledString ().c_str ());
     }
 
     void vk_api::audio::edit::run (abort_callback & p_abort)
@@ -80,10 +95,10 @@ namespace vk_uploader
 
         get_api_provider ()->invoke ("audio.edit", 
             list_of<name_value_pair> 
-            ("aid", pfc::string_formatter () << m_aid)
-            ("oid", get_auth_manager ()->get_user_id ())
-            ("artist", pfc::string_part (str.get_ptr (), sep_pos))
-            ("title", pfc::string_part (str.get_ptr () + sep_pos + 2, str.get_length () - sep_pos - 2)),
+                ("aid", pfc::string_formatter () << m_aid)
+                ("oid", get_auth_manager ()->get_user_id ())
+                ("artist", pfc::string_part (str.get_ptr (), sep_pos))
+                ("title", pfc::string_part (str.get_ptr () + sep_pos + 2, str.get_length () - sep_pos - 2)),
             p_abort);
     }
 
@@ -109,39 +124,24 @@ namespace vk_uploader
 
     bool user_album_list::reload ()
     {
-        reset_error ();
+        typedef vk_api::audio::albums::get method_get;
 
-        vk_api::audio::albums::get method_get_albums;
-        bool ok = method_get_albums.call ();
-        if (ok)
-            m_cfg_album_list = method_get_albums;
-        else
-            get_method_error_code (method_get_albums);
-        return ok;
+        return call_api (method_get (), [&] (method_get & albums) { m_cfg_album_list = albums; });
     }
 
     bool user_album_list::add_item (const pfc::string_base & p_title)
     {
-        reset_error ();
+        typedef vk_api::audio::albums::add method_add;
 
-        vk_api::audio::albums::add method_add_album (p_title);
-        bool ok = method_add_album.call ();
-        if (ok)
-            m_cfg_album_list.add_item (method_add_album.get_album_info ());
-        else
-            get_method_error_code (method_add_album);
-        return ok;
+        return call_api (method_add (p_title), [&] (method_add & album_info) { m_cfg_album_list.add_item (album_info); });
     }
 
     bool user_album_list::remove_item (t_vk_album_id album_id)
     {
-        reset_error ();
+        typedef vk_api::audio::albums::del method_del;
 
-        // Delete from profile
-        vk_api::audio::albums::del method_delete_album (album_id);
-        bool ok = method_delete_album.call ();
-        if (ok) {
-            // Delete from the list
+        return call_api (method_del (album_id), [&] (method_del &) {
+            // Delete album from the list
             auto n = m_cfg_album_list.get_size ();
             while (n --> 0) {
                 if (m_cfg_album_list[n].get<1> () == album_id) {
@@ -149,10 +149,7 @@ namespace vk_uploader
                     break;
                 }
             }
-        }
-        else
-            get_method_error_code (method_delete_album);
-        return ok;
+        });
     }
 
     bool user_album_list::rename_item (const pfc::string_base & p_current_name, const pfc::string_base & p_new_name)
@@ -161,13 +158,10 @@ namespace vk_uploader
 
         int item_index = find_album (p_current_name);
         if (item_index > -1) {
-            vk_api::audio::albums::ren method_rename_album (m_cfg_album_list[item_index].get<1> (), p_new_name);
-            bool ok = method_rename_album.call ();
-            if (ok)
-                m_cfg_album_list[item_index].get<0> () = p_new_name;
-            else
-                get_method_error_code (method_rename_album);
-            return ok;
+            typedef vk_api::audio::albums::ren method_ren;
+
+            return call_api (method_ren (m_cfg_album_list[item_index].get<1> (), p_new_name),
+                [&] (method_ren &) { m_cfg_album_list[item_index].get<0> () = p_new_name; });
         }
         else {
             m_error << "album \"" << p_current_name << "\" not found";

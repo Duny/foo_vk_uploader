@@ -248,6 +248,14 @@ public:
 
     Json::Value* operator-> () { assert_valid (); return &(*m_val); }
     const Json::Value* operator-> () const { return &(*m_val); }
+
+    bool has_members (const std::vector<const char*> & names)
+    {
+        for (auto iter = names.cbegin (), end = names.cend (); iter != end; ++iter)
+            if (!m_val->isMember (*iter))
+                return false;
+        return true;
+    }
 };
 
 // Represents a list of name=>value string pairs of URL parameters

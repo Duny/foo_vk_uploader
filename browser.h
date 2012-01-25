@@ -21,7 +21,7 @@ namespace vk_uploader
         const pfc::string_base & get_browser_location () const { return m_current_location; }
 
     private:
-        BEGIN_MSG_MAP_EX(browser_dialog)
+        BEGIN_MSG_MAP(browser_dialog)
             CHAIN_MSG_MAP(CAxDialogImpl<browser_dialog>)
             CHAIN_MSG_MAP(CDialogResize<browser_dialog>)
             MESSAGE_HANDLER_SIMPLE(WM_INITDIALOG, on_init_dialog)
