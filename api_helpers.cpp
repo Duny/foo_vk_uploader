@@ -3,6 +3,8 @@
 #include "vk_auth.h"
 #include "vk_api.h"
 
+#include "boost/foreach.hpp"
+using namespace boost::foreach;
 
 namespace vk_uploader
 {
@@ -63,24 +65,37 @@ namespace vk_uploader
     }
 
     void vk_api::audio::save::run (abort_callback & p_abort)
-    {    
-        if (m_result.has_members (list_of ("server")("audio")("hash")("audio_hash"))) {
+    {
+        const auto required_fields = list_of ("server")("audio")("hash");
+        
+        if (m_result.has_members (required_fields)) {
 
-            m_result = get_api_provider ()->invoke ("audio.save", 
-                list_of<name_value_pair>
-                    ("server", m_result["server"].asCString ())
-                    ("audio", m_result["audio"].asCString ())
-                    ("hash", m_result["hash"].asCString ())
-                    ("audio_hash", m_result["audio_hash"].asCString ()),
-                p_abort);
+            url_parameters params;
+            std::for_each (required_fields.begin (), required_fields.end (),
+                [&] (const char * field)
+                {
+                    params.push_back (make_pair (field, m_result[field].asCString ()));
+                }
+            );
+
+            m_result = get_api_provider ()->invoke ("audio.save", params, p_abort);
 
             if (m_result->isMember ("aid"))
                 m_id = m_result["aid"].asUInt ();
             else
                 throw pfc::exception ("no 'aid' field in response from audio.save");
         }
-        else
-            throw pfc::exception (pfc::string_formatter () << "Not enough parameters in response from file upload:\n" << m_result->toStyledString ().c_str ());
+        else {
+            pfc::string_formatter err_mgs = "Not enough parameters in response from file upload. Expected fields: \n";
+            std::for_each (required_fields.begin (), required_fields.end (),
+                [&] (const char * field)
+                {
+                    err_mgs << "(" << field << ")";
+                }
+            );
+            err_mgs << "\nGot:\n" << m_result->toStyledString ().c_str ();
+            throw pfc::exception (err_mgs);
+        }
     }
 
     void vk_api::audio::edit::run (abort_callback & p_abort)
