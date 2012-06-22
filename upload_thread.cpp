@@ -60,8 +60,7 @@ void upload_thread::run (threaded_process_status & p_status, abort_callback & p_
     service_ptr_t<titleformat_object> p_object;
     p_compiler->compile (p_object, m_params.get<field_album_name> ());
 
-    pfc::list_t<t_vk_audio_id> audio_ids; // Used (not always) for posting on wall
-    bool album_list_reloaded = false; // We can reload list of user albums once if needed
+    pfc::list_t<t_vk_audio_id> audio_ids; // For posting on wall
 
     for (t_size i = 0, num_items = m_items.get_size (); i < num_items; ++i) {
         const metadb_handle_ptr & p_item = m_items[i];
@@ -94,11 +93,8 @@ void upload_thread::run (threaded_process_status & p_status, abort_callback & p_
         pfc::array_t<t_uint8> & answer_bytes = *answer_raw;
         // Parse answer
         pfc::string8 answer;
-        for (t_size i = 0, num_bytes = answer_bytes.get_size (); i < num_bytes; ++i) {
-            auto c = answer_bytes[i];
-            if (c == 0) track_needs_correction = true;
-            else answer.add_char (c);
-        }
+        for (t_size i = 0, num_bytes = answer_bytes.get_size (); i < num_bytes; ++i)
+            if (auto c = answer_bytes[i]/*c != 0*/) answer.add_char (c);
 
         // Step 3: Save audio in user profile
         p_status.set_item ("saving audio in profile"); 
@@ -115,13 +111,11 @@ void upload_thread::run (threaded_process_status & p_status, abort_callback & p_
         audio_ids.add_item (audio_id); // Save id for the post on wall
 
         // Edit tracks info
-        if (track_needs_correction) {
-            p_status.set_item ("editing audio information"); 
-            vk_api::audio::edit method_edit (p_item, audio_id);
-            if (!method_edit.call (p_abort)) {
-                if (method_edit.aborted ()) return; // Operation aborted
-                else m_errors << "Error while editing \"" << file_name << "\": " << method_edit.get_error () << "\n";
-            }
+        p_status.set_item ("editing audio information"); 
+        vk_api::audio::edit method_edit (p_item, audio_id);
+        if (!method_edit.call (p_abort)) {
+            if (method_edit.aborted ()) return; // Operation aborted
+            else m_errors << "Error while editing \"" << file_name << "\": " << method_edit.get_error () << "\n";
         }
 
         // Format item album title
@@ -135,8 +129,7 @@ void upload_thread::run (threaded_process_status & p_status, abort_callback & p_
             auto album_id = user_albums.get_album_id_by_name (album_name);
 
             // If album_name not found in album list, try to fetch album list from user profile
-            if (!album_id && !album_list_reloaded) {
-                album_list_reloaded = true;
+            if (!album_id) {
                 if (user_albums.reload ()) album_id = user_albums.get_album_id_by_name (album_name);
                 else if (user_albums.aborted ()) return; // Operation aborted
                 else m_errors << "Error while reading album list:" << user_albums.get_error () << "\n";
@@ -149,7 +142,7 @@ void upload_thread::run (threaded_process_status & p_status, abort_callback & p_
                 else m_errors << "Error while creating new album:" << user_albums.get_error () << "\n";    
             }
 
-            // Try Once again
+            // Final try
             if (album_id) {
                 p_status.set_item (pfc::string_formatter () << "moving track to album \"" << album_name << "\"");
                 // Move track to the album
