@@ -166,12 +166,6 @@ namespace vk_uploader
             m_aborted = false;
             m_error.reset ();
         }
-            
-        void get_method_error_code (const api_method_base & p_method)
-        {
-            m_aborted = p_method.aborted ();
-            m_error = p_method.get_error ();
-        }
 
         template <class t_api_method, typename t_on_ok_callback>
         bool call_api (t_api_method & p_method, const t_on_ok_callback & on_ok)
@@ -179,7 +173,7 @@ namespace vk_uploader
             reset_error ();
             bool is_ok = p_method.call ();
             if (is_ok) on_ok (p_method);
-            else get_method_error_code (p_method);
+            else tie(m_aborted, m_error) = make_pair (p_method.aborted (), p_method.get_error ());
             return is_ok;
         }
 

@@ -2,23 +2,26 @@
 
 #include "vk_api.h"
 
-
-// Configuration
-namespace
+namespace vk_uploader
 {
-    GUID guid_vk_advconfig_branch = { 0xafe40ad7, 0x4112, 0x4363, { 0x97, 0x3f, 0x71, 0xab, 0x07, 0xb5,0x89,0x2e }};
+    namespace configuration
+    {
 
-    advconfig_branch_factory g_vk_advconfig_branch ("Vk.com music uploader",
-        guid_vk_advconfig_branch,
-        advconfig_branch::guid_branch_tools, 0);
-    
-    advconfig_checkbox_factory g_allways_create_album ("Always create album",
-        create_guid (0x7f51105d, 0x6f51, 0x4f9e, 0xbe, 0xc1, 0x5f, 0x89, 0xef, 0x43, 0x61, 0x9d),
-        /*parent guid*/guid_vk_advconfig_branch,
-        /*priority*/0,
-        /*p_initialstate*/true);
+        advconfig_branch_factory vk_advconfig_branch (
+            /*const char * p_name*/"Vk.com music uploader",
+            /*const GUID & p_guid*/create_guid (0xafe40ad7, 0x4112, 0x4363, 0x97, 0x3f, 0x71, 0xab, 0x07, 0xb5,0x89,0x2e),
+            /*const GUID & p_parent*/advconfig_branch::guid_branch_tools, 
+            /*double p_priority*/0);
+
+        advconfig_checkbox_factory allways_create_album (
+            /*const char * p_name*/"Always create album",
+            /*const GUID & p_guid*/create_guid (0x7f51105d, 0x6f51, 0x4f9e, 0xbe, 0xc1, 0x5f, 0x89, 0xef, 0x43, 0x61, 0x9d),
+            /*const GUID & p_parent*/vk_advconfig_branch.get_class_guid (), // Construction order depended code
+            /*double p_priority*/0,
+            /*bool p_initialstate*/true);
+    }
+
 }
-
 using namespace vk_uploader;
 
 class upload_thread : public threaded_process_callback
@@ -126,17 +129,14 @@ void upload_thread::run (threaded_process_status & p_status, abort_callback & p_
         // Move tracks to albums whose album_name does not evaluate to empty string
         if (!album_name.is_empty ()) {
             user_album_list user_albums;
-            auto album_id = user_albums.get_album_id_by_name (album_name);
+            t_vk_audio_id   album_id = 0;
+            // Reload album list
+            if (user_albums.reload ()) album_id = user_albums.get_album_id_by_name (album_name);
+            else if (user_albums.aborted ()) return; // Operation aborted
+            else m_errors << "Error while loading user album list:" << user_albums.get_error () << "\n";
 
-            // If album_name not found in album list, try to fetch album list from user profile
-            if (!album_id) {
-                if (user_albums.reload ()) album_id = user_albums.get_album_id_by_name (album_name);
-                else if (user_albums.aborted ()) return; // Operation aborted
-                else m_errors << "Error while reading album list:" << user_albums.get_error () << "\n";
-            }
-
-            // If album_name still not found then try to create it
-            if (!album_id && g_allways_create_album.get ()) {
+            // If album_name not found then try to create it
+            if (!album_id && configuration::allways_create_album) {
                 if (user_albums.add_item (album_name)) album_id = user_albums.get_album_id_by_name (album_name);
                 else if (user_albums.aborted ()) return; // Operation aborted
                 else m_errors << "Error while creating new album:" << user_albums.get_error () << "\n";    
@@ -159,7 +159,7 @@ void upload_thread::run (threaded_process_status & p_status, abort_callback & p_
 
     if (m_params.get<field_post_on_wall> ()) {
         p_status.set_item ("making post on the wall");
-        // Post new message on user wall this all uploaded tracks attached
+        // Make post on user wall with all uploaded tracks as attaches
         vk_api::wall::post method_post_on_wall (m_params.get<field_post_message> (), audio_ids);
         if (!method_post_on_wall.call (p_abort) && !method_post_on_wall.aborted ())
             m_errors << "Error while posting message on the wall: " << method_post_on_wall.get_error ();

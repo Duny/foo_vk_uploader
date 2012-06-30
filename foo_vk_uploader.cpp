@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-DECLARE_COMPONENT_VERSION ("Vk.com Music Uploader", "1.2.3",
+DECLARE_COMPONENT_VERSION ("Vk.com Music Uploader", "1.2.4",
 "Uploads music to your profile in vk.com/vkontakte.ru social network.\n\n\
 (c) 2011-2012 Efimenko Dmitry (majorquake3@gmail.com)");
 

@@ -124,8 +124,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,3,0
- PRODUCTVERSION 1,2,3,0
+ FILEVERSION 1,2,4,0
+ PRODUCTVERSION 1,2,4,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -142,12 +142,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Duny <majorquake3@gmail.com>"
             VALUE "FileDescription", "foobar2000 component for uploading music to vk.com/vkontakte.ru social network."
-            VALUE "FileVersion", "1.2.3.0"
+            VALUE "FileVersion", "1.2.4.0"
             VALUE "InternalName", "foo_vk_uploader.dll"
             VALUE "LegalCopyright", "Copyright (C) 2011-2012 Efimenko Dmitry"
             VALUE "OriginalFilename", "foo_vk_uploader.dll"
             VALUE "ProductName", "vk.com music uploader"
-            VALUE "ProductVersion", "1.2.3.0"
+            VALUE "ProductVersion", "1.2.4.0"
         END
     END
     BLOCK "VarFileInfo"
