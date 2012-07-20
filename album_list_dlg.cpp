@@ -74,7 +74,11 @@ namespace vk_uploader
         // Window must have WS_CLIPCHILDREN for inline editing
         ::SetWindowLong (p_listview, GWL_STYLE, ::GetWindowLong (p_listview, GWL_STYLE) | WS_CLIPCHILDREN);
 
-        listview_fill (p_listview, user_album_list ().get_albums ());
+        const auto & p_albums = user_album_list ().get_albums ();
+        if (p_albums.get_count ())
+            listview_fill (p_listview, p_albums);
+        else
+            on_refresh_albums ();
     }
 
     void album_list_dlg::on_destroy ()

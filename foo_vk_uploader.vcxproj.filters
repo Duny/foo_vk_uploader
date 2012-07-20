@@ -48,9 +48,6 @@
     <ClCompile Include="helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(FB2K_VK_COM_API)\stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api.cpp">
       <Filter>vk_com_api</Filter>
     </ClCompile>

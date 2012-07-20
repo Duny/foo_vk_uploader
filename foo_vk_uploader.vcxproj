@@ -115,21 +115,20 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="$(FB2K_VK_COM_API)\stdafx.cpp" />
     <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api.cpp" />
     <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth.cpp" />
     <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.cpp" />
     <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.cpp" />
     <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_methods.cpp" />
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp" >
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp" >
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp" >
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
