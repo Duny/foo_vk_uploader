@@ -5,37 +5,14 @@
 
 namespace vk_uploader
 {
-    class mainmenu_group_popup_vk_uploader : public mainmenu_group_popup
+    namespace
     {
-        // mainmenu_group overrides
-        GUID get_guid () override
-        {
-            return get_my_guid ();
-        }
-
-	    GUID get_parent () override
-        {
-            return mainmenu_groups::view;
-        }
-
-	    t_uint32 get_sort_priority () override
-        {
-            return mainmenu_commands::sort_priority_dontcare;
-        }
-
-        // mainmenu_group_popup overrides
-        void get_display_string (pfc::string_base & p_out) override
-        {
-            p_out = "Vk.com uploader";
-        }
-
-    public:
-
-        static GUID get_my_guid ()
-        {
-            return create_guid (0x7a0d49a5, 0x0e24, 0x42ce, 0xab, 0xa0, 0xdb, 0x8b, 0x2a, 0x9b, 0xe0, 0x81);
-        }
-    };
+        mainmenu_group_popup_factory mainmenu_group_popup_vk_uploader (
+            create_guid (0xc846f787, 0x1fca, 0x44c5, 0x86, 0x28, 0x6d, 0xfc, 0x02, 0x70, 0xd3, 0xcd),
+            mainmenu_groups::view,
+            0,
+            "Vk.com uploader");
+    }
 
     class menucomman_relogin_upload : public mainmenu_commands
     {
@@ -86,7 +63,7 @@ namespace vk_uploader
         //! Retrieves GUID of owning menu group.
         GUID get_parent () override
         {
-            return mainmenu_group_popup_vk_uploader::get_my_guid ();
+            return mainmenu_group_popup_vk_uploader.get_static_instance ().get_guid ();
         }
 
         //! Executes the command. p_callback parameter is reserved for future use and should be ignored / set to null pointer.
@@ -106,6 +83,5 @@ namespace vk_uploader
     namespace
     {
         mainmenu_commands_factory_t<menucomman_relogin_upload> g_mainmenu_commands_factory;
-        mainmenu_commands_factory_t<mainmenu_group_popup_vk_uploader> g_mainmenu_group_popup_factory;
     }
 }
