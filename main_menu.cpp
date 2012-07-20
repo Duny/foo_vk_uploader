@@ -18,7 +18,7 @@ namespace vk_uploader
         void get_name (t_uint32 p_index, pfc::string_base &p_out) override
         {
             if (p_index == 0) {
-                p_out = vk_com_api::get_auth_manager()->is_valid () ? "Relogin" : "Login";
+                p_out = vk_com_api::get_auth_manager()->user_logged () ? "Relogin" : "Login";
                 p_out += " to vk.com...";
             }
         }
