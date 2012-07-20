@@ -7,7 +7,7 @@ namespace vk_uploader
     inline void listview_fill (HWND p_listview, const pfc::list_base_const_t<audio_album_info> &p_albums)
     {
         uSendMessage (p_listview, LVM_DELETEALLITEMS, 0, 0);
-        p_albums.enumerate ([&](const audio_album_info &p_album) { listview_helper::insert_item (p_listview, 0, p_album.get<0> ().get_ptr (), 0); });
+        p_albums.enumerate ([&](const audio_album_info &p_album) { listview_helper::insert_item (p_listview, 0, p_album.get<0>().get_ptr (), 0); });
     }
 
     inline void listview_get_sel_item_text (HWND p_listview, pfc::string_base & p_out)

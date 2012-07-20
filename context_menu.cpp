@@ -1,5 +1,4 @@
 #include "stdafx.h"
-
 #include "upload_presets.h"
 
 

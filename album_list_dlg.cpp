@@ -1,10 +1,10 @@
 #include "stdafx.h"
 
-#include "vk_api.h"
+#include "vk_com_api.h"
 #include "album_list_dlg.h"
 
 
-namespace { cfgDialogPosition g_dlg_pos (create_guid (0xe48d7bd1, 0x109b, 0x495c, 0xb2, 0xe0, 0x3c, 0x4c,0x8e, 0xb9, 0x4a, 0x4b)); }
+namespace { cfgDialogPosition g_dlg_pos (vk_uploader::create_guid (0xe48d7bd1, 0x109b, 0x495c, 0xb2, 0xe0, 0x3c, 0x4c,0x8e, 0xb9, 0x4a, 0x4b)); }
 
 inline void uErrorBox (const char *p_title, const char *p_message)
 {
@@ -47,7 +47,7 @@ namespace vk_uploader
             {
                 listview_helper::set_item_text (p_listview, p_item_index, 0, new_title.get_ptr ());
 
-                user_album_list user_albums;
+                vk_uploader::user_album_list user_albums;
                 if (!user_albums.rename_item (p_prev_title, new_title)) {
                    listview_helper::set_item_text (p_listview, p_item_index, 0, p_prev_title.get_ptr ());
                    if (!user_albums.aborted ())

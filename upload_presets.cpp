@@ -4,14 +4,12 @@
 
 
 // preset name, preset GUID (for context menus), preset upload parameters
-typedef tuple<pfc::string8, GUID, upload_parameters> upload_preset;
+typedef boost::tuples::tuple<pfc::string8, GUID, upload_parameters> upload_preset;
 
-FB2K_STREAM_READER_OVERLOAD(upload_parameters) { return read_tuple (stream, value); }
-FB2K_STREAM_WRITER_OVERLOAD(upload_parameters) { return write_tuple (stream, value); }
+DEFINE_FB2K_STREAM_READER_WRITER(upload_preset);
+DEFINE_FB2K_STREAM_READER_WRITER(upload_parameters);
 
-FB2K_STREAM_READER_OVERLOAD(upload_preset) { return read_tuple (stream, value); }
-FB2K_STREAM_WRITER_OVERLOAD(upload_preset) { return write_tuple (stream, value); }  
-         
+
 namespace vk_uploader
 {
     PFC_DECLARE_EXCEPTION (exception_preset_not_found, pfc::exception, "");
@@ -22,7 +20,7 @@ namespace vk_uploader
         upload_preset & find_preset_internal (const T & p_val) const
         {
             for (t_size i = 0, n = m_preset_list.get_size (); i < n; i++) {
-                if (p_val == m_preset_list[i].get<N> ())
+                if (p_val == m_preset_list[i].get<N>())
                     return m_preset_list[i];
             }
 
@@ -34,13 +32,13 @@ namespace vk_uploader
         const pfc::string_base & get_preset_name (t_size p_index) const override
         {
             static pfc::string8 dummy = "";
-            return (p_index < m_preset_list.get_count ()) ? m_preset_list[p_index].get<0> () : dummy;
+            return (p_index < m_preset_list.get_count ()) ? m_preset_list[p_index].get<0>() : dummy;
         }
 
         GUID get_preset_guid (const pfc::string_base & p_name) const override
         {
             try {
-                return find_preset_internal<0> (p_name).get<1> ();
+                return find_preset_internal<0> (p_name).get<1>();
             } catch (exception_preset_not_found) {
                 return pfc::guid_null;
             }
@@ -57,7 +55,7 @@ namespace vk_uploader
         const upload_parameters & get_preset (const pfc::string_base & p_name) const override
         {
             try {
-                return find_preset_internal<0> (p_name).get<2> ();
+                return find_preset_internal<0> (p_name).get<2>();
             } catch (exception_preset_not_found) {
                 return m_preset_dummy;
             }
@@ -66,7 +64,7 @@ namespace vk_uploader
         const upload_parameters & get_preset (const GUID & p_guid) const override
         {
             try {
-                return find_preset_internal<1> (p_guid).get<2> ();
+                return find_preset_internal<1> (p_guid).get<2>();
             } catch (exception_preset_not_found) {
                 return m_preset_dummy;
             }
@@ -75,7 +73,7 @@ namespace vk_uploader
         bool save_preset (const pfc::string_base & p_preset_name, const upload_parameters & p_preset) override
         {
             try {
-                find_preset_internal<0> (p_preset_name).get<2> () = p_preset;
+                find_preset_internal<0> (p_preset_name).get<2>() = p_preset;
             } catch (exception_preset_not_found) {
                 GUID guid;
                 if (CoCreateGuid (&guid) != S_OK) return false;

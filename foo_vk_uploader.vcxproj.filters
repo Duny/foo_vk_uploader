@@ -13,8 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="vk_com_api">
+      <UniqueIdentifier>{b1cce11e-b52d-4917-bf7f-9931153ebfcb}</UniqueIdentifier>
+    </Filter>
     <Filter Include="jsoncpp">
-      <UniqueIdentifier>{f5c85095-7eee-47c3-9c17-98fe04a6ac0c}</UniqueIdentifier>
+      <UniqueIdentifier>{0ec28433-60e1-41cc-8d93-a0a1c58b45b4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -27,22 +30,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vk_api.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp">
-      <Filter>jsoncpp</Filter>
-    </ClCompile>
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp">
-      <Filter>jsoncpp</Filter>
-    </ClCompile>
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp">
-      <Filter>jsoncpp</Filter>
-    </ClCompile>
     <ClCompile Include="upload_setup_dlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vk_auth.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="upload_thread.cpp">
@@ -51,33 +39,48 @@
     <ClCompile Include="main_menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="browser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="album_list_dlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="api_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="upload_presets.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_methods.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp">
+      <Filter>jsoncpp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vk_api.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vk_auth.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="browser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="album_list_dlg.h">
@@ -86,16 +89,49 @@
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="api_helpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="upload_presets.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_resource.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_auth.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_external.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_methods.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(JSONCPP)\include\json\value.h">
+      <Filter>jsoncpp</Filter>
+    </ClInclude>
+    <ClInclude Include="$(JSONCPP)\include\json\writer.h">
+      <Filter>jsoncpp</Filter>
+    </ClInclude>
+    <ClInclude Include="$(JSONCPP)\include\json\json.h">
+      <Filter>jsoncpp</Filter>
+    </ClInclude>
+    <ClInclude Include="$(JSONCPP)\include\json\reader.h">
+      <Filter>jsoncpp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_vk_uploader.rc">
       <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="$(FB2K_VK_COM_API)\vk_com_api_resource.rc">
+      <Filter>vk_com_api</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

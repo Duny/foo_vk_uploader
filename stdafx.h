@@ -6,30 +6,13 @@
 
 
 // crt includes
-#include <time.h>
+#include <tuple>
+#include <functional>
+#include <algorithm>
 
-// foobar2000 includes
-#include "foobar2000/ATLHelpers/ATLHelpers.h"
-#include <exdispid.h>
-#include <atlframe.h>
 
-// jsoncpp includes
-#include "json/reader.h"
-#include "json/value.h"
-
-// boost includes
-#include "boost/assign.hpp"
-#include "boost/foreach.hpp"
-#include "boost/function.hpp"
-#include "boost/tuple/tuple.hpp"
-#include "boost/tuple/tuple_io.hpp"
-#include "boost/tuple/tuple_comparison.hpp"
-
-using namespace boost::assign;
-using namespace boost::foreach;
-using boost::function;
-using namespace boost::tuples;
-using std::make_pair;
+// vk_com_api includes
+#include "vk_com_api.h"
 
 // plugin specific includes
 #include "resource.h"

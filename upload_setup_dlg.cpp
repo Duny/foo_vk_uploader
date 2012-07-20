@@ -1,10 +1,10 @@
 #include "stdafx.h"
 
-#include "vk_auth.h"
+#include "vk_com_api_auth.h"
 #include "upload_presets.h"
 #include "album_list_dlg.h"
 
-namespace { cfgDialogPosition g_dlg_pos (create_guid (0x42daae47, 0x20c, 0x4c25, 0xba, 0xa1, 0x27, 0x55, 0x7e, 0x75, 0x3d, 0x42)); }
+namespace { cfgDialogPosition g_dlg_pos (vk_uploader::create_guid (0x42daae47, 0x20c, 0x4c25, 0xba, 0xa1, 0x27, 0x55, 0x7e, 0x75, 0x3d, 0x42)); }
 
 namespace vk_uploader
 {
@@ -86,15 +86,15 @@ namespace vk_uploader
         // helpers
         upload_parameters get_upload_params () const
         {
-            return make_tuple (get_window_text_trimmed (m_edit_album_name), m_check_post_on_wall.IsChecked (), get_window_text_trimmed (m_edit_post_msg));
+            return boost::make_tuple (get_window_text_trimmed (m_edit_album_name), m_check_post_on_wall.IsChecked (), get_window_text_trimmed (m_edit_post_msg));
         }
 
         void set_current_preset (const upload_parameters &p)
         {
-            m_edit_album_name.SetWindowText (pfc::stringcvt::string_os_from_utf8 (p.get<field_album_name> ()));
-            m_check_post_on_wall.ToggleCheck (p.get<field_post_on_wall> ());
-            m_edit_post_msg.SetWindowText (pfc::stringcvt::string_os_from_utf8 (p.get<field_post_message> ()));
-            m_edit_post_msg.EnableWindow (p.get<field_post_on_wall> ());
+            m_edit_album_name.SetWindowText (pfc::stringcvt::string_os_from_utf8 (p.get<field_album_name>()));
+            m_check_post_on_wall.ToggleCheck (p.get<field_post_on_wall>());
+            m_edit_post_msg.SetWindowText (pfc::stringcvt::string_os_from_utf8 (p.get<field_post_message>()));
+            m_edit_post_msg.EnableWindow (p.get<field_post_on_wall>());
         }
 
         pfc::string8 get_window_text_trimmed (HWND wnd) const
@@ -113,9 +113,9 @@ namespace vk_uploader
 
         upload_setup_dlg (metadb_handle_list_cref p_items) : m_items (p_items) {}
     };
-}
 
-void show_upload_setup_dialog (metadb_handle_list_cref p_items)
-{
-    new CWindowAutoLifetime<ImplementModelessTracking<vk_uploader::upload_setup_dlg>>(core_api::get_main_window (), p_items);
+    void show_upload_setup_dialog (metadb_handle_list_cref p_items)
+    {
+        new CWindowAutoLifetime<ImplementModelessTracking<vk_uploader::upload_setup_dlg>>(core_api::get_main_window (), p_items);
+    }
 }

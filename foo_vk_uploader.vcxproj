@@ -54,7 +54,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(FB2KSDK);$(JSONCPP)\include\;$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FB2KSDK);$(JSONCPP)\include\;$(BOOST);$(FB2K_VK_COM_API);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_VK_UPLOADER_EXPORTS;_WIN32_WINNT=0x0600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -83,7 +83,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(FB2KSDK);$(JSONCPP)\include\;$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FB2KSDK);$(JSONCPP)\include\;$(BOOST);$(FB2K_VK_COM_API);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_VK_UPLOADER_EXPORTS;_WIN32_WINNT=0x0600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -115,46 +115,57 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="$(FB2K_VK_COM_API)\stdafx.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_methods.cpp" />
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp" >
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp" >
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp" >
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="album_list_dlg.cpp" />
-    <ClCompile Include="api_helpers.cpp" />
+    <ClCompile Include="helpers.cpp" />
     <ClCompile Include="main_menu.cpp" />
     <ClCompile Include="upload_presets.cpp" />
     <ClCompile Include="context_menu.cpp" />
     <ClCompile Include="foo_vk_uploader.cpp" />
-    <ClCompile Include="browser.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="upload_setup_dlg.cpp" />
     <ClCompile Include="upload_thread.cpp" />
-    <ClCompile Include="vk_api.cpp" />
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="vk_auth.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_auth.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_external.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_methods.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_resource.h" />
+    <ClInclude Include="$(JSONCPP)\include\json\json.h" />
+    <ClInclude Include="$(JSONCPP)\include\json\reader.h" />
+    <ClInclude Include="$(JSONCPP)\include\json\value.h" />
+    <ClInclude Include="$(JSONCPP)\include\json\writer.h" />
     <ClInclude Include="album_list_dlg.h" />
-    <ClInclude Include="api_helpers.h" />
     <ClInclude Include="upload_presets.h" />
-    <ClInclude Include="browser.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="helpers.h" />
-    <ClInclude Include="vk_api.h" />
-    <ClInclude Include="vk_auth.h" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="$(FB2K_VK_COM_API)\vk_com_api_resource.rc" />
     <ResourceCompile Include="foo_vk_uploader.rc" />
   </ItemGroup>
   <ItemGroup>

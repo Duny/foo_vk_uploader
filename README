@@ -6,3 +6,4 @@ In order to build, you will need to define some environment variables:
 3. Path from BUILD_BIN_DIR env var will be used for project's output binary files (*.obj, etc)
 4. JSONCPP must be pointing to the jsoncpp library
 5. BOOST for Boost library
+6. FB2K_VK_COM_API must be pointing to the directory where fb2k_vk_com_api is located
